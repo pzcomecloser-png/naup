@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>나 키우기</title>
+<style>
+  :root {
+    --skin: #f4c28c;
+    --skin-shadow: #d9a066;
+    --hair: #3f2414;
+    --hair-hi: #5c3a20;
+    --band: #d1392b;
+    --band-dark: #a12a20;
+    --gold: #ffd76a;
+    --tunic: #3a72e0;
+    --tunic-shadow: #2652a8;
+    --pants: #22315c;
+    --pants-shadow: #141c37;
+    --boot: #3a2412;
+    --boot-shadow: #241407;
+    --belt: #4a2e1a;
+    --mouth: #a8503a;
+    --iris: #2f6fed;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Malgun Gothic', sans-serif;
+    background: #0f0c29;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  #app {
+    position: relative;
+    width: 100%; height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: linear-gradient(160deg, #24243e 0%, #302b63 50%, #0f0c29 100%);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sparkle {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,0.8);
+    animation: twinkle 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.7); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px;
+  }
+  .screen.active { display: flex; }
+
+  /* ---------- INTRO ---------- */
+  #introScreen {
+    justify-content: center;
+    align-items: center;
+    background: #05040d;
+    text-align: center;
+  }
+  .intro-text {
+    color: #f0f0ff;
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 600;
+    max-width: 340px;
+    opacity: 0;
+    animation: introIn 0.6s ease forwards;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .intro-text .highlight {
+    color: #ffd76a;
+    font-weight: 900;
+    font-size: 17px;
+    display: block;
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+  @keyframes introIn {
+    0%   { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .intro-tap {
+    position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.55); font-size: 12px; font-weight: 700;
+    animation: tapBlink 1.6s ease-in-out infinite;
+  }
+  @keyframes tapBlink {
+    0%, 100% { opacity: 0.3; } 50% { opacity: 0.9; }
+  }
+
+  /* ---------- TITLE ---------- */
+  #titleScreen { justify-content: space-between; }
+  .logo-wrap { margin-top: 30px; text-align: center; }
+  .logo-title {
+    font-size: 44px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 20px rgba(255,215,0,0.9), 0 4px 8px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+    animation: floaty 3s ease-in-out infinite;
+  }
+  .logo-sub { color: #ffd76a; font-size: 14px; margin-top: 6px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  .char-stage { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; }
+  .main-char-stage { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+  .char-glow {
+    position: absolute; width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.35) 0%, rgba(255,215,0,0) 70%);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.15); opacity: 1; } }
+
+  .btn-group { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .btn { border: none; border-radius: 16px; padding: 16px; font-size: 18px; font-weight: 700; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.3); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  .btn-primary { background: linear-gradient(180deg, #ffd76a, #ff9f43); color: #3a2200; }
+  .btn-secondary { background: linear-gradient(180deg, #4b4b7c, #33335c); color: #e5e5ff; }
+
+  /* ---------- MAIN ---------- */
+  #mainScreen { justify-content: flex-start; padding-top: 16px; }
+  .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .top-title { color: #fff; font-size: 20px; font-weight: 800; }
+  .day-badge { background: rgba(255,255,255,0.12); color: #ffd76a; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+
+  .stats-panel {
+    width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px; padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px 14px; margin-bottom: 14px; backdrop-filter: blur(6px);
+  }
+  .stat-row { display: flex; align-items: center; justify-content: space-between; color: #fff; font-size: 13px; font-weight: 600; }
+  .stat-row span.val { color: #ffd76a; font-weight: 800; }
+
+  .speech-bubble {
+    position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    background: #fff; color: #222; padding: 8px 14px; border-radius: 14px;
+    font-size: 12px; font-weight: 700; white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0; animation: bubbleIn 0.4s ease forwards; z-index: 50;
+  }
+  .speech-bubble::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    border-width: 6px 6px 0 6px; border-style: solid; border-color: #fff transparent transparent transparent;
+  }
+  @keyframes bubbleIn { to { opacity: 1; } }
+
+  .action-list { width: 100%; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; }
+  .action-btn {
+    display: flex; align-items: center; justify-content: space-between; border: none; border-radius: 14px;
+    padding: 13px 16px; background: linear-gradient(180deg, #ffffff, #eceaff); color: #2a2a4a;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.25);
+    transition: transform 0.12s ease;
+  }
+  .action-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .action-btn .icon { font-size: 18px; margin-right: 8px; }
+  .action-btn .arrow { color: #a0a0c0; font-size: 16px; }
+
+  /* ---------- ENDING / SCOLD ---------- */
+  #endingScreen, #scoldScreen { justify-content: center; text-align: center; }
+  .ending-title { color: #fff; font-size: 24px; font-weight: 900; margin-top: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .ending-quote {
+    color: #ffd76a; font-size: 15px; font-weight: 700; margin-top: 10px;
+    background: rgba(255,255,255,0.08); padding: 10px 16px; border-radius: 12px;
+    max-width: 320px; line-height: 1.5;
+  }
+  .ending-sub { color: #cfcfe8; font-size: 12px; margin-top: 24px; letter-spacing: 1px; }
+  .btn-restart {
+    margin-top: 18px; background: linear-gradient(180deg, #ffd76a, #ff9f43); color: #3a2200;
+    border: none; border-radius: 16px; padding: 14px 30px; font-size: 15px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 8px 16px rgba(0,0,0,0.3);
+  }
+  .btn-restart:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+
+  .fade { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+  @keyframes idleBounce { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
+  @keyframes rageShake {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    20% { transform: rotate(-6deg) translateY(-2px); }
+    40% { transform: rotate(6deg) translateY(0); }
+    60% { transform: rotate(-4deg) translateY(-2px); }
+    80% { transform: rotate(4deg) translateY(0); }
+  }
+
+  /* =====================================================
+     PIXEL HERO — retro JRPG 소년 용사 (CSS로만 구현)
+     ===================================================== */
+  .hero-stage { position: relative; width: 140px; height: 190px; z-index: 5; }
+  .hero-wrap { position: relative; width: 140px; height: 190px; transform-origin: center bottom; }
+  .hero-wrap.scale-title { transform: scale(1.25); }
+  .hero-wrap.scale-main  { transform: scale(0.92); }
+  .hero-wrap.scale-ending{ transform: scale(1.05); }
+  .hero-wrap.scale-scold { transform: scale(1.05); }
+
+  .hero { position: absolute; left: 0; top: 0; width: 140px; height: 190px; animation: idleBounce 2.6s ease-in-out infinite; }
+  .hero.face-angry { animation: rageShake 0.5s ease-in-out infinite; }
+
+  .hero * { position: absolute; }
+
+  /* sword (behind body) */
+  .hero .sword { left: 100px; top: 18px; width: 8px; height: 78px; border-radius: 2px;
+    background: linear-gradient(to bottom, #f4f4f4 0%, #c9c9c9 68%, #ffd76a 68%, #e8b94f 100%);
+    transform: rotate(35deg); transform-origin: bottom center; z-index: 1; }
+  .hero .sword::before { content: ''; position: absolute; left: -6px; top: 66%; width: 20px; height: 4px; background: var(--gold); border-radius: 1px; }
+
+  /* hair back volume */
+  .hero .hair-back { left: 36px; top: 12px; width: 68px; height: 34px; background: var(--hair);
+    border-radius: 50% 50% 25% 25%; z-index: 2; }
+
+  /* head */
+  .hero .head { left: 45px; top: 20px; width: 50px; height: 44px; background: var(--skin);
+    border-radius: 50% 50% 44% 44%; z-index: 3; }
+  .hero .ear { width: 8px; height: 12px; background: var(--skin); border-radius: 50%; z-index: 3; }
+  .hero .ear-l { left: 40px; top: 36px; } .hero .ear-r { left: 92px; top: 36px; }
+
+  /* bangs */
+  .hero .hair-front { left: 43px; top: 15px; width: 54px; height: 18px; background: var(--hair); z-index: 4;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 45%, 84% 100%, 68% 45%, 52% 100%, 36% 45%, 20% 100%, 6% 45%); }
+
+  /* headband */
+  .hero .headband { left: 43px; top: 25px; width: 54px; height: 7px; background: var(--band); z-index: 5; border-radius: 1px; }
+  .hero .ribbon { width: 9px; height: 16px; background: var(--band); z-index: 5; border-radius: 0 0 4px 4px; }
+  .hero .ribbon-l { left: 34px; top: 28px; transform: rotate(18deg); }
+  .hero .ribbon-r { left: 97px; top: 28px; transform: rotate(-18deg); }
+
+  /* eyebrows */
+  .hero .eyebrow { width: 13px; height: 3px; background: var(--hair); border-radius: 1px; z-index: 6; transition: transform .15s; }
+  .hero .eyebrow-l { left: 55px; top: 37px; }
+  .hero .eyebrow-r { left: 74px; top: 37px; }
+
+  /* eyes */
+  .hero .eye { width: 12px; height: 10px; background: #fff; border-radius: 50%; z-index: 6; overflow: hidden; transition: transform .15s, background .15s; }
+  .hero .eye-l { left: 54px; top: 41px; }
+  .hero .eye-r { left: 75px; top: 41px; }
+  .hero .pupil { width: 6px; height: 6px; left: 3px; top: 2px; background: var(--iris); border-radius: 50%; transition: background .15s; }
+
+  /* blush */
+  .hero .blush { width: 8px; height: 5px; background: rgba(255,90,90,0.55); border-radius: 50%; z-index: 6; opacity: 0; }
+  .hero .blush-l { left: 49px; top: 50px; } .hero .blush-r { left: 82px; top: 50px; }
+
+  /* mouth */
+  .hero .mouth { left: 63px; top: 55px; width: 14px; height: 4px; background: var(--mouth); border-radius: 3px; z-index: 6; transition: all .15s; }
+
+  /* sweat drop (mock face) */
+  .hero .sweat { left: 92px; top: 30px; width: 6px; height: 9px; background: #6fc6ff; border-radius: 50% 50% 50% 0; transform: rotate(45deg); z-index: 7; display: none; }
+
+  /* anger mark */
+  .hero .anger-mark { left: 92px; top: 6px; width: 16px; height: 16px; z-index: 8; display: none; }
+  .hero .anger-mark::before, .hero .anger-mark::after {
+    content: ''; position: absolute; left: 6px; top: 0; width: 4px; height: 16px; background: #e02f2f; border-radius: 1px;
+  }
+  .hero .anger-mark::after { transform: rotate(90deg); }
+
+  /* neck */
+  .hero .neck { left: 61px; top: 61px; width: 18px; height: 9px; background: var(--skin); z-index: 3; }
+
+  /* torso */
+  .hero .torso { left: 37px; top: 68px; width: 66px; height: 54px; background: var(--tunic); z-index: 3;
+    clip-path: polygon(22% 0%, 78% 0%, 100% 100%, 0% 100%); }
+  .hero .collar { left: 58px; top: 66px; width: 24px; height: 10px; background: var(--gold); z-index: 4;
+    clip-path: polygon(50% 100%, 0% 0%, 100% 0%); }
+  .hero .belt { left: 37px; top: 108px; width: 66px; height: 8px; background: var(--belt); z-index: 4; }
+  .hero .buckle { left: 27px; top: 0px; width: 8px; height: 8px; background: var(--gold); }
+
+  /* arms crossed */
+  .hero .arm { width: 16px; height: 34px; background: var(--tunic-shadow); border-radius: 6px; z-index: 6; }
+  .hero .arm-l { left: 30px; top: 78px; transform: rotate(30deg); transform-origin: top center; }
+  .hero .arm-r { left: 94px; top: 78px; transform: rotate(-30deg); transform-origin: top center; }
+
+  /* legs */
+  .hero .leg { width: 16px; height: 34px; background: var(--pants); z-index: 2; }
+  .hero .leg-l { left: 46px; top: 120px; } .hero .leg-r { left: 78px; top: 120px; }
+
+  /* boots */
+  .hero .boot { width: 20px; height: 14px; background: var(--boot); z-index: 2;
+    clip-path: polygon(0 0, 100% 0, 100% 68%, 82% 100%, 0 100%); }
+  .hero .boot-l { left: 44px; top: 152px; } .hero .boot-r { left: 76px; top: 152px; }
+
+  /* ---- expressions ---- */
+  /* default: 자신감 있는 표정 */
+  .hero.face-default .eyebrow-l { transform: rotate(-8deg); }
+  .hero.face-default .eyebrow-r { transform: rotate(10deg) translateY(-1px); }
+  .hero.face-default .mouth { transform: rotate(-8deg); width: 12px; }
+
+  /* mock: 킹받는 조롱 표정 (엔딩) */
+  .hero.face-mock .eyebrow-l { transform: rotate(-26deg) translateY(-4px); }
+  .hero.face-mock .eyebrow-r { transform: rotate(8deg); }
+  .hero.face-mock .eye-r { transform: scaleY(0.3); }
+  .hero.face-mock .eye-l { transform: scaleY(0.85); }
+  .hero.face-mock .mouth { transform: rotate(-14deg); width: 17px; height: 6px; border-radius: 2px 10px 10px 2px; }
+  .hero.face-mock .sweat { display: block; }
+
+  /* angry: 이어하기 잔소리 */
+  .hero.face-angry .eyebrow-l { transform: rotate(28deg) translateY(2px); background: var(--hair); }
+  .hero.face-angry .eyebrow-r { transform: rotate(-28deg) translateY(2px); }
+  .hero.face-angry .eye-l, .hero.face-angry .eye-r { background: #ffd9d9; transform: scaleY(0.55); }
+  .hero.face-angry .pupil { background: #d32222; }
+  .hero.face-angry .mouth { width: 20px; height: 12px; border-radius: 4px; background: #4a1510; left: 60px; top: 53px; }
+  .hero.face-angry .mouth::after { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 3px; background: #fff; border-radius: 1px; }
+  .hero.face-angry .blush { opacity: 1; }
+  .hero.face-angry .anger-mark { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="sparkles"></div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="introScreen" onclick="skipIntro()">
+    <div class="intro-text">
+      칼 키우기, 거지 키우기, 슬라임 키우기...<br>
+      더 이상 딴 걸 키울 수 없다!
+      <span class="highlight">나는, 나를 키운다.</span>
+      세상 모든 걸 다 키워봤다. 칼도 키워보고,<br>
+      거지도 키워보고, 슬라임도 키워봤다.<br>
+      그런데 정작 제일 안 키운 게 있었으니...<br>
+      바로 나 자신.<br>
+      이제는 게임 속 캐릭터가 아니라<br>
+      "진짜 나"를 키울 시간이다.
+    </div>
+    <div class="intro-tap">화면을 탭하면 계속</div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="screen" id="titleScreen">
+    <div class="logo-wrap">
+      <div class="logo-title">나 키우기</div>
+      <div class="logo-sub">— 세상 마지막 육성 시뮬레이션 —</div>
+    </div>
+    <div class="char-stage">
+      <div class="char-glow"></div>
+      <div class="hero-stage" id="heroStageTitle"></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startNewGame()">새로하기</button>
+      <button class="btn btn-secondary" onclick="continueGame()">이어하기</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="screen" id="mainScreen">
+    <div class="top-bar">
+      <div class="top-title">나 키우기</div>
+      <div class="day-badge">DAY 1</div>
+    </div>
+
+    <div class="stats-panel">
+      <div class="stat-row">❤️ 체력 <span class="val">10</span></div>
+      <div class="stat-row">🧠 정신력 <span class="val">10</span></div>
+      <div class="stat-row">📚 학습력 <span class="val">10</span></div>
+      <div class="stat-row">💪 운동력 <span class="val">10</span></div>
+      <div class="stat-row">⚖️ 몸무게 <span class="val">70kg</span></div>
+      <div class="stat-row">⚔️ 전투력 <span class="val">10</span></div>
+    </div>
+
+    <div class="main-char-stage">
+      <div class="speech-bubble" id="mainBubble">뭐 좀 키워볼까?</div>
+      <div class="hero-stage" id="heroStageMain"></div>
+    </div>
+
+    <div class="action-list">
+      <button class="action-btn" onclick="goEnding('❤️ 체력','운동하러 가기')">
+        <span><span class="icon">❤️</span>체력 &gt; 운동하러 가기</span><span class="arrow">›</span>
+      </button>
+      <button class="action-btn" onclick="goEnding('📚 학습력','문제집 풀러 가기')">
+        <span><span class="icon">📚</span>학습력 &gt; 문제집 풀러 가기</span><span class="arrow">›</span>
+      </button>
+      <button class="action-btn" onclick="goEnding('🧠 정신력','명상하러 가기')">
+        <span><span class="icon">🧠</span>정신력 &gt; 명상하러 가기</span><span class="arrow">›</span>
+      </button>
+      <button class="action-btn" onclick="goEnding('⚔️ 전투력','훈련하러 가기')">
+        <span><span class="icon">⚔️</span>전투력 &gt; 훈련하러 가기</span><span class="arrow">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ENDING -->
+  <div class="screen" id="endingScreen">
+    <div class="hero-stage" id="heroStageEnding"></div>
+    <div class="ending-title" id="endingTitle">📴 게임 끄고 운동하러 가세요~</div>
+    <div class="ending-quote" id="endingQuote">"운동하는 게 당연한 거 아냐?"</div>
+    <div class="ending-sub">- THE END -</div>
+    <button class="btn-restart" onclick="restart()">처음으로</button>
+  </div>
+
+  <!-- SCOLD (이어하기) -->
+  <div class="screen" id="scoldScreen">
+    <div class="hero-stage" id="heroStageScold"></div>
+    <div class="ending-title">😠 아직도 게임하니?</div>
+    <div class="ending-quote">"저장 같은 거 없어. 그냥 지금 일어나서 운동해."</div>
+    <div class="ending-sub">- 잔소리 끝 -</div>
+    <button class="btn-restart" onclick="restart()">정신 차리기</button>
+  </div>
+
+</div>
+
+<script>
+  const sparkleContainer = document.getElementById('sparkles');
+  for (let i = 0; i < 24; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    const size = Math.random() * 3 + 1.5;
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 2) + 's';
+    sparkleContainer.appendChild(s);
+  }
+
+  // ---- build hero DOM once ----
+  const heroWrap = document.createElement('div');
+  heroWrap.id = 'heroWrap';
+  heroWrap.className = 'hero-wrap';
+  heroWrap.innerHTML = `
+    <div class="hero" id="hero">
+      <div class="sword"></div>
+      <div class="hair-back"></div>
+      <div class="head"></div>
+      <div class="ear ear-l"></div><div class="ear ear-r"></div>
+      <div class="hair-front"></div>
+      <div class="headband"></div>
+      <div class="ribbon ribbon-l"></div><div class="ribbon ribbon-r"></div>
+      <div class="eyebrow eyebrow-l"></div><div class="eyebrow eyebrow-r"></div>
+      <div class="eye eye-l"><div class="pupil"></div></div>
+      <div class="eye eye-r"><div class="pupil"></div></div>
+      <div class="blush blush-l"></div><div class="blush blush-r"></div>
+      <div class="mouth"></div>
+      <div class="sweat"></div>
+      <div class="anger-mark"></div>
+      <div class="neck"></div>
+      <div class="torso"><div class="collar"></div><div class="belt"><div class="buckle"></div></div></div>
+      <div class="arm arm-l"></div><div class="arm arm-r"></div>
+      <div class="leg leg-l"></div><div class="leg leg-r"></div>
+      <div class="boot boot-l"></div><div class="boot boot-r"></div>
+    </div>`;
+
+  function mountHero(stageId, faceClass, scaleClass) {
+    heroWrap.className = 'hero-wrap ' + scaleClass;
+    const hero = heroWrap.querySelector('.hero');
+    hero.className = 'hero ' + faceClass;
+    document.getElementById(stageId).appendChild(heroWrap);
+  }
+
+  const bubbleLines = [
+    "뭐 좀 키워볼까?",
+    "오늘도 열심히 육성!",
+    "체력, 정신력, 다 올려야지",
+    "나는 완벽해질 거야"
+  ];
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    el.classList.remove('fade');
+    void el.offsetWidth;
+    el.classList.add('fade');
+  }
+
+  function startNewGame() {
+    document.getElementById('mainBubble').textContent =
+      bubbleLines[Math.floor(Math.random() * bubbleLines.length)];
+    mountHero('heroStageMain', 'face-default', 'scale-main');
+    showScreen('mainScreen');
+  }
+
+  function continueGame() {
+    mountHero('heroStageScold', 'face-angry', 'scale-scold');
+    showScreen('scoldScreen');
+  }
+
+  const endingMessages = {
+    '❤️ 체력': { title: '📴 게임 끄고 운동하러 가세요~', quote: '"운동하는 게 당연한 거 아냐?"' },
+    '📚 학습력': { title: '📴 게임 끄고 공부하러 가세요~', quote: '"책 사놓고 왜 게임함?"' },
+    '🧠 정신력': { title: '📴 게임 끄고 명상하러 가세요~', quote: '"명상은 방석 위에서 하는 거야, 폰 들고 있지 말고."' },
+    '⚔️ 전투력': { title: '📴 게임 끄고 훈련하러 가세요~', quote: '"훈련은 헬스장에서 하는 거지, 여기서 뭐해?"' }
+  };
+
+  function goEnding(statKey) {
+    const data = endingMessages[statKey] || endingMessages['❤️ 체력'];
+    document.getElementById('endingTitle').textContent = data.title;
+    document.getElementById('endingQuote').textContent = data.quote;
+    mountHero('heroStageEnding', 'face-mock', 'scale-ending');
+    showScreen('endingScreen');
+  }
+
+  function restart() {
+    mountHero('heroStageTitle', 'face-default', 'scale-title');
+    showScreen('titleScreen');
+  }
+
+  // ---- intro sequence (탭하면 다음으로) ----
+  function goToTitleFromIntro() {
+    mountHero('heroStageTitle', 'face-default', 'scale-title');
+    showScreen('titleScreen');
+  }
+
+  function skipIntro() {
+    goToTitleFromIntro();
+  }
+</script>
+</body>
+</html>
