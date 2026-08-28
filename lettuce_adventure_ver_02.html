@@ -63,6 +63,39 @@
       flex-direction: column;
       align-items: flex-end;
     }
+    .top-bar-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .dev-quick-btn {
+      padding: 7px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      transition: transform 0.1s;
+    }
+    .dev-quick-btn:active {
+      transform: scale(0.95);
+    }
+    .dev-stage1 {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #ffffff;
+      border-color: #bae6fd;
+    }
+    .dev-stage2 {
+      background: linear-gradient(135deg, #ea580c, #fb923c);
+      color: #ffffff;
+      border-color: #fed7aa;
+    }
     .menu-toggle-btn {
       background: rgba(0, 0, 0, 0.7);
       color: #ffffff;
@@ -255,15 +288,123 @@
     .start-btn:active {
       transform: scale(0.96);
     }
+
+    /* 2스테이지 컨티뉴 오버레이 */
+    #continue-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 150;
+    }
+    .continue-card {
+      background: rgba(30, 41, 59, 0.95);
+      border: 3px solid #f59e0b;
+      border-radius: 24px;
+      padding: 28px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      animation: popIn 0.2s ease-out;
+      max-width: 480px;
+      width: 90%;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .continue-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffd700;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 10px rgba(245, 158, 11, 0.6);
+    }
+    .continue-sub {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f97316;
+      background: rgba(249, 115, 22, 0.15);
+      padding: 3px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+    .continue-timer-box {
+      font-size: 72px;
+      font-weight: 900;
+      color: #ef4444;
+      font-family: monospace, sans-serif;
+      text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+      animation: pulseNum 1s infinite;
+      line-height: 1;
+      margin: 4px 0;
+    }
+    @keyframes pulseNum {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .continue-desc {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e2e8f0;
+      text-align: center;
+    }
+    .continue-btn-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 6px;
+      width: 100%;
+      justify-content: center;
+    }
+    .continue-btn {
+      padding: 12px 28px;
+      font-size: 17px;
+      font-weight: 800;
+      border-radius: 30px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      transition: transform 0.1s;
+    }
+    .continue-btn:active {
+      transform: scale(0.95);
+    }
+    .btn-yes {
+      background: linear-gradient(135deg, #00c853, #64dd17);
+      color: #ffffff;
+      border-color: #b9f6ca;
+    }
+    .btn-no {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: #ffffff;
+      border-color: #fca5a5;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
     <div id="game-viewport">
-      <!-- 상단 통합 메뉴 버튼 & 드롭다운 -->
+      <!-- 상단 통합 메뉴 버튼 & 개발자 퀵바 -->
       <div class="top-bar">
-        <div class="menu-toggle-btn" id="btn-menu-toggle">⚙️ 메뉴</div>
+        <div class="top-bar-row">
+          <div class="dev-quick-btn dev-stage1" id="btn-quick-stage1">☀️ STAGE 1</div>
+          <div class="dev-quick-btn dev-stage2" id="btn-quick-stage2">🌅 STAGE 2</div>
+          <div class="menu-toggle-btn" id="btn-menu-toggle">⚙️ 메뉴</div>
+        </div>
         <div class="menu-dropdown" id="menu-dropdown">
+          <div class="menu-item-btn dev-stage-btn" id="btn-goto-stage1" style="display: none; background: rgba(56, 189, 248, 0.25); color: #38bdf8; border-color: rgba(56, 189, 248, 0.6);">☀️ STAGE 1 (낮) 이동</div>
+          <div class="menu-item-btn dev-stage-btn" id="btn-goto-stage2" style="display: none; background: rgba(249, 115, 22, 0.25); color: #fb923c; border-color: rgba(249, 115, 22, 0.6);">🌅 STAGE 2 (노을) 이동</div>
+          <div class="menu-item-btn" id="btn-dev-mode">🛠️ 개발자 모드 (무적)</div>
           <div class="menu-item-btn" id="audio-prompt">🔊 BGM ON/OFF</div>
           <div class="menu-item-btn" id="btn-title-return">🏠 타이틀 화면</div>
         </div>
@@ -271,6 +412,24 @@
       
       <canvas id="gameCanvas"></canvas>
       
+      <!-- 1회 한정 CONTINUE? 오버레이 (모든 스테이지 공통) -->
+      <div id="continue-overlay">
+        <div class="continue-card">
+          <div class="continue-title">CONTINUE?</div>
+          <div class="continue-sub">★ 1회 한정 재도전 기회 (Space: 컨티뉴) ★</div>
+          <div class="continue-timer-box" id="continue-timer-num">10</div>
+          <div class="continue-desc" id="continue-desc-text">죽었던 스테이지 처음부터 다시 시작하시겠습니까?</div>
+          <div class="continue-btn-row">
+            <button class="continue-btn btn-yes" id="btn-continue-yes">
+              ⭕ 예 / CONTINUE (Space)
+            </button>
+            <button class="continue-btn btn-no" id="btn-continue-no">
+              ❌ 아니오 / GIVE UP (Esc)
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 타이틀 화면 풍성한 조작 설명 & 게임 시작 패널 -->
       <div id="title-overlay">
         <div class="title-controls-card">
@@ -301,7 +460,7 @@
             <div class="guide-tips-row">
               <span class="tip-badge">🌵 선인장·통나무 피하기</span>
               <span class="tip-badge">🌿 넝쿨 잡고 점프</span>
-              <span class="tip-badge highlight-badge">⭐ 4,000점 달성 시 LIFE +1</span>
+              <span class="tip-badge highlight-badge">⭐ 4천 / 1만2천 / 2만점 달성 시 LIFE +1</span>
             </div>
           </div>
 
@@ -401,6 +560,14 @@
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(now + 0.38);
+    }
+
+    playSplash() {
+      if (this.muted || !this.ctx) return;
+      this.init();
+      // 웅덩이 빠지는 물 튀는 효과음
+      this.playTone(280, 'sine', 0.14, 0.15, true);
+      setTimeout(() => this.playTone(160, 'triangle', 0.22, 0.16, true), 45);
     }
 
     playCactusBreak() {
@@ -503,6 +670,8 @@
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const titleOverlayEl = document.getElementById('title-overlay');
+  const continueOverlayEl = document.getElementById('continue-overlay');
+  const continueTimerNum = document.getElementById('continue-timer-num');
   const menuDropdownEl = document.getElementById('menu-dropdown');
   const menuToggleBtn = document.getElementById('btn-menu-toggle');
 
@@ -540,9 +709,31 @@
     jump: false
   };
 
+  function updateDevMenuUI() {
+    const isDev = !!gameState.godMode;
+    const devStageBtns = document.querySelectorAll('.dev-stage-btn, .dev-quick-btn');
+    devStageBtns.forEach(btn => {
+      btn.style.display = isDev ? 'flex' : 'none';
+    });
+    const devModeBtn = document.getElementById('btn-dev-mode');
+    if (devModeBtn) {
+      devModeBtn.textContent = isDev ? '🛠️ 개발자 모드 [ON]' : '🛠️ 개발자 모드 (무적)';
+    }
+  }
+
+  function goToStageDirectly(stageNum) {
+    menuDropdownEl.classList.remove('show');
+    gameState.inTitle = false;
+    titleOverlayEl.style.display = 'none';
+    loadStage(stageNum);
+    sound.init();
+    if (!sound.bgmPlaying) sound.startBGM();
+  }
+
   // 메뉴 토글 열기/닫기
   menuToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    updateDevMenuUI();
     menuDropdownEl.classList.toggle('show');
   });
 
@@ -551,6 +742,59 @@
     if (!e.target.closest('.top-bar')) {
       menuDropdownEl.classList.remove('show');
     }
+  });
+
+  const continueDescText = document.getElementById('continue-desc-text');
+
+  function triggerGameOver() {
+    if (!gameState.continueUsed && !gameState.greedyGameOver) {
+      // 첫 모든 라이프 소진 시 1회 한정 CONTINUE? 카운트다운 진입 (10초)
+      gameState.inContinueScreen = true;
+      gameState.continueCountdown = 10;
+      gameState.continueAccumulator = 0;
+      if (continueTimerNum) continueTimerNum.textContent = '10';
+      if (continueDescText) {
+        continueDescText.textContent = `[STAGE ${gameState.currentStage}] 처음부터 다시 도전하시겠습니까? (Space: 컨티뉴)`;
+      }
+      if (continueOverlayEl) continueOverlayEl.style.display = 'flex';
+      sound.init();
+      sound.playTone(440, 'triangle', 0.25, 0.15, true);
+    } else {
+      // 두 번째 사망 또는 컨티뉴 소진 시 일반 게임오버 바로 출력
+      if (continueOverlayEl) continueOverlayEl.style.display = 'none';
+      gameState.inContinueScreen = false;
+      gameState.gameOver = true;
+    }
+  }
+
+  function handleContinueYes() {
+    if (gameState.inContinueScreen) {
+      gameState.inContinueScreen = false;
+      gameState.continueUsed = true; // 1회 컨티뉴 사용 완료
+      continueOverlayEl.style.display = 'none';
+      gameState.lives = 3; // 생명 3개로 회복
+      sound.init();
+      sound.playBonus();
+      loadStage(gameState.currentStage); // 죽었던 해당 스테이지 처음부터 다시 시작
+    }
+  }
+
+  function handleContinueNo() {
+    if (gameState.inContinueScreen) {
+      gameState.inContinueScreen = false;
+      continueOverlayEl.style.display = 'none';
+      gameState.gameOver = true; // 일반 게임오버 화면 전환
+      sound.playHurt();
+    }
+  }
+
+  document.getElementById('btn-continue-yes').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleContinueYes();
+  });
+  document.getElementById('btn-continue-no').addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleContinueNo();
   });
 
   function startAdventure() {
@@ -573,10 +817,48 @@
     e.stopPropagation();
     startAdventure();
   });
+  document.getElementById('btn-quick-stage1').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToStageDirectly(1);
+  });
+
+  document.getElementById('btn-quick-stage2').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToStageDirectly(2);
+  });
+
+  document.getElementById('btn-goto-stage1').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToStageDirectly(1);
+  });
+
+  document.getElementById('btn-goto-stage2').addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToStageDirectly(2);
+  });
+
+  document.getElementById('btn-dev-mode').addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuDropdownEl.classList.remove('show');
+    const inputPass = prompt('🛠️ 개발자 모드 비밀번호를 입력하세요:');
+    if (inputPass === '1029') {
+      gameState.godMode = !gameState.godMode;
+      updateDevMenuUI();
+      if (gameState.godMode) {
+        alert('🔓 [개발자 모드 활성화]\n- 무적 상태 적용 (선인장/통나무/벌 무시 & 악어 위 안전 보행)\n- 상단에 [STAGE 1] [STAGE 2] 선택 버튼이 활성화되었습니다!');
+        createParticle(player.x + player.width / 2, player.y, '#ffd700', 30, 5);
+      } else {
+        alert('🔒 [개발자 모드 해제]\n일반 플레이 모드로 전환되었습니다.');
+      }
+    } else if (inputPass !== null) {
+      alert('❌ 비밀번호가 올바르지 않습니다.');
+    }
+  });
+
   document.getElementById('btn-title-return').addEventListener('click', (e) => {
     e.stopPropagation();
     menuDropdownEl.classList.remove('show');
-    resetGame(true);
+    resetGame(true, 1);
   });
 
   // 키보드 이벤트
@@ -595,14 +877,31 @@
       return;
     }
 
+    if (gameState.inContinueScreen) {
+      if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyY') {
+        handleContinueYes();
+        return;
+      }
+      if (e.code === 'Escape' || e.code === 'KeyN') {
+        handleContinueNo();
+        return;
+      }
+      return;
+    }
+
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
       if (!keys.jump) player.jumpRequested = true;
       keys.jump = true;
     }
-    if (e.code === 'KeyR' && (gameState.gameOver || gameState.gameWon)) {
-      resetGame(false);
+    if (gameState.gameWon && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyR')) {
+      advanceStage();
+      return;
+    }
+    if (gameState.gameOver && (e.code === 'KeyR' || e.code === 'Space' || e.code === 'Enter')) {
+      resetGame(true, 1); // 게임오버 시 타이틀 화면으로 돌아감
+      return;
     }
   });
 
@@ -623,11 +922,21 @@
 
   const gameState = {
     inTitle: true,
-    score: 0,
+    currentStage: 1, // 1: 낮 (Stage 1), 2: 저녁 노을 (Stage 2)
+    godMode: false,  // 🛠️ 비밀번호 1029로 켜고 끄는 무적 개발자 모드
+    stageScore: 0,   // 현재 스테이지에서 획득한 점수 (9000점 욕심쟁이 기준)
+    totalScore: 0,   // 스테이지 1부터 누적된 총 점수
     lives: 3,
-    bonusLifeAwarded: false,
+    bonusStage1Awarded: false, // 4,000점 보너스 달성 여부
+    bonusStage2Awarded: false, // 12,000점 보너스 달성 여부
+    bonusStage3Awarded: false, // 20,000점 보너스 달성 여부
     bonusBannerTimer: 0,
+    bonusBannerText: '★ 4,000점 BONUS! LIFE +1 ★',
     greedyGameOver: false,
+    continueUsed: false,         // 2스테이지 1회성 컨티뉴 사용 여부
+    inContinueScreen: false,     // 2스테이지 컨티뉴 카운트다운 화면 상태
+    continueCountdown: 10,       // 10초 카운트다운
+    continueAccumulator: 0,
     logSpawnTimer: 60,
     timeLeft: 120,
     timeAccumulator: 0,
@@ -716,6 +1025,7 @@
         { x: 4500, width: 300 },
         { x: 5700, width: 460 }
       ],
+      puddles: [], // 스테이지 1은 기존 그대로 웅덩이 없음
       platforms: [
         { x: 1450, y: 350, width: 140, height: 20 },
         { x: 1650, y: 280, width: 140, height: 20 },
@@ -724,9 +1034,6 @@
         { x: 5080, y: 260, width: 160, height: 20 },
         { x: 5320, y: 340, width: 160, height: 20 }
       ],
-      // [선인장 장애물 개선]
-      // 점프로 가뿐히 넘을 수 있는 높이(46~52px)와 명확한 폭(42~46px)
-      // broken: 부러짐 여부
       cactuses: [
         { x: 600, y: GROUND_Y - 48, width: 42, height: 48, broken: false, breakAngle: 0 },
         { x: 1300, y: GROUND_Y - 50, width: 44, height: 50, broken: false, breakAngle: 0 },
@@ -735,7 +1042,7 @@
         { x: 4000, y: GROUND_Y - 48, width: 42, height: 48, broken: false, breakAngle: 0 },
         { x: 6400, y: GROUND_Y - 50, width: 44, height: 50, broken: false, breakAngle: 0 }
       ],
-      rollingLogs: [], // 화면 오른쪽 끝에서 동적으로 스폰되어 굴러옴
+      rollingLogs: [],
       ropes: [
         { anchorX: 1060, anchorY: 60, length: 260, angle: 0, speed: 0.035, phase: 0 },
         { anchorX: 2260, anchorY: 50, length: 270, angle: 0, speed: 0.038, phase: Math.PI / 2 },
@@ -768,7 +1075,7 @@
         { x: 1650, y: 220, type: 'bbq', collected: false },
         { x: 1850, y: 290, type: 'chicken', collected: false },
         { x: 2000, y: 390, type: 'grape', collected: false },
-        { x: 2260, y: 300, type: 'heart', collected: false },
+        { x: 2260, y: 300, type: 'bbq', collected: false },
         { x: 2350, y: 290, type: 'ramen', collected: false },
         { x: 2500, y: 390, type: 'strawberry', collected: false },
         { x: 2700, y: 330, type: 'chicken', collected: false },
@@ -787,7 +1094,7 @@
         { x: 4850, y: 280, type: 'chicken', collected: false },
         { x: 4920, y: 280, type: 'strawberry', collected: false },
         { x: 5080, y: 200, type: 'bbq', collected: false },
-        { x: 5120, y: 200, type: 'heart', collected: false },
+        { x: 5120, y: 200, type: 'chicken', collected: false },
         { x: 5320, y: 280, type: 'watermelon', collected: false },
         { x: 5360, y: 280, type: 'banana', collected: false },
         { x: 5600, y: 390, type: 'ramen', collected: false },
@@ -813,21 +1120,128 @@
     }
   }
 
-  function resetGame(keepTitle = false) {
-    gameState.inTitle = keepTitle;
-    gameState.score = 0;
-    gameState.lives = 3;
-    gameState.bonusLifeAwarded = false;
-    gameState.bonusBannerTimer = 0;
-    gameState.greedyGameOver = false;
-    gameState.logSpawnTimer = 60;
+  // ==========================================
+  // [5-2] 2스테이지: 저녁 노을빛 대모험 (난이도 UP & 웅덩이 수렁 기믹)
+  // ==========================================
+  function buildStage2() {
+    levelData = {
+      pits: [
+        { x: 800, width: 280 },
+        { x: 1950, width: 380 },
+        { x: 3200, width: 440 },
+        { x: 4450, width: 380 },
+        { x: 5700, width: 500 }
+      ],
+      // [스테이지 2 전용 기믹] 바닥 웅덩이 (양배추 인형 스타일 수렁)
+      puddles: [
+        { x: 1350, width: 46, height: 12 },
+        { x: 1440, width: 46, height: 12 },
+        { x: 2500, width: 48, height: 12 },
+        { x: 2600, width: 48, height: 12 },
+        { x: 2700, width: 48, height: 12 },
+        { x: 3800, width: 50, height: 12 },
+        { x: 3950, width: 50, height: 12 },
+        { x: 5120, width: 50, height: 12 },
+        { x: 5240, width: 50, height: 12 },
+        { x: 6380, width: 50, height: 12 }
+      ],
+      platforms: [
+        { x: 1320, y: 340, width: 130, height: 20 },
+        { x: 1540, y: 260, width: 130, height: 20 },
+        { x: 1740, y: 340, width: 130, height: 20 },
+        { x: 2680, y: 330, width: 130, height: 20 },
+        { x: 2880, y: 250, width: 130, height: 20 },
+        { x: 4720, y: 330, width: 140, height: 20 },
+        { x: 4950, y: 250, width: 140, height: 20 },
+        { x: 5200, y: 330, width: 140, height: 20 }
+      ],
+      cactuses: [
+        { x: 550, y: GROUND_Y - 48, width: 42, height: 48, broken: false, breakAngle: 0 },
+        { x: 1200, y: GROUND_Y - 50, width: 44, height: 50, broken: false, breakAngle: 0 },
+        { x: 2380, y: GROUND_Y - 48, width: 42, height: 48, broken: false, breakAngle: 0 },
+        { x: 2520, y: GROUND_Y - 52, width: 46, height: 52, broken: false, breakAngle: 0 },
+        { x: 3700, y: GROUND_Y - 50, width: 44, height: 50, broken: false, breakAngle: 0 },
+        { x: 3880, y: GROUND_Y - 48, width: 42, height: 48, broken: false, breakAngle: 0 },
+        { x: 5060, y: GROUND_Y - 52, width: 46, height: 52, broken: false, breakAngle: 0 },
+        { x: 6250, y: GROUND_Y - 50, width: 44, height: 50, broken: false, breakAngle: 0 }
+      ],
+      rollingLogs: [],
+      ropes: [
+        { anchorX: 940, anchorY: 50, length: 270, angle: 0, speed: 0.042, phase: 0 },
+        { anchorX: 2140, anchorY: 50, length: 280, angle: 0, speed: 0.045, phase: Math.PI / 2 },
+        { anchorX: 3420, anchorY: 50, length: 280, angle: 0, speed: 0.044, phase: 0 },
+        { anchorX: 4640, anchorY: 50, length: 270, angle: 0, speed: 0.043, phase: Math.PI / 4 },
+        { anchorX: 5950, anchorY: 40, length: 290, angle: 0, speed: 0.046, phase: Math.PI / 3 }
+      ],
+      crocodiles: [
+        { x: 3280, y: GROUND_Y + 10, width: 68, height: 28, state: 'closed', timer: 0, cycle: 280 },
+        { x: 3420, y: GROUND_Y + 10, width: 68, height: 28, state: 'closed', timer: 120, cycle: 280 },
+        { x: 3560, y: GROUND_Y + 10, width: 68, height: 28, state: 'closed', timer: 60, cycle: 280 },
+        { x: 5800, y: GROUND_Y + 10, width: 68, height: 28, state: 'closed', timer: 80, cycle: 260 }
+      ],
+      bees: [
+        { x: 750, startY: 330, y: 330, range: 65, speed: 0.06, angle: 0, facing: -1 },
+        { x: 1500, startY: 220, y: 220, range: 55, speed: 0.07, angle: 1.5, facing: -1 },
+        { x: 2350, startY: 340, y: 340, range: 75, speed: 0.06, angle: 0.8, facing: -1 },
+        { x: 3650, startY: 320, y: 320, range: 85, speed: 0.07, angle: 2.1, facing: -1 },
+        { x: 4850, startY: 210, y: 210, range: 65, speed: 0.08, angle: 0.4, facing: -1 },
+        { x: 6150, startY: 330, y: 330, range: 75, speed: 0.06, angle: 1.1, facing: -1 }
+      ],
+      items: [
+        { x: 350, y: 390, type: 'bbq', collected: false },
+        { x: 480, y: 390, type: 'ramen', collected: false },
+        { x: 600, y: 330, type: 'chicken', collected: false },
+        { x: 750, y: 390, type: 'watermelon', collected: false },
+        { x: 940, y: 300, type: 'bbq', collected: false },
+        { x: 1200, y: 330, type: 'strawberry', collected: false },
+        { x: 1380, y: 290, type: 'ramen', collected: false },
+        { x: 1540, y: 210, type: 'chicken', collected: false },
+        { x: 1740, y: 290, type: 'bbq', collected: false },
+        { x: 2140, y: 290, type: 'grape', collected: false },
+        { x: 2300, y: 390, type: 'watermelon', collected: false },
+        { x: 2450, y: 330, type: 'bbq', collected: false },
+        { x: 2680, y: 280, type: 'chicken', collected: false },
+        { x: 2880, y: 200, type: 'ramen', collected: false },
+        { x: 3100, y: 390, type: 'banana', collected: false },
+        { x: 3420, y: 290, type: 'bbq', collected: false },
+        { x: 3700, y: 390, type: 'strawberry', collected: false },
+        { x: 3900, y: 390, type: 'chicken', collected: false },
+        { x: 4200, y: 390, type: 'ramen', collected: false },
+        { x: 4640, y: 290, type: 'bbq', collected: false },
+        { x: 4720, y: 280, type: 'grape', collected: false },
+        { x: 4950, y: 200, type: 'chicken', collected: false },
+        { x: 5200, y: 280, type: 'ramen', collected: false },
+        { x: 5500, y: 390, type: 'bbq', collected: false },
+        { x: 5950, y: 290, type: 'watermelon', collected: false },
+        { x: 6200, y: 390, type: 'chicken', collected: false },
+        { x: 6450, y: 390, type: 'strawberry', collected: false },
+        { x: 6650, y: 390, type: 'ramen', collected: false },
+        { x: 6800, y: 390, type: 'bbq', collected: false }
+      ],
+      decorations: []
+    };
+
+    for (let x = 100; x < LEVEL_LENGTH; x += Math.random() * 240 + 140) {
+      levelData.decorations.push({
+        x: x,
+        y: GROUND_Y,
+        type: Math.random() > 0.4 ? 'tree' : 'bush',
+        scale: 0.8 + Math.random() * 0.4
+      });
+    }
+  }
+
+  function loadStage(stageNum) {
+    gameState.currentStage = stageNum;
+    gameState.stageScore = 0; // 새 스테이지 진입 시 스테이지 점수는 0부터 집계
+    gameState.logSpawnTimer = 0;
     gameState.timeLeft = 120;
     gameState.timeAccumulator = 0;
     gameState.gameOver = false;
     gameState.gameWon = false;
     gameState.particles = [];
     gameState.confetti = [];
-    
+
     player.x = 100;
     player.y = 350;
     player.vx = 0;
@@ -835,13 +1249,34 @@
     player.isGrounded = false;
     player.isHanging = false;
     player.hangingRope = null;
-    player.invincibleTimer = 0;
+    player.invincibleTimer = 50;
 
+    if (stageNum === 2) {
+      buildStage2();
+    } else {
+      buildStage1();
+    }
+  }
+
+  function resetGame(keepTitle = false, stageNum = 1) {
+    gameState.inTitle = keepTitle;
+    gameState.stageScore = 0;
+    gameState.totalScore = 0; // 게임오버/타이틀 복귀 시 총점수 0부터 리셋
+    gameState.lives = 3;
+    gameState.bonusStage1Awarded = false;
+    gameState.bonusStage2Awarded = false;
+    gameState.bonusStage3Awarded = false;
+    gameState.bonusBannerTimer = 0;
+    gameState.greedyGameOver = false;
+    gameState.continueUsed = false;
+    gameState.inContinueScreen = false;
+    continueOverlayEl.style.display = 'none';
+    
     if (keepTitle) {
       titleOverlayEl.style.display = 'flex';
     }
 
-    buildStage1();
+    loadStage(stageNum);
   }
 
   function findSafeGroundX(targetX) {
@@ -855,6 +1290,15 @@
           safeX = pit.x - 75; // 낭떠러지 앞 안전 지면으로 이동
           inDanger = true;
           break;
+        }
+      }
+      if (levelData.puddles) {
+        for (const pud of levelData.puddles) {
+          if (safeX >= pud.x - 45 && safeX <= pud.x + pud.width + 25) {
+            safeX = pud.x - 60; // 웅덩이 앞 안전 지면으로 이동
+            inDanger = true;
+            break;
+          }
         }
       }
       if (!inDanger) break;
@@ -889,13 +1333,30 @@
   function update() {
     if (gameState.inTitle || gameState.gameOver || gameState.gameWon) return;
 
+    // 2스테이지 컨티뉴 카운트다운 (10초에서 1초씩 감소)
+    if (gameState.inContinueScreen) {
+      gameState.continueAccumulator += 1 / 60;
+      if (gameState.continueAccumulator >= 1) {
+        gameState.continueCountdown--;
+        gameState.continueAccumulator -= 1;
+        continueTimerNum.textContent = String(Math.max(0, gameState.continueCountdown));
+        if (gameState.continueCountdown > 0) {
+          sound.playTone(550, 'sine', 0.08, 0.1, true); // 째깍 비프음
+        } else {
+          // 카운트다운 0 도달 시 컨티뉴 불가 -> 게임오버
+          handleContinueNo();
+        }
+      }
+      return;
+    }
+
     gameState.timeAccumulator += 1 / 60;
     if (gameState.timeAccumulator >= 1) {
       gameState.timeLeft--;
       gameState.timeAccumulator -= 1;
       if (gameState.timeLeft <= 0) {
         sound.playHurt();
-        gameState.gameOver = true;
+        triggerGameOver();
       }
     }
 
@@ -993,12 +1454,13 @@
       });
 
       levelData.crocodiles.forEach(croc => {
-        if (croc.state === 'closed') {
+        // 개발자 모드일 때는 악어 입이 열려있든 닫혀있든 항상 안전한 발판으로 위를 건널 수 있음!
+        if (croc.state === 'closed' || gameState.godMode) {
           if (
             player.x + player.width > croc.x &&
             player.x < croc.x + croc.width &&
             feetY >= croc.y &&
-            feetY - player.vy <= croc.y + 12 &&
+            feetY - player.vy <= croc.y + 14 &&
             player.vy >= 0
           ) {
             player.y = croc.y - player.height;
@@ -1010,14 +1472,43 @@
 
       player.isGrounded = onGround;
 
+      // [스테이지 2 전용 기믹] 바닥 웅덩이(수렁) 충돌 & 가라앉음 판정
+      if (levelData.puddles && levelData.puddles.length > 0) {
+        if (player.isGrounded && player.invincibleTimer === 0 && !player.isHanging && !gameState.godMode) {
+          const pCenterX = player.x + player.width / 2;
+          const feetY = player.y + player.height;
+          
+          for (const pud of levelData.puddles) {
+            if (pCenterX >= pud.x + 4 && pCenterX <= pud.x + pud.width - 4 && Math.abs(feetY - GROUND_Y) < 6) {
+              sound.playSplash();
+              sound.playHurt();
+              createParticle(pCenterX, GROUND_Y + 4, '#c026d3', 18, 4);
+              createParticle(pCenterX, GROUND_Y + 4, '#f59e0b', 12, 3);
+              gameState.lives--;
+              if (gameState.lives <= 0) {
+                triggerGameOver();
+              } else {
+                respawnPlayer();
+              }
+              break;
+            }
+          }
+        }
+      }
+
       if (player.y > V_HEIGHT + 30) {
-        sound.playHurt();
-        gameState.lives--;
-        createParticle(player.x + player.width/2, V_HEIGHT - 30, '#53bbf4', 15, 5);
-        if (gameState.lives <= 0) {
-          gameState.gameOver = true;
-        } else {
+        if (gameState.godMode) {
+          // 무적 개발자 모드: 라이프 차감 없이 안전 지면으로 즉시 복귀
           respawnPlayer();
+        } else {
+          sound.playHurt();
+          gameState.lives--;
+          createParticle(player.x + player.width/2, V_HEIGHT - 30, '#53bbf4', 15, 5);
+          if (gameState.lives <= 0) {
+            triggerGameOver();
+          } else {
+            respawnPlayer();
+          }
         }
       }
 
@@ -1043,18 +1534,25 @@
     });
 
     // 6) 통나무 생성: 무조건 화면 오른쪽 끝에서 생성되어 왼쪽으로 굴러옴
-    if (player.x > 300 && player.x < LEVEL_LENGTH - 600) {
+    if (player.x > 250 && player.x < LEVEL_LENGTH - 550) {
       gameState.logSpawnTimer++;
-      if (gameState.logSpawnTimer >= 140 + Math.random() * 70) { // 약 2.3~3.5초 주기
+      // Stage 2는 스폰 주기가 훨씬 빨라짐 (Stage 1: 130~200프레임, Stage 2: 70~120프레임)
+      const spawnInterval = (gameState.currentStage === 2) ? (70 + Math.random() * 50) : (130 + Math.random() * 70);
+      if (gameState.logSpawnTimer >= spawnInterval) {
         gameState.logSpawnTimer = 0;
         const logRand = Math.random();
-        const isFire = logRand < 0.30; // 약 30% 확률로 불타는 통나무 출현
-        const isBouncing = !isFire && (logRand < 0.70); // 불타지 않는 통나무 중 통통 튀는 통나무
+        // Stage 2는 불타는 통나무 출현율 45% (Stage 1은 30%)
+        const fireThreshold = (gameState.currentStage === 2) ? 0.45 : 0.30;
+        const isFire = logRand < fireThreshold;
+        const isBouncing = !isFire && (logRand < 0.75);
         const radius = isFire ? 19 : 18;
-        // 불타는 통나무는 일반 통나무(2.4)보다 확실히 더 빠른 속도(3.8 ~ 4.4)로 돌진!
-        const speed = isFire ? (3.8 + Math.random() * 0.6) : (2.4 + Math.random() * 0.6);
+        // 속도: Stage 2 불타는 통나무는 4.4~5.0 속도로 쾌속 질주!
+        const speed = isFire 
+          ? ((gameState.currentStage === 2 ? 4.4 : 3.8) + Math.random() * 0.6)
+          : ((gameState.currentStage === 2 ? 2.8 : 2.4) + Math.random() * 0.6);
+
         levelData.rollingLogs.push({
-          x: gameState.cameraX + V_WIDTH + 35, // 화면 오른쪽 끝 바깥에서 스폰
+          x: gameState.cameraX + V_WIDTH + 35, // 무조건 화면 오른쪽 끝 바깥에서 생성
           y: GROUND_Y - radius,
           radius: radius,
           vx: -speed, // 왼쪽으로 이동
@@ -1062,7 +1560,7 @@
           bounce: isBouncing,
           isFire: isFire,
           rot: 0,
-          rotSpeed: -(isFire ? 0.12 : 0.07)
+          rotSpeed: -(isFire ? 0.14 : 0.08)
         });
       }
     }
@@ -1149,7 +1647,8 @@
       croc.timer = (croc.timer + 1) % croc.cycle;
       croc.state = (croc.timer < croc.cycle * 0.70) ? 'closed' : 'open';
 
-      if (croc.state === 'open' && player.invincibleTimer === 0 && !player.isHanging) {
+      // 개발자 모드일 때는 악어 입에 닿아도 데미지 전혀 없음!
+      if (croc.state === 'open' && player.invincibleTimer === 0 && !player.isHanging && !gameState.godMode) {
         if (
           player.x + player.width > croc.x + 8 &&
           player.x < croc.x + croc.width - 8 &&
@@ -1161,15 +1660,22 @@
       }
     });
 
+    // 9) 벌 비행 & 쏘임 충돌 판정 (닿으면 Life 1 감소 & 피격)
     levelData.bees.forEach(bee => {
       bee.angle += bee.speed;
       bee.y = bee.startY + Math.sin(bee.angle) * bee.range;
       bee.x += Math.cos(bee.angle * 0.7) * 1.2;
 
+      // 벌 충돌 판정
       if (player.invincibleTimer === 0 && !player.isHanging) {
         const dx = (player.x + player.width / 2) - bee.x;
         const dy = (player.y + player.height / 2) - bee.y;
-        if (Math.hypot(dx, dy) < 24) {
+        if (Math.hypot(dx, dy) < 26) {
+          if (!gameState.godMode) {
+            // 따끔한 벌침 피격 이펙트 (노란색/주황색 번개 스파크 파티클)
+            createParticle(bee.x, bee.y, '#ffd600', 10, 3.5);
+            createParticle(bee.x, bee.y, '#ff3d00', 8, 3.0);
+          }
           hitPlayer();
         }
       }
@@ -1217,21 +1723,42 @@
           }
 
           if (addedScore > 0) {
-            gameState.score += addedScore;
+            gameState.stageScore += addedScore;
+            gameState.totalScore += addedScore;
             
-            // 최초 4000점 돌파 시 BONUS 획득 (LIFE +1)
-            if (!gameState.bonusLifeAwarded && gameState.score >= 4000) {
-              gameState.bonusLifeAwarded = true;
+            // 1차 4,000점 / 2차 12,000점 / 3차 20,000점 보너스 (+1 Life)
+            if (!gameState.bonusStage1Awarded && gameState.totalScore >= 4000) {
+              gameState.bonusStage1Awarded = true;
               gameState.lives = Math.min(5, gameState.lives + 1);
+              gameState.bonusBannerText = '★ 4,000점 달성 BONUS! LIFE +1 ★';
               gameState.bonusBannerTimer = 160;
               sound.playBonus();
               spawnConfetti(90);
               createParticle(player.x + player.width / 2, player.y - 20, '#ffd700', 30, 5);
               createParticle(player.x + player.width / 2, player.y - 20, '#ff4757', 20, 4);
+            } else if (!gameState.bonusStage2Awarded && gameState.totalScore >= 12000) {
+              gameState.bonusStage2Awarded = true;
+              gameState.lives = Math.min(5, gameState.lives + 1);
+              gameState.bonusBannerText = '★ 12,000점 달성 BONUS! LIFE +1 ★';
+              gameState.bonusBannerTimer = 160;
+              sound.playBonus();
+              spawnConfetti(110);
+              createParticle(player.x + player.width / 2, player.y - 20, '#ffd700', 35, 5.5);
+              createParticle(player.x + player.width / 2, player.y - 20, '#00e5ff', 20, 4);
+            } else if (!gameState.bonusStage3Awarded && gameState.totalScore >= 20000) {
+              gameState.bonusStage3Awarded = true;
+              gameState.lives = Math.min(5, gameState.lives + 1);
+              gameState.bonusBannerText = '★ 20,000점 달성 BONUS! LIFE +1 ★';
+              gameState.bonusBannerTimer = 160;
+              sound.playBonus();
+              spawnConfetti(130);
+              createParticle(player.x + player.width / 2, player.y - 20, '#ffd700', 40, 6);
+              createParticle(player.x + player.width / 2, player.y - 20, '#ff1744', 25, 4.5);
             }
 
-            // 9000점 초과 시 "9000점이 넘다니 욕심쟁이!" 특별 게임오버 발동
-            if (gameState.score >= 9000 && !gameState.greedyGameOver) {
+            // 9000점 초과 시 "9000점이 넘다니 욕심쟁이!" 특별 게임오버 발동 (해당 스테이지 점수 stageScore 기준!)
+            const greedyThreshold = gameState.godMode ? 999999999 : 9000;
+            if (gameState.stageScore >= greedyThreshold && !gameState.greedyGameOver) {
               gameState.greedyGameOver = true;
               gameState.gameOver = true;
               sound.playGreedySound();
@@ -1272,6 +1799,11 @@
   }
 
   function hitPlayer() {
+    if (gameState.godMode) {
+      // 무적 개발자 모드: 피격 무시 & 황금빛 스파크
+      createParticle(player.x + player.width / 2, player.y + player.height / 2, '#ffd700', 6, 2.5);
+      return;
+    }
     sound.playHurt();
     gameState.lives--;
     player.vy = -6.5;
@@ -1279,7 +1811,7 @@
     player.invincibleTimer = 75;
     createParticle(player.x + player.width/2, player.y + player.height/2, '#ff4d4d', 14);
     if (gameState.lives <= 0) {
-      gameState.gameOver = true;
+      triggerGameOver();
     }
   }
 
@@ -1291,22 +1823,46 @@
 
     const camX = gameState.cameraX;
 
-    // 1) 하늘 배경
+    const isSunset = (gameState.currentStage === 2);
+
+    // 1) 하늘 배경 (Stage 1: 청명한 낮 / Stage 2: 아름다운 저녁 노을)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, V_HEIGHT);
-    skyGrad.addColorStop(0, '#56b4f7');
-    skyGrad.addColorStop(0.7, '#a6e3e9');
-    skyGrad.addColorStop(1, '#dff9fb');
+    if (isSunset) {
+      skyGrad.addColorStop(0, '#2e1065');   // 짙은 황혼 보라
+      skyGrad.addColorStop(0.35, '#831843'); // 자줏빛 노을
+      skyGrad.addColorStop(0.68, '#ea580c'); // 불타는 오렌지빛
+      skyGrad.addColorStop(1, '#fbbf24');    // 황금빛 지평선
+    } else {
+      skyGrad.addColorStop(0, '#56b4f7');
+      skyGrad.addColorStop(0.7, '#a6e3e9');
+      skyGrad.addColorStop(1, '#dff9fb');
+    }
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
 
-    // 태양
-    ctx.fillStyle = '#fff48f';
-    ctx.beginPath();
-    ctx.arc(V_WIDTH - 120, 80, 42, 0, Math.PI * 2);
-    ctx.fill();
+    // 태양 / 저녁 노을 석양
+    if (isSunset) {
+      ctx.fillStyle = 'rgba(255, 109, 0, 0.25)';
+      ctx.beginPath();
+      ctx.arc(V_WIDTH - 140, 140, 68, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ff6d00';
+      ctx.beginPath();
+      ctx.arc(V_WIDTH - 140, 140, 48, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffb74d';
+      ctx.beginPath();
+      ctx.arc(V_WIDTH - 140, 140, 38, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#fff48f';
+      ctx.beginPath();
+      ctx.arc(V_WIDTH - 120, 80, 42, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 먼 산
-    ctx.fillStyle = '#8bc34a';
+    ctx.fillStyle = isSunset ? '#4c1d95' : '#8bc34a';
     ctx.beginPath();
     ctx.moveTo(0, GROUND_Y);
     for (let x = 0; x <= V_WIDTH; x += 160) {
@@ -1317,7 +1873,7 @@
     ctx.fill();
 
     // 먼 숲
-    ctx.fillStyle = '#689f38';
+    ctx.fillStyle = isSunset ? '#312e81' : '#689f38';
     ctx.beginPath();
     ctx.moveTo(0, GROUND_Y);
     for (let x = 0; x <= V_WIDTH; x += 100) {
@@ -1327,21 +1883,21 @@
     ctx.lineTo(V_WIDTH, GROUND_Y);
     ctx.fill();
 
-    // 2) 장식용 나무/수풀 (부드러운 파스텔 톤)
+    // 2) 장식용 나무/수풀
     levelData.decorations.forEach(d => {
       const screenX = d.x - camX;
       if (screenX > -150 && screenX < V_WIDTH + 150) {
         if (d.type === 'tree') {
-          ctx.fillStyle = '#8d6e63';
+          ctx.fillStyle = isSunset ? '#271810' : '#8d6e63';
           ctx.fillRect(screenX - 12 * d.scale, d.y - 140 * d.scale, 24 * d.scale, 140 * d.scale);
-          ctx.fillStyle = '#4caf50';
+          ctx.fillStyle = isSunset ? '#7c2d12' : '#4caf50';
           ctx.beginPath();
           ctx.arc(screenX, d.y - 140 * d.scale, 45 * d.scale, 0, Math.PI * 2);
           ctx.arc(screenX - 25 * d.scale, d.y - 120 * d.scale, 35 * d.scale, 0, Math.PI * 2);
           ctx.arc(screenX + 25 * d.scale, d.y - 120 * d.scale, 35 * d.scale, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.fillStyle = '#81c784';
+          ctx.fillStyle = isSunset ? '#9a3412' : '#81c784';
           ctx.beginPath();
           ctx.arc(screenX, d.y - 15, 20 * d.scale, 0, Math.PI * 2);
           ctx.arc(screenX - 15, d.y - 10, 16 * d.scale, 0, Math.PI * 2);
@@ -1352,32 +1908,73 @@
     });
 
     // 3) 지면 & 강
-    ctx.fillStyle = '#5d4037';
+    ctx.fillStyle = isSunset ? '#372213' : '#5d4037';
     ctx.fillRect(0, GROUND_Y, V_WIDTH, V_HEIGHT - GROUND_Y);
-    ctx.fillStyle = '#7cb342';
+    ctx.fillStyle = isSunset ? '#c2410c' : '#7cb342';
     ctx.fillRect(0, GROUND_Y, V_WIDTH, 18);
 
     levelData.pits.forEach(pit => {
       const pScreenX = pit.x - camX;
       if (pScreenX + pit.width > 0 && pScreenX < V_WIDTH) {
         const waterGrad = ctx.createLinearGradient(0, GROUND_Y, 0, V_HEIGHT);
-        waterGrad.addColorStop(0, '#29b6f6');
-        waterGrad.addColorStop(0.3, '#0288d1');
-        waterGrad.addColorStop(1, '#01579b');
+        if (isSunset) {
+          waterGrad.addColorStop(0, '#701a75');
+          waterGrad.addColorStop(0.35, '#c2410c');
+          waterGrad.addColorStop(1, '#450a0a');
+        } else {
+          waterGrad.addColorStop(0, '#29b6f6');
+          waterGrad.addColorStop(0.3, '#0288d1');
+          waterGrad.addColorStop(1, '#01579b');
+        }
         ctx.fillStyle = waterGrad;
         ctx.fillRect(pScreenX, GROUND_Y, pit.width, V_HEIGHT - GROUND_Y);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillStyle = isSunset ? 'rgba(254, 240, 138, 0.45)' : 'rgba(255, 255, 255, 0.4)';
         for (let i = 0; i < pit.width; i += 30) {
           const waveY = GROUND_Y + Math.sin((Date.now() * 0.006) + (i * 0.2)) * 4 + 4;
           ctx.fillRect(pScreenX + i, waveY, 16, 3);
         }
 
-        ctx.fillStyle = '#3e2723';
+        ctx.fillStyle = isSunset ? '#1c1008' : '#3e2723';
         ctx.fillRect(pScreenX - 4, GROUND_Y, 6, 40);
         ctx.fillRect(pScreenX + pit.width - 2, GROUND_Y, 6, 40);
       }
     });
+
+    // 3.5) 바닥 웅덩이 (Puddles / Water Sinkholes - 스테이지 2 전용)
+    if (levelData.puddles) {
+      levelData.puddles.forEach(pud => {
+        const scrX = pud.x - camX;
+        if (scrX + pud.width > -20 && scrX < V_WIDTH + 20) {
+          // 웅덩이 깊은 테두리
+          ctx.fillStyle = isSunset ? '#1a0521' : '#0c2340';
+          ctx.beginPath();
+          ctx.ellipse(scrX + pud.width / 2, GROUND_Y + 4, pud.width / 2 + 2, pud.height / 2 + 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 웅덩이 물
+          const pudGrad = ctx.createLinearGradient(scrX, GROUND_Y, scrX + pud.width, GROUND_Y + pud.height);
+          if (isSunset) {
+            pudGrad.addColorStop(0, '#3b0764');
+            pudGrad.addColorStop(0.5, '#7e22ce');
+            pudGrad.addColorStop(1, '#c026d3');
+          } else {
+            pudGrad.addColorStop(0, '#0288d1');
+            pudGrad.addColorStop(1, '#29b6f6');
+          }
+          ctx.fillStyle = pudGrad;
+          ctx.beginPath();
+          ctx.ellipse(scrX + pud.width / 2, GROUND_Y + 4, pud.width / 2, pud.height / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 수면 반사 하이라이트
+          ctx.fillStyle = isSunset ? 'rgba(254, 240, 138, 0.65)' : 'rgba(255, 255, 255, 0.7)';
+          ctx.beginPath();
+          ctx.ellipse(scrX + pud.width / 2 - 4, GROUND_Y + 2, pud.width * 0.25, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
 
     // 4) 발판
     levelData.platforms.forEach(plat => {
@@ -1867,21 +2464,6 @@
             ctx.arc(14, 0, 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
-
-          } else if (item.type === 'heart') {
-            // ❤️ 생명 하트 푸딩 케이크
-            ctx.fillStyle = '#ff2d55';
-            ctx.beginPath();
-            ctx.arc(-5, -4, 6, 0, Math.PI * 2);
-            ctx.arc(5, -4, 6, 0, Math.PI * 2);
-            ctx.moveTo(-11, -2);
-            ctx.lineTo(0, 11);
-            ctx.lineTo(11, -2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(-5, -5, 2, 0, Math.PI * 2);
-            ctx.fill();
           }
 
           ctx.restore();
@@ -2044,6 +2626,32 @@
     // 15) 화면 오버레이
     if (gameState.inTitle) {
       renderTitleScreen();
+    } else if (gameState.inContinueScreen) {
+      // 캔버스 자체 컨티뉴 레트로 배경 & 카운트다운 렌더링
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 42px "Impact", "Arial Black", sans-serif';
+      ctx.fillText('CONTINUE?', V_WIDTH / 2, V_HEIGHT / 2 - 120);
+
+      ctx.fillStyle = '#f97316';
+      ctx.font = 'bold 16px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(`★ 1회 한정 재도전 기회 [STAGE ${gameState.currentStage}] ★`, V_WIDTH / 2, V_HEIGHT / 2 - 80);
+
+      // 큼직한 카운트다운 숫자
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '900 80px monospace, sans-serif';
+      ctx.fillText(String(Math.max(0, gameState.continueCountdown)), V_WIDTH / 2, V_HEIGHT / 2);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 18px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('스페이스바를 누르면 이 스테이지를 처음부터 다시 시작합니다!', V_WIDTH / 2, V_HEIGHT / 2 + 55);
+
+      ctx.fillStyle = '#22c55e';
+      ctx.font = '900 20px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('⭕ [Space] 또는 [Enter] 키를 눌러 CONTINUE', V_WIDTH / 2, V_HEIGHT / 2 + 100);
     } else if (gameState.gameOver) {
       renderGameOver();
     } else if (gameState.gameWon) {
@@ -2052,13 +2660,14 @@
   }
 
   // ==========================================
-  // [8] 캐릭터 렌더링 (자연스러운 앞/뒤 인체 비례 & 귀여운 양상추 소녀)
+  // [8] 캐릭터 렌더링 (3/4 정측면 뷰 - 사랑스러운 양상추 요정 인형)
   // ==========================================
   function drawLettuceGirl(ctx, x, y, scale = 1.0, animFrame = 0, isGrounded = true, isHanging = false, facing = 'right', timer = 0) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(scale, scale);
-    if (facing === 'left') ctx.scale(-1, 1);
+    // 좌우 반전 적용: 오른쪽 이동 시 정면-전방을 향하도록 미러링
+    if (facing === 'right') ctx.scale(-1, 1);
 
     let frontLegAngle = 0;
     let backLegAngle = 0;
@@ -2067,110 +2676,120 @@
     let bodyBob = 0;
 
     if (isHanging) {
-      frontLegAngle = 0.2;
-      backLegAngle = 0.3;
-      frontArmAngle = -2.2;
-      backArmAngle = -2.2;
+      frontLegAngle = 0.25;
+      backLegAngle = 0.35;
+      frontArmAngle = -2.3;
+      backArmAngle = -2.1;
+      bodyBob = -3;
     } else if (!isGrounded) {
-      frontLegAngle = -0.4;
+      frontLegAngle = -0.5;
       backLegAngle = 0.5;
-      frontArmAngle = -1.2;
-      backArmAngle = 0.8;
+      frontArmAngle = -1.4;
+      backArmAngle = 0.9;
       bodyBob = -2;
     } else if (animFrame > 0 || timer > 0) {
-      const walkCycle = Math.sin(timer * 0.22);
-      frontLegAngle = walkCycle * 0.65;
-      backLegAngle = -walkCycle * 0.65;
-      frontArmAngle = -walkCycle * 0.7;
-      backArmAngle = walkCycle * 0.7;
-      bodyBob = Math.abs(Math.sin(timer * 0.22)) * 3;
+      const walkCycle = Math.sin(timer * 0.24);
+      frontLegAngle = walkCycle * 0.7;
+      backLegAngle = -walkCycle * 0.7;
+      frontArmAngle = -walkCycle * 0.75;
+      backArmAngle = walkCycle * 0.75;
+      bodyBob = Math.abs(Math.sin(timer * 0.24)) * 3.5;
     }
 
     ctx.translate(0, -bodyBob);
 
-    // [Layer 1] 뒤쪽 팔 (Back Arm)
+    // [1] 뒤쪽 양상추 트윈테일 (Back Lettuce Bun)
+    ctx.fillStyle = '#2e7d32';
+    ctx.beginPath();
+    ctx.arc(-15, -16, 11, 0, Math.PI * 2);
+    ctx.arc(-18, -9, 9, 0, Math.PI * 2);
+    ctx.arc(-12, -23, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#43a047';
+    ctx.beginPath();
+    ctx.arc(-14, -15, 9, 0, Math.PI * 2);
+    ctx.arc(-16, -9, 7.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // [2] 뒤쪽 팔 (Back Arm)
     ctx.save();
-    ctx.translate(-3, 3);
+    ctx.translate(-7, 3);
     ctx.rotate(backArmAngle);
     ctx.fillStyle = '#fbc02d';
     ctx.beginPath();
     ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#e0a96d';
+    ctx.strokeStyle = '#ffe0b2';
     ctx.lineWidth = 5.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, 13);
     ctx.stroke();
-    ctx.fillStyle = '#e0a96d';
+    ctx.fillStyle = '#ffe0b2';
     ctx.beginPath();
     ctx.arc(0, 13, 3.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // [Layer 2] 뒤쪽 다리 (Back Leg)
+    // [3] 뒤쪽 다리 (Back Leg)
     ctx.save();
-    ctx.translate(-2, 16);
+    ctx.translate(-4, 16);
     ctx.rotate(backLegAngle);
     ctx.fillStyle = '#1565c0';
     ctx.fillRect(-3.5, 0, 7, 12);
     ctx.fillStyle = '#f57f17';
     ctx.beginPath();
-    ctx.ellipse(3, 13, 6.5, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(3, 13, 7, 5, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-2, 16, 10, 2.5);
     ctx.restore();
 
-    // [Layer 3] 뒤통수 & 목덜미 풍성한 양상추 헤어 (목 뒤 피부가 노출되어 목이 꺾여 보이지 않도록 완벽 커버)
-    ctx.fillStyle = '#388e3c';
-    ctx.beginPath();
-    ctx.arc(-10, -14, 11, 0, Math.PI * 2);
-    ctx.arc(-11, -5, 9, 0, Math.PI * 2);
-    ctx.arc(-5, -2, 8, 0, Math.PI * 2);
-    ctx.arc(-11, -22, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    // [Layer 4] 몸통 (노란 셔츠 & 앞가슴 청색 멜빵바지)
+    // [4] 몸통 (3/4 뷰 노란 셔츠 & 파란 멜빵바지)
+    // 노란 셔츠
     ctx.fillStyle = '#fbc02d';
     ctx.beginPath();
-    ctx.roundRect(-6, 0, 14, 16, 4);
+    ctx.roundRect(-8, 0, 16, 16, 4);
     ctx.fill();
 
-    // 멜빵바지 본체 (앞쪽 +x가 앞가슴과 배, 뒤쪽 -x가 등과 엉덩이)
+    // 청색 멜빵바지
     ctx.fillStyle = '#1e88e5';
     ctx.beginPath();
-    ctx.moveTo(-6, 7);
-    ctx.lineTo(0, 4);
-    ctx.lineTo(6, 4);
-    ctx.quadraticCurveTo(8.5, 12, 6, 20);
-    ctx.lineTo(-6, 20);
-    ctx.quadraticCurveTo(-8, 13, -6, 7);
+    ctx.moveTo(-8, 6);
+    ctx.lineTo(8, 6);
+    ctx.quadraticCurveTo(10, 13, 8, 20);
+    ctx.lineTo(-8, 20);
+    ctx.quadraticCurveTo(-10, 13, -8, 6);
     ctx.fill();
 
-    // 앞쪽 멜빵 끈
+    // 좌우 멜빵 끈 (3/4 뷰)
     ctx.fillStyle = '#1565c0';
-    ctx.fillRect(1, 0, 3.5, 12);
+    ctx.fillRect(-6, 0, 3.5, 12); // 뒤쪽 끈
+    ctx.fillRect(2.5, 0, 3.5, 12); // 앞쪽 끈
 
-    // 앞가슴 붉은 단추
+    // 붉은 단추
     ctx.fillStyle = '#e53935';
     ctx.beginPath();
-    ctx.arc(2.8, 6.5, 2.2, 0, Math.PI * 2);
+    ctx.arc(-4.2, 6.5, 2, 0, Math.PI * 2);
+    ctx.arc(4.2, 6.5, 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(2.2, 5.8, 0.7, 0, Math.PI * 2);
+    ctx.arc(-4.7, 5.9, 0.7, 0, Math.PI * 2);
+    ctx.arc(3.7, 5.9, 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    // 앞주머니 스티치
+    // 앞주머니
     ctx.strokeStyle = '#1565c0';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.roundRect(0, 10, 5.5, 5.5, 2);
+    ctx.roundRect(-3, 10, 6, 6, 2);
     ctx.stroke();
 
-    // [Layer 5] 앞쪽 다리 (Front Leg)
+    // [5] 앞쪽 다리 (Front Leg)
     ctx.save();
-    ctx.translate(3, 16);
+    ctx.translate(4, 16);
     ctx.rotate(frontLegAngle);
     ctx.fillStyle = '#1976d2';
     ctx.fillRect(-3.5, 0, 7, 12);
@@ -2182,88 +2801,123 @@
     ctx.fillRect(-2, 16, 11, 2.5);
     ctx.restore();
 
-    // [Layer 6] 자연스러운 목과 볼 실루엣 (Face & Neck)
-    ctx.fillStyle = '#ffe0b2';
-    // 목
+    // [6] 머리 베이스 - 풍성한 양상추 헤어 (Main Lettuce Head)
+    ctx.fillStyle = '#388e3c';
     ctx.beginPath();
-    ctx.fillRect(-1, -4, 6, 6);
-    // 통통하고 사랑스러운 앞얼굴 실루엣
-    ctx.beginPath();
-    ctx.moveTo(-2, -14);
-    ctx.lineTo(5, -15);
-    ctx.quadraticCurveTo(8, -12, 10, -9);
-    ctx.quadraticCurveTo(11, -5, 7, -2);
-    ctx.quadraticCurveTo(5, 1, 0, 0);
-    ctx.lineTo(-2, -6);
-    ctx.closePath();
+    ctx.arc(0, -14, 17, 0, Math.PI * 2);
+    ctx.arc(-10, -18, 12, 0, Math.PI * 2);
+    ctx.arc(10, -18, 12, 0, Math.PI * 2);
+    ctx.arc(0, -25, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // [Layer 7] 눈, 코, 볼터치, 미소 입
-    ctx.fillStyle = '#263238';
-    ctx.beginPath();
-    ctx.ellipse(6.5, -8.5, 3, 5, 0.08, 0, Math.PI * 2);
-    ctx.fill();
-    // 눈 하이라이트
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(7.5, -10.2, 1.8, 0, Math.PI * 2);
-    ctx.arc(5.8, -7, 0.9, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 눈썹
-    ctx.strokeStyle = '#263238';
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(8, -13.5);
-    ctx.lineTo(10, -15.5);
-    ctx.stroke();
-
-    // 사랑스러운 핑크 볼터치
-    ctx.fillStyle = 'rgba(255, 64, 129, 0.45)';
-    ctx.beginPath();
-    ctx.ellipse(5, -3.5, 3.8, 2.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 방긋 웃는 입
-    ctx.strokeStyle = '#d81b60';
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.arc(7.5, -3, 2.2, 0.1, Math.PI * 0.8);
-    ctx.stroke();
-
-    // [Layer 8] 양상추 앞머리 & 모자 잎 (Front Lettuce Cap & Bangs)
     ctx.fillStyle = '#43a047';
     ctx.beginPath();
-    ctx.arc(-2, -18, 14, 0, Math.PI * 2);
-    ctx.arc(6, -17, 10, 0, Math.PI * 2);
-    ctx.arc(-7, -15, 11, 0, Math.PI * 2);
+    ctx.arc(0, -14, 15.5, 0, Math.PI * 2);
+    ctx.arc(-8, -17, 11, 0, Math.PI * 2);
+    ctx.arc(8, -17, 11, 0, Math.PI * 2);
+    ctx.arc(0, -23, 10.5, 0, Math.PI * 2);
     ctx.fill();
 
+    // [7] 통통하고 사랑스러운 3/4 뷰 얼굴 (Chubby Cute Chibi Face)
+    ctx.fillStyle = '#ffe0b2';
+    ctx.beginPath();
+    ctx.ellipse(1, -7, 11.5, 9.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 턱선 & 볼통통
+    ctx.fillStyle = '#ffe0b2';
+    ctx.beginPath();
+    ctx.arc(-4, -5, 6, 0, Math.PI * 2);
+    ctx.arc(6, -5, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // [8] 양상추 앞머리 & 모자 잎사귀 웨이브
     ctx.fillStyle = '#66bb6a';
     ctx.beginPath();
-    ctx.arc(1, -21, 8, 0, Math.PI * 2);
-    ctx.arc(-5, -23, 7, 0, Math.PI * 2);
-    ctx.arc(2, -13, 5, 0, Math.PI * 2); // 귀여운 앞머리 컬
-    ctx.arc(5, -12, 4.5, 0, Math.PI * 2);
+    ctx.arc(-7, -13, 5.5, 0, Math.PI * 2);
+    ctx.arc(0, -14, 6, 0, Math.PI * 2);
+    ctx.arc(7, -13, 5.5, 0, Math.PI * 2);
+    ctx.arc(-3, -22, 7, 0, Math.PI * 2);
+    ctx.arc(4, -22, 7, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#a5d6a7';
     ctx.beginPath();
-    ctx.arc(3, -22, 6, 0, Math.PI * 2);
-    ctx.arc(-4, -24, 5, 0, Math.PI * 2);
+    ctx.arc(0, -23, 5, 0, Math.PI * 2);
+    ctx.arc(-6, -15, 3.5, 0, Math.PI * 2);
+    ctx.arc(6, -15, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
     // 잎맥 하이라이트
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.3;
     ctx.beginPath();
-    ctx.moveTo(-6, -20);
-    ctx.quadraticCurveTo(1, -22, 7, -16);
+    ctx.moveTo(-5, -20); ctx.quadraticCurveTo(0, -24, 5, -20);
     ctx.stroke();
 
-    // [Layer 9] 앞쪽 팔 (Front Arm)
+    // [9] 초롱초롱한 두 눈 (3/4 각도 배치)
+    // 왼쪽 눈
+    ctx.fillStyle = '#263238';
+    ctx.beginPath();
+    ctx.ellipse(-3.5, -7.5, 2.6, 4.2, -0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-2.8, -9, 1.4, 0, Math.PI * 2);
+    ctx.arc(-4.2, -6.5, 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 오른쪽 눈
+    ctx.fillStyle = '#263238';
+    ctx.beginPath();
+    ctx.ellipse(5, -7.5, 2.8, 4.4, 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(5.8, -9, 1.5, 0, Math.PI * 2);
+    ctx.arc(4.2, -6.5, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 양쪽 눈썹
+    ctx.strokeStyle = '#263238';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-5.5, -12); ctx.lineTo(-2, -13);
+    ctx.moveTo(3.5, -13); ctx.lineTo(7, -12);
+    ctx.stroke();
+
+    // 사랑스러운 양 볼터치 (Pink Blush)
+    ctx.fillStyle = 'rgba(255, 64, 129, 0.48)';
+    ctx.beginPath();
+    ctx.ellipse(-6, -4, 3.5, 2.3, -0.1, 0, Math.PI * 2);
+    ctx.ellipse(7.5, -4, 3.8, 2.5, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 방긋 웃는 귀여운 입 (Smile)
+    ctx.fillStyle = '#d81b60';
+    ctx.beginPath();
+    ctx.arc(1, -4, 2.8, 0.1, Math.PI * 0.9);
+    ctx.fill();
+
+    // [10] 앞쪽 양상추 트윈테일 (Front Lettuce Bun)
+    ctx.fillStyle = '#2e7d32';
+    ctx.beginPath();
+    ctx.arc(15, -14, 10, 0, Math.PI * 2);
+    ctx.arc(17, -7, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#43a047';
+    ctx.beginPath();
+    ctx.arc(14, -13, 8, 0, Math.PI * 2);
+    ctx.arc(15, -7, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#76ff03';
+    ctx.beginPath();
+    ctx.arc(13, -12, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // [11] 앞쪽 팔 (Front Arm)
     ctx.save();
-    ctx.translate(2.5, 2.5);
+    ctx.translate(6, 3);
     ctx.rotate(frontArmAngle);
     ctx.fillStyle = '#fbc02d';
     ctx.beginPath();
@@ -2349,66 +3003,84 @@
   }
 
   function renderHUD() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
     ctx.beginPath();
-    ctx.roundRect(16, 12, V_WIDTH - 32, 46, 12);
+    ctx.roundRect(16, 10, V_WIDTH - 32, 50, 14);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 18px "Apple SD Gothic Neo", sans-serif';
+    ctx.font = 'bold 15px "Apple SD Gothic Neo", sans-serif';
     ctx.textAlign = 'left';
 
-    ctx.fillText(`SCORE: ${gameState.score.toString().padStart(5, '0')}`, 32, 42);
+    // 스테이지 점수
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillText(`STAGE: ${gameState.stageScore.toLocaleString()}점`, 30, 41);
 
+    // 총 점수 (누적)
+    ctx.fillStyle = '#fde047';
+    ctx.fillText(`TOTAL: ${gameState.totalScore.toLocaleString()}점`, 165, 41);
+
+    // 개발자 모드 태그
+    if (gameState.godMode) {
+      ctx.fillStyle = '#4ade80';
+      ctx.font = '900 13px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('⚡[GOD]', 305, 41);
+    }
+
+    // 라이프
     let livesStr = 'LIFE: ';
     for (let i = 0; i < gameState.lives; i++) livesStr += '❤️ ';
     ctx.fillStyle = '#ff6b81';
-    ctx.fillText(livesStr, 220, 42);
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(livesStr, gameState.godMode ? 370 : 315, 41);
 
+    // 남은 시간
     ctx.fillStyle = gameState.timeLeft <= 20 ? '#ff4757' : '#ffa502';
-    ctx.fillText(`TIME: ${gameState.timeLeft}s`, 430, 42);
+    ctx.font = 'bold 16px "Apple SD Gothic Neo", sans-serif';
+    ctx.fillText(`TIME: ${gameState.timeLeft}s`, gameState.godMode ? 505 : 460, 41);
 
-    const progWidth = 180;
-    const progX = V_WIDTH - 220;
+    // 진행 바
+    const progWidth = 170;
+    const progX = V_WIDTH - 215;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(progX, 26, progWidth, 16, 8);
+    ctx.roundRect(progX, 27, progWidth, 16, 8);
     ctx.fill();
 
     const progress = Math.min(1, Math.max(0, player.x / (LEVEL_LENGTH - 300)));
     ctx.fillStyle = '#2ed573';
     ctx.beginPath();
-    ctx.roundRect(progX, 26, progWidth * progress, 16, 8);
+    ctx.roundRect(progX, 27, progWidth * progress, 16, 8);
     ctx.fill();
 
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('STAGE 1', progX - 55, 39);
+    ctx.font = '900 12px sans-serif';
+    ctx.fillText(`STAGE ${gameState.currentStage}`, progX - 62, 40);
 
-    // 최초 4000점 달성 BONUS! 축하 배너 렌더링
+    // 보너스 축하 배너 렌더링
     if (gameState.bonusBannerTimer > 0) {
       const alpha = Math.min(1, gameState.bonusBannerTimer / 30);
       const scale = 1 + Math.sin(gameState.bonusBannerTimer * 0.15) * 0.06;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(V_WIDTH / 2, 115);
+      ctx.translate(V_WIDTH / 2, 120);
       ctx.scale(scale, scale);
 
       // 배너 배경 글로우
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
       ctx.beginPath();
-      ctx.roundRect(-190, -32, 380, 64, 32);
+      ctx.roundRect(-230, -32, 460, 64, 32);
       ctx.fill();
 
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3.5;
       ctx.strokeStyle = '#ffd700';
       ctx.stroke();
 
       // 보너스 텍스트
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffd700';
-      ctx.font = '900 26px "Apple SD Gothic Neo", sans-serif';
-      ctx.fillText('★ BONUS! LIFE +1 ★', 0, 8);
+      ctx.font = '900 24px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(gameState.bonusBannerText || '★ BONUS! LIFE +1 ★', 0, 8);
 
       ctx.restore();
     }
@@ -2421,7 +3093,7 @@
     ctx.textAlign = 'center';
 
     if (gameState.greedyGameOver) {
-      // 9000점 돌파 특별 욕심쟁이 엔딩!
+      // 해당 스테이지 9000점 돌파 특별 욕심쟁이 엔딩!
       ctx.fillStyle = 'rgba(255, 243, 199, 0.14)';
       ctx.beginPath();
       ctx.roundRect(V_WIDTH / 2 - 290, V_HEIGHT / 2 - 195, 580, 380, 24);
@@ -2432,18 +3104,18 @@
 
       // 메인 욕심쟁이 멘트
       ctx.fillStyle = '#f59e0b';
-      ctx.font = '900 38px "Apple SD Gothic Neo", sans-serif';
-      ctx.fillText('🐷 9000점이 넘다니 욕심쟁이!', V_WIDTH / 2, V_HEIGHT / 2 - 115);
+      ctx.font = '900 36px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(`🐷 STAGE ${gameState.currentStage} 9000점 초과! 욕심쟁이!`, V_WIDTH / 2, V_HEIGHT / 2 - 115);
 
       // 서브 위트 문구
       ctx.fillStyle = '#fde68a';
-      ctx.font = 'bold 18px "Apple SD Gothic Neo", sans-serif';
+      ctx.font = 'bold 17px "Apple SD Gothic Neo", sans-serif';
       ctx.fillText('너무 많이 먹어서 배가 빵빵해져 모험을 계속할 수 없습니다!', V_WIDTH / 2, V_HEIGHT / 2 - 70);
 
       // 점수 안내
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText(`욕심 점수: ${gameState.score.toLocaleString()}점`, V_WIDTH / 2, V_HEIGHT / 2 - 25);
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`스테이지 점수: ${gameState.stageScore.toLocaleString()}점  |  누적 총점: ${gameState.totalScore.toLocaleString()}점`, V_WIDTH / 2, V_HEIGHT / 2 - 25);
 
       // 배가 빵빵해진 귀여운 양상추 인형
       drawLettuceGirl(
@@ -2460,52 +3132,149 @@
 
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 15px "Apple SD Gothic Neo", sans-serif';
-      ctx.fillText('[ 화면을 터치하거나 R 키를 눌러 다시 시작 ]', V_WIDTH / 2, V_HEIGHT / 2 + 145);
+      ctx.fillText('[ 화면을 터치하거나 Space/R 키를 눌러 타이틀 화면으로 이동 ]', V_WIDTH / 2, V_HEIGHT / 2 + 145);
 
     } else {
       ctx.fillStyle = '#ff4757';
       ctx.font = 'bold 44px sans-serif';
-      ctx.fillText('GAME OVER', V_WIDTH / 2, V_HEIGHT / 2 - 30);
+      ctx.fillText('GAME OVER', V_WIDTH / 2, V_HEIGHT / 2 - 35);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = '20px sans-serif';
-      ctx.fillText(`최종 점수: ${gameState.score}`, V_WIDTH / 2, V_HEIGHT / 2 + 15);
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`누적 총 점수: ${gameState.totalScore.toLocaleString()}점 (STAGE ${gameState.currentStage}: ${gameState.stageScore.toLocaleString()}점)`, V_WIDTH / 2, V_HEIGHT / 2 + 15);
 
       ctx.fillStyle = '#2ed573';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText('[ 화면을 터치하거나 R 키를 눌러 다시 시작 ]', V_WIDTH / 2, V_HEIGHT / 2 + 65);
+      ctx.font = 'bold 18px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('[ 화면을 터치하거나 Space를 눌러 타이틀 화면으로 이동 ]', V_WIDTH / 2, V_HEIGHT / 2 + 65);
     }
   }
 
   function renderGameWon() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.84)';
     ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#2ed573';
-    ctx.font = 'bold 44px sans-serif';
-    ctx.fillText('STAGE 1 CLEAR!! 🎉', V_WIDTH / 2, V_HEIGHT / 2 - 40);
+    
+    const elapsedTime = Math.max(0, 120 - gameState.timeLeft);
+    const mins = Math.floor(elapsedTime / 60);
+    const secs = elapsedTime % 60;
+    const timeFormatted = mins > 0 ? `${mins}분 ${secs}초` : `${secs}초`;
 
-    ctx.fillStyle = '#ffd32a';
-    ctx.font = 'bold 24px sans-serif';
-    const timeBonus = gameState.timeLeft * 50;
-    ctx.fillText(`클리어 보너스: +${timeBonus}점`, V_WIDTH / 2, V_HEIGHT / 2 + 5);
+    // 30초 미만 / 31~35초 / 36초 이상 클리어 평가 메시지
+    let speedMessage = '';
+    let speedColor = '#fde047';
+    let speedBg = 'rgba(254, 240, 138, 0.12)';
+    if (elapsedTime <= 30) {
+      speedMessage = '⚡ 대단해요 엄청 빠르시네요';
+      speedColor = '#fde047'; // 골드
+      speedBg = 'rgba(253, 224, 71, 0.15)';
+    } else if (elapsedTime <= 35) {
+      speedMessage = '🏃 조금 서둘렀지만 빠르진 않습니다';
+      speedColor = '#38bdf8'; // 스카이블루
+      speedBg = 'rgba(56, 189, 248, 0.15)';
+    } else {
+      speedMessage = '🐢 너무 느린거 아닌가요?';
+      speedColor = '#fb7185'; // 로즈핑크
+      speedBg = 'rgba(251, 113, 133, 0.15)';
+    }
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '22px sans-serif';
-    ctx.fillText(`총 점수: ${gameState.score + timeBonus}점`, V_WIDTH / 2, V_HEIGHT / 2 + 40);
+    if (gameState.currentStage === 1) {
+      // 1스테이지 클리어 화면
+      ctx.fillStyle = '#2ed573';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillText('STAGE 1 CLEAR!! 🎉', V_WIDTH / 2, V_HEIGHT / 2 - 95);
 
-    ctx.fillStyle = '#a4b0be';
-    ctx.font = '16px sans-serif';
-    ctx.fillText('[ 화면을 터치하거나 R 키를 눌러 다시 플레이 ]', V_WIDTH / 2, V_HEIGHT / 2 + 85);
+      // 클리어 소요 시간 표시
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = 'bold 22px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(`⏱️ 클리어 시간: ${timeFormatted}  (남은 시간: ${gameState.timeLeft}초)`, V_WIDTH / 2, V_HEIGHT / 2 - 48);
+
+      // 화면 정중앙 강조 평가 박스
+      ctx.fillStyle = speedBg;
+      ctx.beginPath();
+      ctx.roundRect(V_WIDTH / 2 - 250, V_HEIGHT / 2 - 24, 500, 48, 14);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = speedColor;
+      ctx.stroke();
+
+      // 화면 정중앙 가운데 정렬 메시지
+      ctx.fillStyle = speedColor;
+      ctx.font = '900 23px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(speedMessage, V_WIDTH / 2, V_HEIGHT / 2 + 9);
+
+      // 스테이지 점수 & 누적 총점수 동시 표시
+      ctx.fillStyle = '#ffd32a';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`⭐ 1스테이지 획득: ${gameState.stageScore.toLocaleString()}점  |  누적 총점: ${gameState.totalScore.toLocaleString()}점`, V_WIDTH / 2, V_HEIGHT / 2 + 58);
+
+      ctx.fillStyle = '#ff9f43';
+      ctx.font = 'bold 18px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('[ 화면을 터치하거나 Space를 눌러 STAGE 2 (저녁 노을) 시작! 🌅 ]', V_WIDTH / 2, V_HEIGHT / 2 + 105);
+
+    } else {
+      // 2스테이지 최종 완주 화면
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 44px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('🏆 ALL STAGES CLEAR!! 🏆', V_WIDTH / 2, V_HEIGHT / 2 - 105);
+
+      ctx.fillStyle = '#2ed573';
+      ctx.font = 'bold 20px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText('양상추 소녀의 대모험을 모두 완수했습니다!', V_WIDTH / 2, V_HEIGHT / 2 - 60);
+
+      // 2스테이지 클리어 소요 시간
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = 'bold 22px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(`⏱️ 2스테이지 클리어 시간: ${timeFormatted}`, V_WIDTH / 2, V_HEIGHT / 2 - 25);
+
+      // 화면 정중앙 강조 평가 박스
+      ctx.fillStyle = speedBg;
+      ctx.beginPath();
+      ctx.roundRect(V_WIDTH / 2 - 250, V_HEIGHT / 2 - 14, 500, 48, 14);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = speedColor;
+      ctx.stroke();
+
+      // 화면 정중앙 가운데 정렬 메시지
+      ctx.fillStyle = speedColor;
+      ctx.font = '900 23px "Apple SD Gothic Neo", sans-serif';
+      ctx.fillText(speedMessage, V_WIDTH / 2, V_HEIGHT / 2 + 19);
+
+      // 최종 획득 점수 표시
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`⭐ 2스테이지 획득: ${gameState.stageScore.toLocaleString()}점  |  최종 대모험 점수: ${gameState.totalScore.toLocaleString()}점`, V_WIDTH / 2, V_HEIGHT / 2 + 65);
+
+      ctx.fillStyle = '#a4b0be';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('[ 화면을 터치하거나 R 키를 눌러 처음부터 다시 플레이 ]', V_WIDTH / 2, V_HEIGHT / 2 + 115);
+    }
   }
 
-  // 캔버스 터치 재시작
+  function advanceStage() {
+    if (gameState.gameWon) {
+      if (gameState.currentStage === 1) {
+        // 스테이지 1 클리어 -> 스테이지 2로 진행
+        loadStage(2);
+      } else {
+        // 스테이지 2 완주 -> 1스테이지부터 재시작
+        resetGame(true, 1);
+      }
+    } else if (gameState.gameOver) {
+      // 남은 Life가 없거나 게임오버 시 타이틀 화면으로 복귀 (1스테이지부터 새로 시작, Life 2개 리셋)
+      resetGame(true, 1);
+    }
+  }
+
+  // 캔버스 터치 재시작 / 스테이지 진행 / 컨티뉴 터치
   canvas.addEventListener('pointerdown', () => {
     sound.init();
-    if (gameState.gameOver || gameState.gameWon) {
-      resetGame(false);
+    if (gameState.inContinueScreen) {
+      handleContinueYes();
+      return;
     }
+    advanceStage();
   });
 
   // ==========================================
