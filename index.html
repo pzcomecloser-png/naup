@@ -14,7 +14,7 @@
   #app {
     position: relative; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 20px; padding: 20px;
+    gap: 16px; padding: 16px;
     background:
       radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 0, transparent 40%),
       radial-gradient(circle at 80% 70%, rgba(255,255,255,0.04) 0, transparent 40%),
@@ -22,39 +22,39 @@
   }
 
   .page-title {
-    color: #ffe15a; font-size: clamp(18px, 6vw, 26px); font-weight: 900;
+    color: #ffe15a; font-size: clamp(16px, 5.5vw, 24px); font-weight: 900;
     letter-spacing: 2px; text-shadow: 2px 2px 0 #000, 0 0 14px rgba(255,225,90,.5);
-    margin-bottom: 4px; text-align: center;
+    margin-bottom: 2px; text-align: center;
   }
 
-  .card-list { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; }
+  .card-list { display: flex; flex-direction: column; gap: 11px; width: 100%; max-width: 330px; }
 
   .game-card {
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: center; gap: 12px;
     background: #14142c; border: 3px solid #3a3a5c; border-radius: 6px;
-    padding: 10px 14px; text-decoration: none; cursor: pointer;
-    box-shadow: 0 4px 0 #05050f, 0 6px 14px rgba(0,0,0,.5);
+    padding: 8px 12px; text-decoration: none; cursor: pointer;
+    box-shadow: 0 4px 0 #05050f, 0 5px 12px rgba(0,0,0,.5);
     transition: transform .1s ease;
   }
-  .game-card:active { transform: translateY(4px); box-shadow: 0 0 0 #05050f; }
+  .game-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #05050f; }
 
   .icon-frame {
-    flex: none; width: 68px; height: 68px; background: #05050f;
+    flex: none; width: 56px; height: 56px; background: #05050f;
     border: 2px solid #4a4a72; border-radius: 4px;
     display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
   .icon-frame canvas {
-    width: 54px; height: 54px;
+    width: 46px; height: 46px;
     image-rendering: pixelated; image-rendering: crisp-edges;
   }
 
-  .card-text { display: flex; flex-direction: column; gap: 4px; }
-  .card-title { color: #fff; font-size: clamp(14px, 4vw, 17px); font-weight: 900; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; }
-  .card-desc { color: #a0a0c8; font-size: clamp(10px, 2.6vw, 12px); font-weight: 700; }
-  .card-arrow { margin-left: auto; color: #ffe15a; font-size: 20px; font-weight: 900; flex: none; }
+  .card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .card-title { color: #fff; font-size: clamp(13px, 3.8vw, 16px); font-weight: 900; letter-spacing: 0.5px; text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-desc { color: #a0a0c8; font-size: clamp(9.5px, 2.5vw, 11.5px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-arrow { margin-left: auto; color: #ffe15a; font-size: 18px; font-weight: 900; flex: none; padding-left: 4px; }
 
   .footer-hint {
-    margin-top: 6px; color: #5a5a80; font-size: clamp(9px, 2.2vw, 11px); text-align: center; letter-spacing: .5px;
+    margin-top: 4px; color: #5a5a80; font-size: clamp(9px, 2vw, 11px); text-align: center; letter-spacing: .5px;
   }
 </style>
 </head>
@@ -89,6 +89,16 @@
       <div class="card-text">
         <div class="card-title">양상치 소녀의 모험</div>
         <div class="card-desc">플랫포머 어드벤처 게임</div>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+
+    <!-- 4. 신마협전 -->
+    <a class="game-card" href="신마협전 v0.0.3.html">
+      <div class="icon-frame"><canvas id="iconSinma" width="24" height="24"></canvas></div>
+      <div class="card-text">
+        <div class="card-title">신마협전</div>
+        <div class="card-desc">정통 무협 RPG 어드벤처</div>
       </div>
       <div class="card-arrow">▶</div>
     </a>
@@ -241,9 +251,75 @@ function drawLettuceIcon(id) {
   ctx.fillRect(9, 21, 5, 1);
 }
 
+function drawSinmaIcon(id) {
+  const c = document.getElementById(id);
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 1. 포니테일 / 휘날리는 갈색 장발
+  ctx.fillStyle = '#2e1910';
+  ctx.fillRect(15, 2, 5, 6);
+  ctx.fillRect(18, 4, 4, 7);
+  ctx.fillRect(19, 9, 3, 5);
+
+  // 2. 메인 머리카락 (앞머리 및 볼륨)
+  ctx.fillStyle = '#3d2417';
+  ctx.fillRect(7, 2, 9, 4);
+  ctx.fillRect(5, 4, 11, 4);
+  ctx.fillStyle = '#543322';
+  ctx.fillRect(8, 3, 6, 2); // 하이라이트
+
+  // 3. 얼굴 & 목 (살구색 톤)
+  ctx.fillStyle = '#f6cfa9';
+  ctx.fillRect(7, 6, 8, 7);
+  ctx.fillRect(9, 13, 4, 2); // 목
+
+  // 얼굴 음영
+  ctx.fillStyle = '#e2b38b';
+  ctx.fillRect(6, 8, 2, 4);
+  ctx.fillRect(13, 9, 2, 3);
+
+  // 구레나룻 & 잔머리
+  ctx.fillStyle = '#2e1910';
+  ctx.fillRect(5, 6, 2, 5);
+  ctx.fillRect(7, 5, 2, 4);
+  ctx.fillRect(11, 4, 2, 3);
+
+  // 눈썹 & 이목구비
+  ctx.fillStyle = '#24140c';
+  ctx.fillRect(8, 7, 2, 1);  // 왼쪽 눈썹
+  ctx.fillRect(12, 7, 2, 1); // 오른쪽 눈썹
+  ctx.fillRect(8, 8, 2, 1);  // 왼쪽 눈
+  ctx.fillRect(12, 8, 2, 1); // 오른쪽 눈
+  ctx.fillStyle = '#9e624b';
+  ctx.fillRect(10, 9, 1, 2); // 코
+  ctx.fillRect(10, 11, 2, 1); // 입
+
+  // 4. 무협 의복 (어깨 깃 & 노란 끈 / 띠 장식)
+  ctx.fillStyle = '#dcd8d0'; // 연회색 도포 깃
+  ctx.fillRect(6, 14, 11, 7);
+  ctx.fillStyle = '#495a6a'; // 청회색 겉옷
+  ctx.fillRect(4, 16, 3, 7);
+  ctx.fillRect(16, 16, 4, 7);
+
+  ctx.fillStyle = '#d89b34'; // 황금색/황토색 가슴 띠
+  ctx.fillRect(8, 16, 6, 2);
+  ctx.fillRect(9, 18, 5, 2);
+
+  // 5. 무협 손목 아대 (팔)
+  ctx.fillStyle = '#3a271d'; // 가죽 완갑
+  ctx.fillRect(3, 19, 4, 4);
+  ctx.fillRect(16, 19, 4, 4);
+  ctx.fillStyle = '#d89b34'; // 완갑 금속 테두리
+  ctx.fillRect(3, 18, 4, 1);
+  ctx.fillRect(16, 18, 4, 1);
+}
+
 drawNaupIcon('iconNaup');
 drawUfoIcon('iconUfo');
 drawLettuceIcon('iconLettuce');
+drawSinmaIcon('iconSinma');
 </script>
 </body>
 </html>
