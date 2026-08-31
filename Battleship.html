@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>해양 전투 대작전 - Naval Combat Operation</title>
+<style>
+  :root {
+    --bg-color: #0b132b;
+    --panel-bg: rgba(28, 37, 65, 0.94);
+    --border-color: #3a506b;
+    --accent-cyan: #48cae4;
+    --accent-glow: #90e0ef;
+    --hit-color: #ff4d6d;
+    --hit-dark: #800f2f;
+    --miss-color: #6c757d;
+    --ship-carrier: #3a86ff;
+    --ship-cruiser: #06d6a0;
+    --ship-sub: #ffd166;
+    --text-main: #edf2f4;
+    --text-dim: #8d99ae;
+    --guide-gold: #fcbf49;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    user-select: none;
+  }
+
+  body {
+    background: radial-gradient(circle at 50% 15%, #1c2541 0%, #0b132b 100%);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 10px;
+    position: relative;
+    width: 100%;
+    max-width: 1080px;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 {
+    font-size: 2.1rem;
+    color: var(--accent-glow);
+    text-shadow: 0 0 14px rgba(144, 224, 239, 0.6);
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-help {
+    background: rgba(252, 191, 73, 0.15);
+    border: 1px solid var(--guide-gold);
+    color: var(--guide-gold);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-help:hover {
+    background: var(--guide-gold);
+    color: #0b132b;
+    box-shadow: 0 0 12px rgba(252, 191, 73, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .synopsis {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    margin-top: 2px;
+    text-align: left;
+  }
+
+  .main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 1080px;
+    width: 100%;
+  }
+
+  /* --- STEPPER / PROGRESS TUTORIAL BAR --- */
+  .stepper-bar {
+    width: 100%;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    opacity: 0.45;
+    transition: all 0.3s;
+  }
+  .step-item.active {
+    opacity: 1;
+  }
+  .step-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #151e33;
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: var(--text-dim);
+  }
+  .step-item.active .step-number {
+    background: var(--accent-cyan);
+    border-color: var(--accent-glow);
+    color: #0b132b;
+    box-shadow: 0 0 10px var(--accent-cyan);
+  }
+  .step-item.completed .step-number {
+    background: #2a9d8f;
+    border-color: #52b788;
+    color: #fff;
+  }
+  .step-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .step-title {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--text-main);
+  }
+  .step-item.active .step-title {
+    color: var(--accent-glow);
+  }
+  .step-desc {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+  .step-arrow {
+    color: var(--border-color);
+    font-size: 0.9rem;
+  }
+
+  /* --- DYNAMIC ACTION GUIDE CALLOUT --- */
+  .guide-callout {
+    width: 100%;
+    background: rgba(252, 191, 73, 0.12);
+    border: 1px solid rgba(252, 191, 73, 0.4);
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    color: #ffe8d6;
+    animation: pulseBorder 2.5s infinite;
+  }
+  .guide-callout-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .guide-tag {
+    background: var(--guide-gold);
+    color: #0b132b;
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  @keyframes pulseBorder {
+    0%, 100% { border-color: rgba(252, 191, 73, 0.4); }
+    50% { border-color: rgba(252, 191, 73, 0.9); box-shadow: 0 0 10px rgba(252, 191, 73, 0.3); }
+  }
+
+  /* Control Panels */
+  .control-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 18px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .panel-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: bold;
+  }
+
+  /* Visual Ship Placement Selector Card */
+  .ship-choice-card {
+    background: #151e33;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ship-choice-card:hover:not(:disabled) {
+    border-color: var(--accent-cyan);
+    background: #1c2b48;
+  }
+  .ship-choice-card.selected {
+    background: #1b4965;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(72, 202, 228, 0.5);
+  }
+  .ship-choice-card:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #3a506b;
+  }
+  .ship-card-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+  .ship-card-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+  .ship-card-size {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+
+  .weapon-btn {
+    background: #1c2541;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .weapon-btn.selected {
+    background: #f77f00;
+    color: #fff;
+    border-color: #fcbf49;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(247, 127, 0, 0.6);
+  }
+  .weapon-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #3a506b;
+  }
+  .badge-ammo {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: #00b4d8; color: #0b132b; }
+  .btn-primary:hover:not(:disabled) { background: #90e0ef; transform: translateY(-1px); }
+  .btn-secondary { background: #3a506b; color: #edf2f4; }
+  .btn-secondary:hover:not(:disabled) { background: #5bc0be; color: #0b132b; }
+  .btn-accent { background: #2a9d8f; color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: #52b788; }
+  .btn-glow {
+    animation: btnReadyGlow 1.5s infinite;
+  }
+  @keyframes btnReadyGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(42, 157, 143, 0.6); }
+    50% { box-shadow: 0 0 20px rgba(82, 183, 136, 1); transform: scale(1.03); }
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Boards Wrapper */
+  .boards-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .board-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .board-section.highlight-board {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 16px rgba(72, 202, 228, 0.35);
+  }
+
+  .board-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-title { color: #52b788; }
+  .cpu-title { color: #ff758f; }
+
+  .fleet-status {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    max-width: 400px;
+  }
+
+  .ship-badge {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+  }
+  .ship-badge.sunk {
+    text-decoration: line-through;
+    opacity: 0.4;
+    background: rgba(255, 77, 109, 0.25);
+    border-color: var(--hit-color);
+    color: #ff99a8;
+  }
+
+  /* 7x7 Grid: 1 header row/col + 7 grid cells = 8x8 */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 24px repeat(7, 44px);
+    grid-template-rows: 24px repeat(7, 44px);
+    gap: 3px;
+    background: rgba(11, 19, 43, 0.75);
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(58, 80, 107, 0.7);
+  }
+
+  .grid-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .cell {
+    width: 44px;
+    height: 44px;
+    background: rgba(28, 37, 65, 0.85);
+    border: 1px solid rgba(72, 202, 228, 0.15);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    transition: all 0.12s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .interactive-grid .cell:hover:not(.hit):not(.miss) {
+    background: rgba(72, 202, 228, 0.3);
+    border-color: var(--accent-cyan);
+    cursor: crosshair;
+    transform: scale(1.04);
+  }
+
+  .cell.ship-preview {
+    background: rgba(42, 157, 143, 0.6) !important;
+    border-color: #52b788 !important;
+  }
+  .cell.ship-invalid-preview {
+    background: rgba(230, 57, 70, 0.5) !important;
+    border-color: #e63946 !important;
+  }
+  .cell.attack-preview {
+    background: rgba(247, 127, 0, 0.45) !important;
+    border-color: #fcbf49 !important;
+    box-shadow: inset 0 0 8px rgba(247, 127, 0, 0.6);
+  }
+
+  .ship-svg-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .ship-svg-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .cell-overlay-icon {
+    position: absolute;
+    font-size: 1.3rem;
+    z-index: 5;
+    pointer-events: none;
+    text-shadow: 0 0 6px rgba(0,0,0,0.8);
+  }
+
+  .cell.hit {
+    animation: hitAnim 0.35s ease;
+  }
+  .cell.miss {
+    background: rgba(33, 47, 69, 0.8);
+    border-color: rgba(108, 117, 125, 0.3);
+  }
+  .cell.miss::after {
+    content: "✕";
+    color: var(--miss-color);
+    font-size: 1.3rem;
+    font-weight: 900;
+  }
+
+  .cell.sunk-ship {
+    background: #4a0d1e !important;
+    border-color: #ff4d6d !important;
+    box-shadow: 0 0 6px rgba(255, 77, 109, 0.6);
+  }
+  .cell.sunk-ship svg {
+    filter: grayscale(0.6) sepia(0.8) hue-rotate(-50deg) brightness(0.6);
+  }
+
+  @keyframes hitAnim {
+    0% { transform: scale(0.6); }
+    50% { transform: scale(1.18); }
+    100% { transform: scale(1.0); }
+  }
+
+  /* Log Area */
+  .log-container {
+    width: 100%;
+    background: rgba(11, 19, 43, 0.9);
+    border: 1px solid rgba(58, 80, 107, 0.6);
+    border-radius: 10px;
+    padding: 10px 14px;
+    height: 100px;
+    overflow-y: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .log-entry { margin-bottom: 4px; line-height: 1.35; }
+  .log-player { color: #90e0ef; }
+  .log-cpu { color: #ff99a8; }
+  .log-hit { color: #ff4d6d; font-weight: bold; }
+  .log-sunk { color: #ffd166; font-weight: bold; }
+  .log-weapon { color: #fcbf49; font-weight: bold; }
+  .log-system { color: #a8dadc; }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.78);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal-card {
+    background: #1c2541;
+    border: 2px solid var(--accent-cyan);
+    border-radius: 16px;
+    padding: 26px 34px;
+    box-shadow: 0 0 30px rgba(72, 202, 228, 0.5);
+    max-width: 520px;
+    width: 90%;
+  }
+  .modal-title { font-size: 1.7rem; margin-bottom: 12px; text-align: center; }
+  .modal-desc { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 18px; line-height: 1.5; }
+  .win-text { color: #52b788; text-shadow: 0 0 10px #52b788; }
+  .lose-text { color: #ff4d6d; text-shadow: 0 0 10px #ff4d6d; }
+
+  /* Tutorial List in Modal */
+  .tutorial-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 22px;
+    text-align: left;
+  }
+  .tutorial-item {
+    background: rgba(11, 19, 43, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .tut-icon { font-size: 1.4rem; }
+  .tut-title { font-weight: bold; font-size: 0.95rem; color: var(--accent-glow); margin-bottom: 2px; }
+  .tut-desc { font-size: 0.83rem; color: var(--text-main); line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>⚓ 해양 전투 대작전</h1>
+    <button class="btn-help" onclick="openTutorialModal()">📖 튜토리얼 / 도움말</button>
+  </div>
+  <p class="synopsis">"적의 함대를 격침하여 우리 항구를 완벽히 수호하라!"</p>
+</header>
+
+<div class="main-container">
+  <!-- Interactive Step-by-Step Guide Bar -->
+  <div class="stepper-bar" id="stepperBar">
+    <div class="step-item active" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-text">
+        <span class="step-title">함선 배치</span>
+        <span class="step-desc">배 선택 & 회전 후 좌측 클릭</span>
+      </div>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="step-item" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-text">
+        <span class="step-title">작전 개시</span>
+        <span class="step-desc">5척 배치 완료 후 전투 시작</span>
+      </div>
+    </div>
+    <div class="step-arrow">➔</div>
+    <div class="step-item" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-text">
+        <span class="step-title">전투 & 특수무기</span>
+        <span class="step-desc">우측 적 해역 공격 (턴제)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Guide Banner (Contextual Tutorial Tip) -->
+  <div class="guide-callout" id="guideCallout">
+    <div class="guide-callout-content">
+      <span class="guide-tag">작전 지침</span>
+      <span id="guideText">배치할 함선을 고르고, <kbd style="background:#2b3a55; padding:2px 5px; border-radius:3px;">🔄 방향</kbd> 버튼으로 가로/세로를 조절해 <b>아군 해역(좌측)</b>에 배치하세요.</span>
+    </div>
+    <span style="font-size:0.8rem; color:var(--text-dim); cursor:pointer;" onclick="openTutorialModal()">전체 규칙 ℹ️</span>
+  </div>
+
+  <!-- Placement Controls -->
+  <div class="control-panel" id="placementControls">
+    <div class="btn-group">
+      <span class="panel-label">함대 선택:</span>
+      <div id="shipSelectorGroup" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" id="rotateShipBtn" title="단축키: R">🔄 방향: 가로 (H)</button>
+      <button class="btn btn-secondary" id="randomPlaceBtn">🎲 자동 배치</button>
+      <button class="btn btn-secondary" id="resetPlacementBtn">🗑️ 초기화</button>
+      <button class="btn btn-accent" id="startGameBtn" disabled>⚔️ 작전 개시</button>
+    </div>
+  </div>
+
+  <!-- Battle Controls -->
+  <div class="control-panel" id="battleControls" style="display:none;">
+    <div class="btn-group">
+      <span class="panel-label">무기 선택:</span>
+      <button class="weapon-btn selected" id="w-normal" onclick="selectWeapon('normal')">
+        🎯 일반 사격 <span class="badge-ammo">무제한</span>
+      </button>
+      <button class="weapon-btn" id="w-cross" onclick="selectWeapon('cross')">
+        ➕ 십자탄 (5칸) <span class="badge-ammo" id="ammo-cross">1회</span>
+      </button>
+      <button class="weapon-btn" id="w-x" onclick="selectWeapon('x')">
+        ✖️ X자탄 (5칸) <span class="badge-ammo" id="ammo-x">1회</span>
+      </button>
+      <button class="weapon-btn" id="w-skip" onclick="selectWeapon('skip')">
+        🌊 물수제비탄 (4칸) <span class="badge-ammo" id="ammo-skip">1회</span>
+      </button>
+    </div>
+    <div class="btn-group" id="skipDirGroup" style="display:none;">
+      <button class="btn btn-secondary" id="toggleSkipDirBtn">➡️ 발사 방향: 가로</button>
+    </div>
+  </div>
+
+  <!-- Boards -->
+  <div class="boards-wrapper">
+    <!-- Player Board -->
+    <div class="board-section highlight-board" id="playerBoardSection">
+      <div class="board-title player-title">🛡️ 아군 해역 (Player)</div>
+      <div class="fleet-status" id="playerFleetStatus"></div>
+      <div class="grid-container" id="playerGrid"></div>
+    </div>
+
+    <!-- CPU Board -->
+    <div class="board-section" id="cpuBoardSection">
+      <div class="board-title cpu-title">🎯 적군 해역 (CPU)</div>
+      <div class="fleet-status" id="cpuFleetStatus"></div>
+      <div class="grid-container" id="cpuGrid"></div>
+    </div>
+  </div>
+
+  <!-- Combat Log -->
+  <div class="log-container" id="combatLog">
+    <div class="log-entry log-system">[작전 지휘소] 7×7 전장에 아군 함대를 전략적으로 배치하십시오.</div>
+  </div>
+</div>
+
+<!-- Tutorial Modal -->
+<div class="modal-overlay" id="tutorialModal">
+  <div class="modal-card">
+    <div class="modal-title" style="color:var(--guide-gold);">📖 작전 사령부 튜토리얼</div>
+    <div class="modal-desc">처음 플레이하시나요? 3단계만 알면 쉽게 즐길 수 있습니다!</div>
+    
+    <div class="tutorial-list">
+      <div class="tutorial-item">
+        <div class="tut-icon">🚢</div>
+        <div>
+          <div class="tut-title">1단계: 함선 배치하기</div>
+          <div class="tut-desc">
+            • <b>항공모함(4칸) 1척, 순양함(3칸) 2척, 잠수함(2칸) 2척</b>을 좌측 아군 해역에 배치합니다.<br>
+            • <b>가로/세로만 배치 가능</b>하며 대각선은 불가합니다.<br>
+            • <kbd>🔄 방향 버튼</kbd>이나 키보드 <kbd>R</kbd>키로 회전할 수 있으며, <kbd>🎲 자동 배치</kbd>를 누르면 즉시 배치됩니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="tutorial-item">
+        <div class="tut-icon">⚔️</div>
+        <div >
+          <div class="tut-title">2단계: 턴제 포격전 (전투)</div>
+          <div class="tut-desc">
+            • 모든 배를 놓은 후 <b>[작전 개시]</b>를 누르면 전투가 시작됩니다.<br>
+            • 플레이어와 적군(CPU)이 <b>번갈아가며 1번씩</b> 상대 해역을 지정해 공격합니다.<br>
+            • <b>명중(💥)</b> / <b>빗나감(✕)</b>이 표시되며, 함선의 모든 칸이 명중되면 <b>침몰(☠️)</b>합니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="tutorial-item">
+        <div class="tut-icon">🚀</div>
+        <div>
+          <div class="tut-title">3단계: 강력한 특수 무기 활용 (각 1회)</div>
+          <div class="tut-desc">
+            • <b>➕ 십자탄</b>: 지정한 위치 기준 상·하·좌·우 <b>총 5칸</b> 동시 타격<br>
+            • <b>✖️ X자탄</b>: 지정한 위치 기준 4방향 대각선 <b>총 5칸</b> 동시 타격<br>
+            • <b>🌊 물수제비탄</b>: 지정 위치부터 일직선 <b>4칸 연속</b> 관통 타격
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%; justify-content:center; padding:10px;" onclick="closeTutorialModal()">이해했습니다! 작전 시작</button>
+  </div>
+</div>
+
+<!-- Game Over Modal -->
+<div class="modal-overlay" id="gameOverModal">
+  <div class="modal-card">
+    <div class="modal-title" id="modalTitle">작전 대성공!</div>
+    <div class="modal-desc" id="modalDesc">적 함대를 모두 침몰시키고 우리 항구를 지켜냈습니다!</div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center; padding:10px;" onclick="restartGame()">새 작전 시작</button>
+  </div>
+</div>
+
+<script>
+// --- AUDIO FX ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'hit') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === 'miss') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(350, now);
+    osc.frequency.linearRampToValueAtTime(120, now + 0.2);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  } else if (type === 'sunk') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(330, now + 0.15);
+    osc.frequency.setValueAtTime(220, now + 0.3);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+    osc.start(now);
+    osc.stop(now + 0.65);
+  } else if (type === 'special') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.linearRampToValueAtTime(800, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(120, now + 0.35);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } else if (type === 'click') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(550, now);
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+}
+
+// --- SHIP ICONS & CELL GRAPHICS ---
+function getMiniShipIconSvg(type) {
+  if (type === 'carrier') {
+    return `<svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+      <path d="M2 11 L6 3 L32 3 L34 11 Z" fill="#2b5c8f" stroke="#48cae4" stroke-width="1.2"/>
+      <line x1="8" y1="7" x2="28" y2="7" stroke="#ffd166" stroke-width="1" stroke-dasharray="2 2"/>
+      <rect x="23" y="1" width="6" height="4" fill="#1d3557" stroke="#90e0ef" stroke-width="0.8"/>
+      <polygon points="12,5 15,7 12,9" fill="#edf2f4"/>
+    </svg>`;
+  } else if (type.startsWith('cruiser')) {
+    return `<svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+      <path d="M2 12 L6 5 L26 5 L30 12 Z" fill="#1b6ca8" stroke="#06d6a0" stroke-width="1.2"/>
+      <circle cx="10" cy="5" r="2.5" fill="#0a3d62" stroke="#52b788" stroke-width="0.8"/>
+      <line x1="10" y1="5" x2="5" y2="3" stroke="#edf2f4" stroke-width="1.2"/>
+      <rect x="15" y="2" width="5" height="5" fill="#0a3d62" stroke="#52b788" stroke-width="0.8"/>
+      <circle cx="23" cy="5" r="2.5" fill="#0a3d62" stroke="#52b788" stroke-width="0.8"/>
+      <line x1="23" y1="5" x2="27" y2="3" stroke="#edf2f4" stroke-width="1.2"/>
+    </svg>`;
+  } else {
+    return `<svg width="26" height="16" viewBox="0 0 26 16" fill="none">
+      <path d="M4 8 C4 5, 22 5, 22 8 C22 11, 4 11, 4 8 Z" fill="#b07d06" stroke="#ffd166" stroke-width="1.2"/>
+      <rect x="11" y="2" width="4" height="4" rx="1" fill="#755202" stroke="#ffe49e" stroke-width="0.8"/>
+      <line x1="13" y1="2" x2="13" y2="0.5" stroke="#edf2f4" stroke-width="1"/>
+      <polygon points="2,6 4,8 2,10" fill="#ffd166"/>
+    </svg>`;
+  }
+}
+
+function getShipCellSvg(shipType, partIndex, totalSize, isHorizontal) {
+  const rot = isHorizontal ? 0 : 90;
+  let innerGfx = '';
+  if (shipType === 'carrier') {
+    if (partIndex === 0) {
+      innerGfx = `
+        <path d="M6 38 L14 6 L38 6 L38 38 Z" fill="#254d77" stroke="#48cae4" stroke-width="1.5"/>
+        <line x1="14" y1="22" x2="38" y2="22" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <polygon points="22,12 30,16 22,20" fill="#edf2f4"/>
+      `;
+    } else if (partIndex === 1) {
+      innerGfx = `
+        <rect x="0" y="6" width="44" height="32" fill="#254d77" stroke="#48cae4" stroke-width="1.5"/>
+        <line x1="0" y1="22" x2="44" y2="22" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <rect x="12" y="1" width="16" height="8" rx="1" fill="#132c48" stroke="#90e0ef" stroke-width="1"/>
+        <line x1="20" y1="1" x2="20" y2="-3" stroke="#90e0ef" stroke-width="1.5"/>
+      `;
+    } else if (partIndex === 2) {
+      innerGfx = `
+        <rect x="0" y="6" width="44" height="32" fill="#254d77" stroke="#48cae4" stroke-width="1.5"/>
+        <line x1="0" y1="22" x2="44" y2="22" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <rect x="14" y="10" width="16" height="12" fill="#19385c" stroke="#48cae4" stroke-width="1" stroke-dasharray="2 2"/>
+        <polygon points="10,28 18,32 10,36" fill="#edf2f4" opacity="0.8"/>
+      `;
+    } else {
+      innerGfx = `
+        <path d="M0 6 L34 6 L38 12 L38 32 L34 38 L0 38 Z" fill="#254d77" stroke="#48cae4" stroke-width="1.5"/>
+        <line x1="0" y1="22" x2="34" y2="22" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <line x1="12" y1="10" x2="12" y2="34" stroke="#ff4d6d" stroke-width="1"/>
+        <line x1="22" y1="10" x2="22" y2="34" stroke="#ff4d6d" stroke-width="1"/>
+      `;
+    }
+  } else if (shipType.startsWith('cruiser')) {
+    if (partIndex === 0) {
+      innerGfx = `
+        <path d="M4 22 L16 8 L38 8 L38 36 L16 36 Z" fill="#1d5c52" stroke="#52b788" stroke-width="1.5"/>
+        <circle cx="26" cy="22" r="6" fill="#0d352e" stroke="#52b788" stroke-width="1.2"/>
+        <line x1="26" y1="22" x2="10" y2="22" stroke="#edf2f4" stroke-width="2.2" stroke-linecap="round"/>
+      `;
+    } else if (partIndex === 1) {
+      innerGfx = `
+        <rect x="0" y="8" width="44" height="28" fill="#1d5c52" stroke="#52b788" stroke-width="1.5"/>
+        <rect x="12" y="14" width="20" height="16" rx="2" fill="#0d352e" stroke="#90e0ef" stroke-width="1.2"/>
+        <circle cx="22" cy="22" r="3" fill="#52b788"/>
+        <line x1="22" y1="14" x2="22" y2="4" stroke="#90e0ef" stroke-width="1.5"/>
+        <line x1="17" y1="6" x2="27" y2="6" stroke="#90e0ef" stroke-width="1.5"/>
+      `;
+    } else {
+      innerGfx = `
+        <path d="M0 8 L28 8 L38 18 L38 26 L28 36 L0 36 Z" fill="#1d5c52" stroke="#52b788" stroke-width="1.5"/>
+        <circle cx="16" cy="22" r="6" fill="#0d352e" stroke="#52b788" stroke-width="1.2"/>
+        <line x1="16" y1="22" x2="30" y2="22" stroke="#edf2f4" stroke-width="2.2" stroke-linecap="round"/>
+      `;
+    }
+  } else {
+    if (partIndex === 0) {
+      innerGfx = `
+        <path d="M6 22 C6 10, 38 10, 38 10 L38 34 C38 34, 6 34, 6 22 Z" fill="#7a5704" stroke="#ffd166" stroke-width="1.5"/>
+        <rect x="22" y="14" width="12" height="16" rx="3" fill="#4d3600" stroke="#ffd166" stroke-width="1.2"/>
+        <line x1="26" y1="14" x2="26" y2="6" stroke="#edf2f4" stroke-width="1.5"/>
+        <circle cx="26" cy="5" r="1.5" fill="#48cae4"/>
+      `;
+    } else {
+      innerGfx = `
+        <path d="M0 10 L28 10 C34 10, 38 18, 38 22 C38 26, 34 34, 28 34 L0 34 Z" fill="#7a5704" stroke="#ffd166" stroke-width="1.5"/>
+        <line x1="38" y1="22" x2="42" y2="22" stroke="#ffd166" stroke-width="2"/>
+        <polygon points="41,16 44,22 41,28" fill="#ffd166"/>
+      `;
+    }
+  }
+
+  return `
+    <div class="ship-svg-container">
+      <svg viewBox="0 0 44 44" style="transform: rotate(${rot}deg);">
+        ${innerGfx}
+      </svg>
+    </div>
+  `;
+}
+
+// --- CONSTANTS & CONFIG ---
+const BOARD_SIZE = 7;
+const COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+const ROWS = ['1', '2', '3', '4', '5', '6', '7'];
+
+const SHIP_DEFINITIONS = [
+  { id: 'carrier', name: '항공모함', size: 4, type: 'carrier' },
+  { id: 'cruiser1', name: '순양함 #1', size: 3, type: 'cruiser' },
+  { id: 'cruiser2', name: '순양함 #2', size: 3, type: 'cruiser' },
+  { id: 'sub1', name: '잠수함 #1', size: 2, type: 'sub' },
+  { id: 'sub2', name: '잠수함 #2', size: 2, type: 'sub' }
+];
+
+let gameState = 'PLACEMENT';
+let selectedShipIndex = 0;
+let isHorizontalPlacement = true;
+
+let selectedWeapon = 'normal';
+let skipHorizontal = true;
+let playerAmmo = { cross: 1, x: 1, skip: 1 };
+let cpuAmmo = { cross: 1, x: 1, skip: 1 };
+
+let playerShips = [];
+let cpuShips = [];
+let playerGridState = [];
+let cpuGridState = [];
+
+let aiHuntQueue = [];
+
+// --- INITIALIZATION ---
+function initBoardState() {
+  playerGridState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null).map(() => ({ shipId: null, hit: false, miss: false })));
+  cpuGridState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null).map(() => ({ shipId: null, hit: false, miss: false })));
+  playerShips = [];
+  cpuShips = [];
+  aiHuntQueue = [];
+  playerAmmo = { cross: 1, x: 1, skip: 1 };
+  cpuAmmo = { cross: 1, x: 1, skip: 1 };
+  selectedWeapon = 'normal';
+}
+
+function updateTutorialGuide() {
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+  const step3 = document.getElementById('step3');
+  const guideText = document.getElementById('guideText');
+  const startBtn = document.getElementById('startGameBtn');
+  const pBoard = document.getElementById('playerBoardSection');
+  const cBoard = document.getElementById('cpuBoardSection');
+
+  if (gameState === 'PLACEMENT') {
+    if (playerShips.length < SHIP_DEFINITIONS.length) {
+      step1.className = 'step-item active';
+      step2.className = 'step-item';
+      step3.className = 'step-item';
+      startBtn.classList.remove('btn-glow');
+      pBoard.classList.add('highlight-board');
+      cBoard.classList.remove('highlight-board');
+      
+      const currentShip = SHIP_DEFINITIONS[selectedShipIndex] || SHIP_DEFINITIONS.find(s => !playerShips.some(p => p.id === s.id));
+      const shipName = currentShip ? currentShip.name : '함선';
+      guideText.innerHTML = `현재 선택: <b>${shipName}</b> | <b>아군 해역(좌측)</b>을 클릭해 배치하세요. (<kbd style="background:#2b3a55; padding:2px 5px; border-radius:3px;">🔄 방향</kbd> 또는 <kbd>R</kbd>로 회전)`;
+    } else {
+      step1.className = 'step-item completed';
+      step2.className = 'step-item active';
+      step3.className = 'step-item';
+      startBtn.classList.add('btn-glow');
+      pBoard.classList.remove('highlight-board');
+      cBoard.classList.remove('highlight-board');
+      guideText.innerHTML = `🎉 5척의 함선이 모두 배치되었습니다! 우측 상단 <b>[⚔️ 작전 개시]</b> 버튼을 눌러 교전을 시작하세요!`;
+    }
+  } else if (gameState === 'PLAYER_TURN') {
+    step1.className = 'step-item completed';
+    step2.className = 'step-item completed';
+    step3.className = 'step-item active';
+    pBoard.classList.remove('highlight-board');
+    cBoard.classList.add('highlight-board');
+    
+    if (selectedWeapon === 'normal') {
+      guideText.innerHTML = `🎯 <b>아군 공격 턴</b>: <b>적군 해역(우측)</b>에서 타격할 좌표를 클릭하세요. (상단 특수무기 선택 가능)`;
+    } else if (selectedWeapon === 'cross') {
+      guideText.innerHTML = `➕ <b>십자탄 장전됨</b>: 중심 좌표를 클릭하면 상·하·좌·우 <b>총 5칸</b>을 동시 폭격합니다!`;
+    } else if (selectedWeapon === 'x') {
+      guideText.innerHTML = `✖️ <b>X자탄 장전됨</b>: 중심 좌표를 클릭하면 4개 대각선 <b>총 5칸</b>을 동시 폭격합니다!`;
+    } else if (selectedWeapon === 'skip') {
+      guideText.innerHTML = `🌊 <b>물수제비탄 장전됨</b>: 지정 좌표부터 일직선 <b>4칸 연속</b> 관통 타격합니다! (방향 전환 가능)`;
+    }
+  } else if (gameState === 'CPU_TURN') {
+    pBoard.classList.add('highlight-board');
+    cBoard.classList.remove('highlight-board');
+    guideText.innerHTML = `⚠️ <b>적군 턴</b>: 적 함대가 아군 해역을 조준하여 포격하고 있습니다...`;
+  }
+}
+
+function renderGrids() {
+  const pGrid = document.getElementById('playerGrid');
+  const cGrid = document.getElementById('cpuGrid');
+  pGrid.innerHTML = '';
+  cGrid.innerHTML = '';
+
+  pGrid.appendChild(createHeaderCell(''));
+  cGrid.appendChild(createHeaderCell(''));
+
+  COLS.forEach(col => {
+    pGrid.appendChild(createHeaderCell(col));
+    cGrid.appendChild(createHeaderCell(col));
+  });
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    pGrid.appendChild(createHeaderCell(ROWS[r]));
+    cGrid.appendChild(createHeaderCell(ROWS[r]));
+
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const pCell = document.createElement('div');
+      pCell.className = 'cell';
+      pCell.dataset.row = r;
+      pCell.dataset.col = c;
+      pCell.addEventListener('mouseenter', () => onPlayerCellHover(r, c));
+      pCell.addEventListener('mouseleave', () => clearGridPreviews());
+      pCell.addEventListener('click', () => onPlayerCellClick(r, c));
+      pGrid.appendChild(pCell);
+
+      const cCell = document.createElement('div');
+      cCell.className = 'cell';
+      cCell.dataset.row = r;
+      cCell.dataset.col = c;
+      cCell.addEventListener('mouseenter', () => onCpuCellHover(r, c));
+      cCell.addEventListener('mouseleave', () => clearGridPreviews());
+      cCell.addEventListener('click', () => onCpuCellClick(r, c));
+      cGrid.appendChild(cCell);
+    }
+  }
+  updateGridVisuals();
+}
+
+function createHeaderCell(text) {
+  const el = document.createElement('div');
+  el.className = 'grid-header';
+  el.textContent = text;
+  return el;
+}
+
+function renderShipSelectors() {
+  const group = document.getElementById('shipSelectorGroup');
+  group.innerHTML = '';
+  SHIP_DEFINITIONS.forEach((ship, idx) => {
+    const card = document.createElement('button');
+    const isPlaced = playerShips.some(s => s.id === ship.id);
+    card.className = `ship-choice-card ${idx === selectedShipIndex ? 'selected' : ''}`;
+    card.disabled = isPlaced;
+    card.innerHTML = `
+      ${getMiniShipIconSvg(ship.id)}
+      <div class="ship-card-info">
+        <span class="ship-card-name">${ship.name} ${isPlaced ? '✓' : ''}</span>
+        <span class="ship-card-size">${ship.size}칸</span>
+      </div>
+    `;
+    card.onclick = () => {
+      playSound('click');
+      selectedShipIndex = idx;
+      renderShipSelectors();
+      updateTutorialGuide();
+    };
+    group.appendChild(card);
+  });
+
+  const allPlaced = playerShips.length === SHIP_DEFINITIONS.length;
+  document.getElementById('startGameBtn').disabled = !allPlaced;
+  updateTutorialGuide();
+}
+
+function renderFleetStatusBadges() {
+  const pStatus = document.getElementById('playerFleetStatus');
+  const cStatus = document.getElementById('cpuFleetStatus');
+  
+  pStatus.innerHTML = SHIP_DEFINITIONS.map(s => `
+    <span class="ship-badge" id="p-${s.id}">
+      ${getMiniShipIconSvg(s.id)}
+      <span>${s.name} (${s.size})</span>
+    </span>
+  `).join('');
+
+  cStatus.innerHTML = SHIP_DEFINITIONS.map(s => `
+    <span class="ship-badge" id="c-${s.id}">
+      ${getMiniShipIconSvg(s.id)}
+      <span>${s.name} (${s.size})</span>
+    </span>
+  `).join('');
+}
+
+// --- PLACEMENT LOGIC ---
+function canPlaceShip(grid, r, c, size, horizontal) {
+  for (let i = 0; i < size; i++) {
+    const curR = horizontal ? r : r + i;
+    const curC = horizontal ? c + i : c;
+    if (curR < 0 || curR >= BOARD_SIZE || curC < 0 || curC >= BOARD_SIZE) return false;
+    if (grid[curR][curC].shipId !== null) return false;
+  }
+  return true;
+}
+
+function onPlayerCellHover(r, c) {
+  if (gameState !== 'PLACEMENT') return;
+  if (selectedShipIndex === null || selectedShipIndex >= SHIP_DEFINITIONS.length) return;
+  const shipDef = SHIP_DEFINITIONS[selectedShipIndex];
+  if (playerShips.some(s => s.id === shipDef.id)) return;
+
+  clearGridPreviews();
+  const valid = canPlaceShip(playerGridState, r, c, shipDef.size, isHorizontalPlacement);
+  const pGrid = document.getElementById('playerGrid');
+
+  for (let i = 0; i < shipDef.size; i++) {
+    const curR = isHorizontalPlacement ? r : r + i;
+    const curC = isHorizontalPlacement ? c + i : c;
+    if (curR >= 0 && curR < BOARD_SIZE && curC >= 0 && curC < BOARD_SIZE) {
+      const idx = (curR + 1) * (BOARD_SIZE + 1) + (curC + 1);
+      const cell = pGrid.children[idx];
+      if (cell) cell.classList.add(valid ? 'ship-preview' : 'ship-invalid-preview');
+    }
+  }
+}
+
+function clearGridPreviews() {
+  document.querySelectorAll('.cell').forEach(cell => {
+    cell.classList.remove('ship-preview', 'ship-invalid-preview', 'attack-preview');
+  });
+}
+
+function onPlayerCellClick(r, c) {
+  if (gameState !== 'PLACEMENT') return;
+  const shipDef = SHIP_DEFINITIONS[selectedShipIndex];
+  if (!shipDef || playerShips.some(s => s.id === shipDef.id)) return;
+
+  if (canPlaceShip(playerGridState, r, c, shipDef.size, isHorizontalPlacement)) {
+    playSound('click');
+    const cells = [];
+    for (let i = 0; i < shipDef.size; i++) {
+      const curR = isHorizontalPlacement ? r : r + i;
+      const curC = isHorizontalPlacement ? c + i : c;
+      playerGridState[curR][curC].shipId = shipDef.id;
+      cells.push({ r: curR, c: curC });
+    }
+    playerShips.push({
+      id: shipDef.id,
+      name: shipDef.name,
+      size: shipDef.size,
+      cells,
+      horizontal: isHorizontalPlacement,
+      hits: 0,
+      sunk: false
+    });
+
+    logMessage(`[배치 완료] ${shipDef.name} (${shipDef.size}칸) 정박 성공.`, 'log-system');
+
+    const nextIdx = SHIP_DEFINITIONS.findIndex(s => !playerShips.some(p => p.id === s.id));
+    selectedShipIndex = nextIdx !== -1 ? nextIdx : null;
+
+    clearGridPreviews();
+    updateGridVisuals();
+    renderShipSelectors();
+  }
+}
+
+function autoPlaceShips(grid, shipsArray) {
+  grid.forEach(row => row.forEach(cell => { cell.shipId = null; }));
+  shipsArray.length = 0;
+
+  SHIP_DEFINITIONS.forEach(def => {
+    let placed = false;
+    let attempts = 0;
+    while (!placed && attempts < 500) {
+      attempts++;
+      const horiz = Math.random() < 0.5;
+      const r = Math.floor(Math.random() * BOARD_SIZE);
+      const c = Math.floor(Math.random() * BOARD_SIZE);
+      if (canPlaceShip(grid, r, c, def.size, horiz)) {
+        const cells = [];
+        for (let i = 0; i < def.size; i++) {
+          const curR = horiz ? r : r + i;
+          const curC = horiz ? c + i : c;
+          grid[curR][curC].shipId = def.id;
+          cells.push({ r: curR, c: curC });
+        }
+        shipsArray.push({
+          id: def.id,
+          name: def.name,
+          size: def.size,
+          cells,
+          horizontal: horiz,
+          hits: 0,
+          sunk: false
+        });
+        placed = true;
+      }
+    }
+  });
+}
+
+// --- SPECIAL WEAPONS ---
+function getWeaponTargetCoords(centerR, centerC, weaponType, isHoriz = true) {
+  const coords = [];
+  if (weaponType === 'normal') {
+    coords.push({ r: centerR, c: centerC });
+  } else if (weaponType === 'cross') {
+    const deltas = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]];
+    deltas.forEach(([dr, dc]) => {
+      const nr = centerR + dr;
+      const nc = centerC + dc;
+      if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+        coords.push({ r: nr, c: nc });
+      }
+    });
+  } else if (weaponType === 'x') {
+    const deltas = [[0, 0], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    deltas.forEach(([dr, dc]) => {
+      const nr = centerR + dr;
+      const nc = centerC + dc;
+      if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+        coords.push({ r: nr, c: nc });
+      }
+    });
+  } else if (weaponType === 'skip') {
+    for (let i = 0; i < 4; i++) {
+      const nr = isHoriz ? centerR : centerR + i;
+      const nc = isHoriz ? centerC + i : centerC;
+      if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+        coords.push({ r: nr, c: nc });
+      }
+    }
+  }
+  return coords;
+}
+
+function selectWeapon(w) {
+  if (playerAmmo[w] !== undefined && playerAmmo[w] <= 0) return;
+  playSound('click');
+  selectedWeapon = w;
+
+  document.querySelectorAll('.weapon-btn').forEach(b => b.classList.remove('selected'));
+  const activeBtn = document.getElementById(`w-${w}`);
+  if (activeBtn) activeBtn.classList.add('selected');
+
+  document.getElementById('skipDirGroup').style.display = (w === 'skip') ? 'flex' : 'none';
+  updateTutorialGuide();
+}
+
+function updateWeaponButtons() {
+  ['cross', 'x', 'skip'].forEach(w => {
+    const btn = document.getElementById(`w-${w}`);
+    const badge = document.getElementById(`ammo-${w}`);
+    if (btn && badge) {
+      badge.textContent = `${playerAmmo[w]}회`;
+      if (playerAmmo[w] <= 0) {
+        btn.disabled = true;
+        if (selectedWeapon === w) selectWeapon('normal');
+      } else {
+        btn.disabled = false;
+      }
+    }
+  });
+}
+
+function onCpuCellHover(r, c) {
+  if (gameState !== 'PLAYER_TURN') return;
+  clearGridPreviews();
+  const cGrid = document.getElementById('cpuGrid');
+  const targets = getWeaponTargetCoords(r, c, selectedWeapon, skipHorizontal);
+
+  targets.forEach(({ r: tr, c: tc }) => {
+    const idx = (tr + 1) * (BOARD_SIZE + 1) + (tc + 1);
+    const cell = cGrid.children[idx];
+    if (cell && !cpuGridState[tr][tc].hit && !cpuGridState[tr][tc].miss) {
+      cell.classList.add('attack-preview');
+    }
+  });
+}
+
+// --- COMBAT LOGIC ---
+function startGame() {
+  playSound('click');
+  gameState = 'PLAYER_TURN';
+  document.getElementById('placementControls').style.display = 'none';
+  document.getElementById('battleControls').style.display = 'flex';
+  document.getElementById('cpuGrid').classList.add('interactive-grid');
+  logMessage('⚔️ 작전 개시! 7×7 전장에서 포격전이 시작되었습니다.', 'log-system');
+
+  autoPlaceShips(cpuGridState, cpuShips);
+  updateWeaponButtons();
+  updateTutorialGuide();
+}
+
+function applyAttackToGrid(targetGrid, shipsArray, coords, isPlayer) {
+  let hitCount = 0;
+  let newHit = false;
+
+  coords.forEach(({ r, c }) => {
+    const cell = targetGrid[r][c];
+    if (cell.hit || cell.miss) return;
+
+    if (cell.shipId) {
+      cell.hit = true;
+      newHit = true;
+      hitCount++;
+      const ship = shipsArray.find(s => s.id === cell.shipId);
+      if (ship) {
+        ship.hits++;
+        if (ship.hits === ship.size && !ship.sunk) {
+          ship.sunk = true;
+          playSound('sunk');
+          const prefix = isPlayer ? '💥 [격침!]' : '💀 [아군 함선 침몰!]';
+          const targetName = isPlayer ? `적 ${ship.name}` : `아군 ${ship.name}`;
+          logMessage(`${prefix} ${targetName}이(가) 완전히 침몰했습니다!`, isPlayer ? 'log-sunk' : 'log-hit');
+        }
+      }
+    } else {
+      cell.miss = true;
+    }
+  });
+
+  if (newHit) playSound('hit');
+  else playSound('miss');
+
+  updateGridVisuals();
+  updateFleetStatusBadges();
+  return { hitCount, newHit };
+}
+
+function onCpuCellClick(r, c) {
+  if (gameState !== 'PLAYER_TURN') return;
+
+  const targets = getWeaponTargetCoords(r, c, selectedWeapon, skipHorizontal);
+  const validTargets = targets.filter(({ r: tr, c: tc }) => !cpuGridState[tr][tc].hit && !cpuGridState[tr][tc].miss);
+  if (validTargets.length === 0) return;
+
+  const weaponNames = {
+    normal: '일반 사격',
+    cross: '십자탄 (5칸)',
+    x: 'X자탄 (5칸)',
+    skip: '물수제비탄 (4칸)'
+  };
+
+  const centerCoord = `${COLS[c]}${ROWS[r]}`;
+  logMessage(`🚀 [아군 공격] ${weaponNames[selectedWeapon]} → 기준 좌표 ${centerCoord}`, 'log-player log-weapon');
+
+  if (selectedWeapon !== 'normal') {
+    playSound('special');
+    playerAmmo[selectedWeapon]--;
+    updateWeaponButtons();
+  }
+
+  const result = applyAttackToGrid(cpuGridState, cpuShips, targets, true);
+  logMessage(`결과: 명중 ${result.hitCount}칸 / 전체 타격 ${targets.length}칸`, result.hitCount > 0 ? 'log-hit' : 'log-player');
+
+  clearGridPreviews();
+
+  if (selectedWeapon !== 'normal') selectWeapon('normal');
+
+  if (cpuShips.every(s => s.sunk)) {
+    endGame(true);
+    return;
+  }
+
+  gameState = 'CPU_TURN';
+  document.getElementById('cpuGrid').classList.remove('interactive-grid');
+  updateTutorialGuide();
+  setTimeout(executeCpuTurn, 850);
+}
+
+function executeCpuTurn() {
+  if (gameState !== 'GAME_OVER') {
+    let weapon = 'normal';
+    const usableWeapons = ['cross', 'x', 'skip'].filter(w => cpuAmmo[w] > 0);
+    if (usableWeapons.length > 0 && Math.random() < 0.35) {
+      weapon = usableWeapons[Math.floor(Math.random() * usableWeapons.length)];
+      cpuAmmo[weapon]--;
+    }
+
+    let r, c;
+    if (aiHuntQueue.length > 0 && weapon === 'normal') {
+      const target = aiHuntQueue.shift();
+      r = target.r;
+      c = target.c;
+      if (playerGridState[r][c].hit || playerGridState[r][c].miss) {
+        executeCpuTurn();
+        return;
+      }
+    } else {
+      const available = [];
+      for (let i = 0; i < BOARD_SIZE; i++) {
+        for (let j = 0; j < BOARD_SIZE; j++) {
+          if (!playerGridState[i][j].hit && !playerGridState[i][j].miss) {
+            available.push({ r: i, c: j });
+          }
+        }
+      }
+      if (available.length === 0) return;
+      const chosen = available[Math.floor(Math.random() * available.length)];
+      r = chosen.r;
+      c = chosen.c;
+    }
+
+    const isHoriz = Math.random() < 0.5;
+    const targets = getWeaponTargetCoords(r, c, weapon, isHoriz);
+    const weaponNames = {
+      normal: '일반 사격',
+      cross: '십자탄',
+      x: 'X자탄',
+      skip: '물수제비탄'
+    };
+
+    const coordText = `${COLS[c]}${ROWS[r]}`;
+    logMessage(`🚨 [적군 공격] ${weaponNames[weapon]} 발사! → 표적 좌표 ${coordText}`, 'log-cpu log-weapon');
+
+    applyAttackToGrid(playerGridState, playerShips, targets, false);
+
+    targets.forEach(({ r: tr, c: tc }) => {
+      if (playerGridState[tr][tc].hit) {
+        const neighbors = [
+          { r: tr - 1, c: tc }, { r: tr + 1, c: tc },
+          { r: tr, c: tc - 1 }, { r: tr, c: tc + 1 }
+        ];
+        neighbors.forEach(n => {
+          if (n.r >= 0 && n.r < BOARD_SIZE && n.c >= 0 && n.c < BOARD_SIZE) {
+            if (!playerGridState[n.r][n.c].hit && !playerGridState[n.r][n.c].miss) {
+              if (!aiHuntQueue.some(q => q.r === n.r && q.c === n.c)) {
+                aiHuntQueue.push(n);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    if (playerShips.every(s => s.sunk)) {
+      endGame(false);
+      return;
+    }
+
+    gameState = 'PLAYER_TURN';
+    document.getElementById('cpuGrid').classList.add('interactive-grid');
+    updateTutorialGuide();
+  }
+}
+
+// --- VISUAL RENDER WITH SHIP GRAPHICS ---
+function updateGridVisuals() {
+  const pGrid = document.getElementById('playerGrid');
+  const cGrid = document.getElementById('cpuGrid');
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const idx = (r + 1) * (BOARD_SIZE + 1) + (c + 1);
+
+      // Player Grid Cell
+      const pCell = pGrid.children[idx];
+      const pState = playerGridState[r][c];
+      pCell.className = 'cell';
+      pCell.innerHTML = '';
+
+      if (pState.shipId) {
+        const ship = playerShips.find(s => s.id === pState.shipId);
+        if (ship) {
+          const partIdx = ship.cells.findIndex(cell => cell.r === r && cell.c === c);
+          pCell.innerHTML = getShipCellSvg(ship.id, partIdx, ship.size, ship.horizontal);
+          if (ship.sunk) pCell.classList.add('sunk-ship');
+        }
+      }
+
+      if (pState.hit) {
+        pCell.classList.add('hit');
+        const overlay = document.createElement('div');
+        overlay.className = 'cell-overlay-icon';
+        overlay.textContent = '💥';
+        pCell.appendChild(overlay);
+      } else if (pState.miss) {
+        pCell.classList.add('miss');
+      }
+
+      // CPU Grid Cell
+      const cCell = cGrid.children[idx];
+      const cState = cpuGridState[r][c];
+      cCell.className = 'cell';
+      cCell.innerHTML = '';
+
+      if (cState.shipId) {
+        const ship = cpuShips.find(s => s.id === cState.shipId);
+        if (ship && ship.sunk) {
+          const partIdx = ship.cells.findIndex(cell => cell.r === r && cell.c === c);
+          cCell.innerHTML = getShipCellSvg(ship.id, partIdx, ship.size, ship.horizontal);
+          cCell.classList.add('sunk-ship');
+          const overlay = document.createElement('div');
+          overlay.className = 'cell-overlay-icon';
+          overlay.textContent = '☠️';
+          cCell.appendChild(overlay);
+        }
+      }
+
+      if (cState.hit && !(cState.shipId && cpuShips.find(s => s.id === cState.shipId)?.sunk)) {
+        cCell.classList.add('hit');
+        const overlay = document.createElement('div');
+        overlay.className = 'cell-overlay-icon';
+        overlay.textContent = '💥';
+        cCell.appendChild(overlay);
+      } else if (cState.miss) {
+        cCell.classList.add('miss');
+      }
+    }
+  }
+}
+
+function updateFleetStatusBadges() {
+  playerShips.forEach(s => {
+    const el = document.getElementById(`p-${s.id}`);
+    if (el && s.sunk) el.classList.add('sunk');
+  });
+  cpuShips.forEach(s => {
+    const el = document.getElementById(`c-${s.id}`);
+    if (el && s.sunk) el.classList.add('sunk');
+  });
+}
+
+function endGame(playerWon) {
+  gameState = 'GAME_OVER';
+  const modal = document.getElementById('gameOverModal');
+  const title = document.getElementById('modalTitle');
+  const desc = document.getElementById('modalDesc');
+
+  if (playerWon) {
+    title.textContent = '🏆 작전 대성공!';
+    title.className = 'modal-title win-text';
+    desc.textContent = '적 함대를 모두 전멸시키고 우리 항구를 완벽히 수호했습니다!';
+  } else {
+    title.textContent = '⚓ 작전 실패...';
+    title.className = 'modal-title lose-text';
+    desc.textContent = '아군 함대가 전멸했습니다. 항구가 적에게 함락되었습니다.';
+  }
+  modal.classList.add('active');
+}
+
+function logMessage(text, className = '') {
+  const log = document.getElementById('combatLog');
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${className}`;
+  entry.textContent = text;
+  log.prepend(entry);
+}
+
+function restartGame() {
+  document.getElementById('gameOverModal').classList.remove('active');
+  document.getElementById('placementControls').style.display = 'flex';
+  document.getElementById('battleControls').style.display = 'none';
+  document.getElementById('cpuGrid').classList.remove('interactive-grid');
+  
+  gameState = 'PLACEMENT';
+  selectedShipIndex = 0;
+  isHorizontalPlacement = true;
+  document.getElementById('rotateShipBtn').textContent = '🔄 방향: 가로 (H)';
+
+  initBoardState();
+  renderGrids();
+  renderShipSelectors();
+  renderFleetStatusBadges();
+  updateTutorialGuide();
+}
+
+function openTutorialModal() {
+  playSound('click');
+  document.getElementById('tutorialModal').classList.add('active');
+}
+
+function closeTutorialModal() {
+  playSound('click');
+  document.getElementById('tutorialModal').classList.remove('active');
+}
+
+// --- BUTTON LISTENERS ---
+document.getElementById('rotateShipBtn').onclick = () => {
+  playSound('click');
+  isHorizontalPlacement = !isHorizontalPlacement;
+  document.getElementById('rotateShipBtn').textContent = `🔄 방향: ${isHorizontalPlacement ? '가로 (H)' : '세로 (V)'}`;
+};
+
+document.getElementById('toggleSkipDirBtn').onclick = () => {
+  playSound('click');
+  skipHorizontal = !skipHorizontal;
+  document.getElementById('toggleSkipDirBtn').textContent = `➡️ 발사 방향: ${skipHorizontal ? '가로' : '세로'}`;
+};
+
+document.getElementById('randomPlaceBtn').onclick = () => {
+  playSound('click');
+  autoPlaceShips(playerGridState, playerShips);
+  selectedShipIndex = null;
+  updateGridVisuals();
+  renderShipSelectors();
+  logMessage('[배치] 5척의 함선이 무작위로 자동 배치되었습니다.', 'log-system');
+};
+
+document.getElementById('resetPlacementBtn').onclick = () => {
+  playSound('click');
+  initBoardState();
+  selectedShipIndex = 0;
+  updateGridVisuals();
+  renderShipSelectors();
+  logMessage('[배치] 함선 배치가 초기화되었습니다.', 'log-system');
+};
+
+document.getElementById('startGameBtn').onclick = startGame;
+
+window.addEventListener('keydown', (e) => {
+  if (gameState === 'PLACEMENT' && (e.key === 'r' || e.key === 'R')) {
+    document.getElementById('rotateShipBtn').click();
+  }
+});
+
+// Boot
+initBoardState();
+renderGrids();
+renderShipSelectors();
+renderFleetStatusBadges();
+updateTutorialGuide();
+</script>
+</body>
+</html>
