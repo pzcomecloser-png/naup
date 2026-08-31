@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세계를 구하자 2 (Save the World Part 2)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Galmuri11:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #0b0b12;
+      color: #fff;
+      font-family: 'Galmuri11', monospace, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 200, 255, 0.25);
+      border: 4px solid #1a3350;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .audio-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(10, 20, 35, 0.85);
+      color: #00e5ff;
+      border: 2px solid #205080;
+      padding: 6px 12px;
+      font-family: 'Galmuri11', monospace;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s ease;
+    }
+
+    .audio-btn:hover {
+      background: #205080;
+      color: #fff;
+    }
+
+    .instructions {
+      margin-top: 14px;
+      color: #729bbb;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <button id="audio-toggle" class="audio-btn">🔊 사운드: ON</button>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+  </div>
+  <div class="instructions">
+    [SPACE] 키 또는 [마우스 클릭 / 1, 2 키] 로 진행합니다
+  </div>
+
+<script>
+/* ============================================================
+   8-BIT SOUND ENGINE (Web Audio API)
+============================================================ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playTone(freq, type, duration, gainVal = 0.1, decay = true) {
+    if (this.muted || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+      gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+      if (decay) {
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+      }
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  playTitleBeep() {
+    this.init();
+    this.playTone(440, 'triangle', 0.12, 0.15);
+    setTimeout(() => this.playTone(554.37, 'triangle', 0.12, 0.15), 90);
+    setTimeout(() => this.playTone(659.25, 'triangle', 0.15, 0.15), 180);
+    setTimeout(() => this.playTone(880, 'square', 0.35, 0.18), 270);
+  }
+
+  playTextBlip() {
+    this.init();
+    const f = 180 + Math.random() * 50;
+    this.playTone(f, 'square', 0.04, 0.06);
+  }
+
+  playDemonHeroLaugh() {
+    this.init();
+    const pitches = [160, 140, 180, 130, 150, 120];
+    pitches.forEach((p, idx) => {
+      setTimeout(() => {
+        this.playTone(p, 'sawtooth', 0.1, 0.14);
+      }, idx * 80);
+    });
+  }
+
+  playHero2Appear() {
+    this.init();
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((n, idx) => {
+      setTimeout(() => {
+        this.playTone(n, 'triangle', 0.12, 0.12);
+      }, idx * 70);
+    });
+  }
+
+  playSlash() {
+    this.init();
+    if (this.muted || !this.ctx) return;
+    try {
+      const bufferSize = this.ctx.sampleRate * 0.28;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1600, this.ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.28);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.28);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      noise.start();
+      this.playTone(980, 'sawtooth', 0.2, 0.25);
+    } catch (e) {}
+  }
+
+  playHornPop() {
+    this.init();
+    if (this.muted || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(850, this.ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.18);
+    } catch (e) {}
+  }
+
+  playRetireSigh() {
+    this.init();
+    this.playTone(330, 'triangle', 0.2, 0.12);
+    setTimeout(() => this.playTone(392, 'triangle', 0.2, 0.12), 150);
+    setTimeout(() => this.playTone(523.25, 'triangle', 0.4, 0.15), 300);
+  }
+
+  playPeaceJingle() {
+    this.init();
+    const melody = [
+      { f: 523.25, d: 0.18 }, { f: 659.25, d: 0.18 }, { f: 783.99, d: 0.18 },
+      { f: 1046.50, d: 0.3 }, { f: 1174.66, d: 0.2 }, { f: 1318.51, d: 0.6 }
+    ];
+    let time = 0;
+    melody.forEach(m => {
+      setTimeout(() => this.playTone(m.f, 'triangle', m.d, 0.14), time * 1000);
+      time += m.d * 0.85;
+    });
+  }
+
+  playSuccessionJingle() {
+    this.init();
+    const notes = [
+      { f: 220, d: 0.2 }, { f: 261.63, d: 0.2 }, { f: 329.63, d: 0.2 },
+      { f: 207.65, d: 0.3 }, { f: 164.81, d: 0.8 }
+    ];
+    let time = 0;
+    notes.forEach(n => {
+      setTimeout(() => this.playTone(n.f, 'sawtooth', n.d, 0.18), time * 1000);
+      time += n.d * 0.85;
+    });
+  }
+}
+
+const audio = new SoundEngine();
+document.getElementById('audio-toggle').addEventListener('click', (e) => {
+  audio.init();
+  audio.muted = !audio.muted;
+  e.target.textContent = audio.muted ? '🔇 사운드: OFF' : '🔊 사운드: ON';
+});
+
+/* ============================================================
+   GAME LOGIC & RENDERER
+============================================================ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const STATE = {
+  TITLE: 'TITLE',
+  DEMON_INTRO: 'DEMON_INTRO',
+  HERO2_APPEAR: 'HERO2_APPEAR',
+  CHOICE: 'CHOICE',
+  SLASH: 'SLASH',
+  PASS_HORN: 'PASS_HORN',
+  ENDING_PEACE: 'ENDING_PEACE',
+  ENDING_SUCCESSION: 'ENDING_SUCCESSION',
+  THE_END: 'THE_END'
+};
+
+let currentState = STATE.TITLE;
+let stateTime = 0;
+let lastTime = performance.now();
+
+let dialogList = [];
+let currentDialogIndex = 0;
+let displayedText = "";
+let charTimer = 0;
+let isTextComplete = false;
+
+let selectedChoice = 0;
+let choiceButtons = [
+  { text: "1. 세계 구한다", x: 220, y: 440, w: 360, h: 48 },
+  { text: "2. 구하지 않는다", x: 220, y: 505, w: 360, h: 48 }
+];
+
+let particles = [];
+let slashEffect = { active: false, progress: 0, x1: 0, y1: 0, x2: 0, y2: 0 };
+let demonSplit = { leftOffset: 0, rightOffset: 0, alpha: 1, split: false };
+let passHornAnim = { progress: 0, hornX: 540, hornY: 170, exHeroWalkOff: 0 };
+
+let lightningTimer = 0;
+let lightningAlpha = 0;
+
+function changeState(newState) {
+  currentState = newState;
+  stateTime = 0;
+  charTimer = 0;
+  displayedText = "";
+  isTextComplete = false;
+
+  if (newState === STATE.DEMON_INTRO) {
+    dialogList = [
+      { speaker: "마왕(전직 용사)", text: "나 마왕." },
+      { speaker: "마왕(전직 용사)", text: "세계정복 한다." },
+      { speaker: "마왕(전직 용사)", text: "내놔 세상... 크하하!" }
+    ];
+    currentDialogIndex = 0;
+    demonSplit = { leftOffset: 0, rightOffset: 0, alpha: 1, split: false };
+    audio.playDemonHeroLaugh();
+  } else if (newState === STATE.HERO2_APPEAR) {
+    dialogList = [
+      { speaker: "2대 용사", text: "선배 마왕님! 세계는 제가 지키겠습니다!" }
+    ];
+    currentDialogIndex = 0;
+    audio.playHero2Appear();
+  } else if (newState === STATE.CHOICE) {
+    selectedChoice = 0;
+  } else if (newState === STATE.SLASH) {
+    slashEffect = { active: true, progress: 0, x1: 260, y1: 140, x2: 560, y2: 380 };
+    demonSplit.split = true;
+    audio.playSlash();
+    spawnSlashParticles(420, 260);
+  } else if (newState === STATE.PASS_HORN) {
+    passHornAnim = { progress: 0, hornX: 540, hornY: 170, exHeroWalkOff: 0 };
+    dialogList = [
+      { speaker: "마왕(전직 용사)", text: "하아... 사실 나 마왕 그만하고 싶어." },
+      { speaker: "마왕(전직 용사)", text: "니가 해라! 난 이제 퇴근이다! ㅋㅋㅋ" },
+      { speaker: "2대 용사", text: "어...? 뿔을 받았네? 이제 내가 마왕...?!" }
+    ];
+    currentDialogIndex = 0;
+    audio.playHornPop();
+  } else if (newState === STATE.ENDING_PEACE) {
+    audio.playPeaceJingle();
+  } else if (newState === STATE.ENDING_SUCCESSION) {
+    audio.playSuccessionJingle();
+  }
+}
+
+function spawnSlashParticles(x, y) {
+  particles = [];
+  for (let i = 0; i < 60; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 8;
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      color: ['#00e5ff', '#ff0055', '#ffffff', '#ffd700'][Math.floor(Math.random() * 4)],
+      size: 3 + Math.random() * 5,
+      alpha: 1,
+      decay: 0.02 + Math.random() * 0.03
+    });
+  }
+}
+
+/* ============================================================
+   PIXEL ART RENDERING UTILITIES
+============================================================ */
+function drawPixelRect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
+}
+
+// 1. 타이틀 배경
+function drawTitleBackground(time) {
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 450);
+  skyGrad.addColorStop(0, '#050a18');
+  skyGrad.addColorStop(0.6, '#0d1f3a');
+  skyGrad.addColorStop(1, '#1b3252');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, 800, 600);
+
+  if (lightningAlpha > 0) {
+    ctx.fillStyle = `rgba(180, 230, 255, ${lightningAlpha})`;
+    ctx.fillRect(0, 0, 800, 600);
+  }
+
+  // Cyan Magical Moon
+  ctx.fillStyle = '#00e5ff';
+  ctx.beginPath();
+  ctx.arc(620, 120, 50, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#80f2ff';
+  ctx.beginPath();
+  ctx.arc(615, 115, 42, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Clouds
+  ctx.fillStyle = 'rgba(10, 25, 50, 0.7)';
+  ctx.fillRect(0, 180 + Math.sin(time * 0.5) * 5, 800, 70);
+
+  // Demon Castle Silhouette
+  ctx.fillStyle = '#07101f';
+  ctx.fillRect(340, 180, 120, 270);
+  ctx.fillRect(320, 220, 160, 230);
+  ctx.beginPath();
+  ctx.moveTo(340, 180); ctx.lineTo(400, 90); ctx.lineTo(460, 180); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(270, 240); ctx.lineTo(310, 150); ctx.lineTo(350, 240); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(450, 240); ctx.lineTo(490, 150); ctx.lineTo(530, 240); ctx.fill();
+
+  ctx.fillRect(240, 240, 90, 210);
+  ctx.fillRect(470, 240, 90, 210);
+  ctx.fillRect(160, 300, 90, 150);
+  ctx.fillRect(550, 300, 90, 150);
+
+  // Blue Fire Lights
+  const glow = 0.5 + Math.sin(time * 3) * 0.4;
+  ctx.fillStyle = `rgba(0, 229, 255, ${glow})`;
+  ctx.fillRect(390, 230, 20, 35);
+  ctx.fillRect(360, 270, 15, 25);
+  ctx.fillRect(425, 270, 15, 25);
+
+  // Ground
+  ctx.fillStyle = '#0a1628';
+  ctx.beginPath();
+  ctx.moveTo(0, 430);
+  ctx.lineTo(250, 410);
+  ctx.lineTo(400, 440);
+  ctx.lineTo(600, 400);
+  ctx.lineTo(800, 440);
+  ctx.lineTo(800, 600);
+  ctx.lineTo(0, 600);
+  ctx.fill();
+
+  ctx.fillStyle = '#050c17';
+  ctx.fillRect(0, 470, 800, 130);
+}
+
+// 2. 2대 용사 뒷모습
+function drawHero2BackView(x, y, time) {
+  const capeWave = Math.sin(time * 5.5) * 7;
+  const bob = Math.sin(time * 3) * 2;
+
+  ctx.fillStyle = '#00838f';
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y - 42 + bob);
+  ctx.lineTo(x + 16, y - 42 + bob);
+  ctx.lineTo(x + 32 + capeWave, y + 28 + bob);
+  ctx.lineTo(x - 26 + capeWave * 0.5, y + 30 + bob);
+  ctx.closePath();
+  ctx.fill();
+
+  drawPixelRect(x - 15, y - 42 + bob, 30, 38, '#b0bec5');
+  drawPixelRect(x - 20, y - 44 + bob, 9, 15, '#cfd8dc');
+  drawPixelRect(x + 11, y - 44 + bob, 9, 15, '#cfd8dc');
+
+  drawPixelRect(x - 13, y - 10 + bob, 26, 6, '#ffd54f');
+  drawPixelRect(x - 4, y - 10 + bob, 8, 6, '#00e5ff');
+
+  drawPixelRect(x - 14, y - 70 + bob, 28, 28, '#eceff1');
+  drawPixelRect(x - 16, y - 64 + bob, 5, 22, '#cfd8dc');
+  drawPixelRect(x + 11, y - 64 + bob, 5, 22, '#cfd8dc');
+  drawPixelRect(x - 5, y - 76 + bob, 10, 8, '#ffffff');
+
+  // Crystal Sword
+  ctx.fillStyle = '#00e5ff';
+  ctx.fillRect(x + 8, y - 82 + bob, 8, 56);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x + 10, y - 80 + bob, 4, 52);
+  ctx.fillStyle = '#ffd54f';
+  ctx.fillRect(x + 2, y - 48 + bob, 20, 6);
+  ctx.fillStyle = '#37474f';
+  ctx.fillRect(x + 8, y - 42 + bob, 8, 14);
+
+  drawPixelRect(x - 13, y - 4 + bob, 11, 32, '#37474f');
+  drawPixelRect(x + 2, y - 4 + bob, 11, 32, '#37474f');
+  drawPixelRect(x - 15, y + 22 + bob, 13, 12, '#263238');
+  drawPixelRect(x + 2, y + 22 + bob, 13, 12, '#263238');
+}
+
+// 3. 전작 용사 마왕
+function drawDemonHero(cx, cy, bounce, splitState, time, hasHorns = true) {
+  const leftX = cx - (splitState.split ? splitState.leftOffset : 0);
+  const rightX = cx + (splitState.split ? splitState.rightOffset : 0);
+  const curY = cy + bounce;
+
+  ctx.save();
+  ctx.globalAlpha = splitState.alpha;
+
+  if (splitState.split) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, cx - splitState.leftOffset * 0.2, 600);
+    ctx.clip();
+    renderDemonHeroBody(leftX, curY, time, bounce, hasHorns);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cx + splitState.rightOffset * 0.2, 0, 800, 600);
+    ctx.clip();
+    renderDemonHeroBody(rightX, curY, time, bounce, hasHorns);
+    ctx.restore();
+  } else {
+    renderDemonHeroBody(cx, curY, time, bounce, hasHorns);
+  }
+
+  ctx.restore();
+}
+
+function renderDemonHeroBody(cx, cy, time, bounce, hasHorns) {
+  for (let i = -5; i <= 5; i++) {
+    const auraH = 12 + Math.sin(time * 7 + i) * 10;
+    ctx.fillStyle = 'rgba(255, 0, 85, 0.35)';
+    ctx.fillRect(cx + i * 14 - 7, cy + 70 - auraH, 12, auraH);
+  }
+
+  ctx.fillStyle = '#4a0817';
+  ctx.fillRect(cx - 45, cy - 25, 90, 85);
+  ctx.fillStyle = '#2b040c';
+  ctx.fillRect(cx - 50, cy + 40, 100, 25);
+
+  drawPixelRect(cx - 35, cy - 30, 70, 75, '#1e1b24');
+  drawPixelRect(cx - 28, cy - 25, 56, 65, '#31293b');
+  drawPixelRect(cx - 8, cy - 20, 16, 55, '#ff0055');
+
+  drawPixelRect(cx - 55, cy - 40, 24, 25, '#15121c');
+  drawPixelRect(cx + 31, cy - 40, 24, 25, '#15121c');
+  drawPixelRect(cx - 50, cy - 50, 8, 12, '#ff0055');
+  drawPixelRect(cx + 42, cy - 50, 8, 12, '#ff0055');
+
+  drawPixelRect(cx - 24, cy - 65, 48, 40, '#ffd1b3');
+  drawPixelRect(cx - 28, cy - 74, 56, 18, '#2b190c');
+  drawPixelRect(cx - 30, cy - 68, 8, 22, '#2b190c');
+  drawPixelRect(cx + 22, cy - 68, 8, 22, '#2b190c');
+
+  if (hasHorns) {
+    drawPixelRect(cx - 36, cy - 84, 10, 18, '#ffd700');
+    drawPixelRect(cx - 42, cy - 98, 8, 16, '#ff5500');
+    drawPixelRect(cx - 46, cy - 108, 6, 12, '#ff0044');
+
+    drawPixelRect(cx + 26, cy - 84, 10, 18, '#ffd700');
+    drawPixelRect(cx + 34, cy - 98, 8, 16, '#ff5500');
+    drawPixelRect(cx + 40, cy - 108, 6, 12, '#ff0044');
+  }
+
+  drawPixelRect(cx - 16, cy - 54, 10, 8, '#ff0033');
+  drawPixelRect(cx + 6, cy - 54, 10, 8, '#ff0033');
+  drawPixelRect(cx - 12, cy - 52, 4, 4, '#ffff00');
+  drawPixelRect(cx + 10, cy - 52, 4, 4, '#ffff00');
+
+  const laughH = Math.abs(bounce) > 2 ? 16 : 8;
+  drawPixelRect(cx - 14, cy - 40, 28, laughH, '#110307');
+  drawPixelRect(cx - 10, cy - 40, 4, 4, '#fff');
+  drawPixelRect(cx + 6, cy - 40, 4, 4, '#fff');
+
+  const armBob = Math.sin(time * 8) * 6;
+  drawPixelRect(cx - 50, cy + 5 + armBob, 16, 35, '#1e1b24');
+  drawPixelRect(cx + 34, cy + 5 - armBob, 16, 35, '#1e1b24');
+
+  drawPixelRect(cx - 24, cy + 45, 18, 35, '#15121c');
+  drawPixelRect(cx + 6, cy + 45, 18, 35, '#15121c');
+}
+
+// 4. 2대 용사 앞모습
+function drawHero2FrontView(x, y, time, hasHorns = false) {
+  const bob = Math.sin(time * 6) * 2;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 42, 35, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (hasHorns) {
+    ctx.fillStyle = 'rgba(255, 0, 100, 0.3)';
+    ctx.fillRect(x - 40, y - 75 + bob, 80, 110);
+  }
+
+  ctx.fillStyle = hasHorns ? '#4a082b' : '#00838f';
+  ctx.fillRect(x - 22, y - 35 + bob, 44, 50);
+
+  drawPixelRect(x - 16, y - 38 + bob, 32, 42, '#b0bec5');
+  drawPixelRect(x - 12, y - 32 + bob, 24, 30, '#cfd8dc');
+  drawPixelRect(x - 4, y - 26 + bob, 8, 14, hasHorns ? '#ff0055' : '#00e5ff');
+
+  drawPixelRect(x - 14, y - 66 + bob, 28, 28, '#ffdbac');
+  drawPixelRect(x - 16, y - 72 + bob, 32, 14, '#eceff1');
+  drawPixelRect(x - 18, y - 68 + bob, 6, 20, '#eceff1');
+  drawPixelRect(x + 12, y - 68 + bob, 6, 20, '#eceff1');
+
+  if (hasHorns) {
+    drawPixelRect(x - 20, y - 84 + bob, 6, 14, '#ffd700');
+    drawPixelRect(x - 24, y - 94 + bob, 5, 12, '#ff5500');
+    drawPixelRect(x + 14, y - 84 + bob, 6, 14, '#ffd700');
+    drawPixelRect(x + 19, y - 94 + bob, 5, 12, '#ff5500');
+  }
+
+  if (hasHorns) {
+    drawPixelRect(x - 8, y - 56 + bob, 5, 5, '#ff0055');
+    drawPixelRect(x + 3, y - 56 + bob, 5, 5, '#ff0055');
+  } else {
+    drawPixelRect(x - 8, y - 56 + bob, 4, 6, '#00838f');
+    drawPixelRect(x + 4, y - 56 + bob, 4, 6, '#00838f');
+  }
+
+  drawPixelRect(x - 14, y + 4 + bob, 12, 34, '#37474f');
+  drawPixelRect(x + 2, y + 4 + bob, 12, 34, '#37474f');
+  drawPixelRect(x - 16, y + 26 + bob, 14, 14, '#263238');
+  drawPixelRect(x + 2, y + 26 + bob, 14, 14, '#263238');
+
+  // Shield
+  const shieldX = x - 36;
+  const shieldY = y - 30 + bob;
+  drawPixelRect(shieldX, shieldY, 18, 36, '#00acc1');
+  drawPixelRect(shieldX + 3, shieldY + 3, 12, 30, '#80deea');
+  drawPixelRect(shieldX + 6, shieldY + 10, 6, 16, '#ffffff');
+
+  // Sword
+  const swordX = x + 24;
+  const swordY = y - 55 + bob;
+  ctx.fillStyle = '#00e5ff';
+  ctx.fillRect(swordX + 2, swordY, 8, 48);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(swordX + 4, swordY + 2, 4, 42);
+  ctx.fillStyle = '#ffd54f';
+  ctx.fillRect(swordX - 4, swordY + 44, 20, 6);
+  ctx.fillStyle = '#37474f';
+  ctx.fillRect(swordX + 3, swordY + 50, 6, 12);
+}
+
+// 5. 대화창
+function drawDialogBox(speaker, text, progressText) {
+  ctx.fillStyle = 'rgba(10, 15, 28, 0.94)';
+  ctx.fillRect(40, 420, 720, 150);
+
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#00bcd4';
+  ctx.strokeRect(40, 420, 720, 150);
+
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(46, 426, 708, 138);
+
+  if (speaker) {
+    ctx.fillStyle = speaker.includes("마왕") ? '#991133' : '#00838f';
+    ctx.fillRect(60, 395, 170, 34);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(60, 395, 170, 34);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 15px "Galmuri11", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(speaker, 145, 418);
+  }
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '20px "Galmuri11", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(progressText, 70, 475);
+
+  if (isTextComplete && (Math.floor(Date.now() / 400) % 2 === 0)) {
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.moveTo(720, 540);
+    ctx.lineTo(735, 540);
+    ctx.lineTo(727.5, 550);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// 6. 선택지 UI
+function drawChoiceUI() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.fillRect(0, 0, 800, 600);
+
+  ctx.fillStyle = '#0f1a2e';
+  ctx.fillRect(160, 340, 480, 230);
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(160, 340, 480, 230);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 22px "Galmuri11", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText("어떻게 하겠습니까?", 400, 395);
+
+  choiceButtons.forEach((btn, idx) => {
+    const isSelected = selectedChoice === idx;
+
+    ctx.fillStyle = isSelected ? '#154060' : '#102236';
+    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+    ctx.strokeStyle = isSelected ? '#00e5ff' : '#305f88';
+    ctx.lineWidth = isSelected ? 3 : 2;
+    ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+    if (isSelected) {
+      ctx.fillStyle = '#00e5ff';
+      ctx.fillText("▶", btn.x + 25, btn.y + 31);
+    }
+
+    ctx.fillStyle = isSelected ? '#ffffff' : '#9ec5e6';
+    ctx.font = '18px "Galmuri11", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(btn.text, btn.x + 50, btn.y + 31);
+  });
+}
+
+// 7. 참격 슬래시
+function drawSlashAnimation() {
+  if (!slashEffect.active) return;
+
+  ctx.save();
+  if (slashEffect.progress < 0.3) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${(0.3 - slashEffect.progress) * 3})`;
+    ctx.fillRect(0, 0, 800, 600);
+  }
+
+  const p = Math.min(1, slashEffect.progress * 2);
+  const curX = slashEffect.x1 + (slashEffect.x2 - slashEffect.x1) * p;
+  const curY = slashEffect.y1 + (slashEffect.y2 - slashEffect.y1) * p;
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(slashEffect.x1, slashEffect.y1);
+  ctx.lineTo(curX, curY);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function updateAndDrawParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.alpha -= p.decay;
+
+    if (p.alpha <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1.0;
+}
+
+/* ============================================================
+   MAIN LOOP & SCENE UPDATES
+============================================================ */
+function update(dt, time) {
+  stateTime += dt;
+
+  if (currentState === STATE.TITLE) {
+    lightningTimer += dt;
+    if (lightningTimer > 4.0 + Math.random() * 4) {
+      lightningAlpha = 0.8;
+      lightningTimer = 0;
+    }
+    if (lightningAlpha > 0) {
+      lightningAlpha -= dt * 3;
+      if (lightningAlpha < 0) lightningAlpha = 0;
+    }
+  }
+
+  if (
+    currentState === STATE.DEMON_INTRO ||
+    currentState === STATE.HERO2_APPEAR ||
+    currentState === STATE.PASS_HORN
+  ) {
+    const targetText = dialogList[currentDialogIndex]?.text || "";
+    if (displayedText.length < targetText.length) {
+      charTimer += dt;
+      if (charTimer >= 0.05) {
+        charTimer = 0;
+        displayedText = targetText.slice(0, displayedText.length + 1);
+        audio.playTextBlip();
+      }
+    } else {
+      isTextComplete = true;
+    }
+  }
+
+  if (currentState === STATE.SLASH) {
+    slashEffect.progress += dt * 1.5;
+
+    if (slashEffect.progress > 0.2) {
+      demonSplit.leftOffset += dt * 130;
+      demonSplit.rightOffset += dt * 130;
+      demonSplit.alpha = Math.max(0, 1 - (slashEffect.progress - 0.2) * 1.2);
+    }
+
+    if (slashEffect.progress >= 1.7) {
+      slashEffect.active = false;
+      changeState(STATE.ENDING_PEACE);
+    }
+  }
+
+  if (currentState === STATE.PASS_HORN) {
+    if (currentDialogIndex >= 1) {
+      passHornAnim.exHeroWalkOff += dt * 70;
+    }
+  }
+}
+
+function render(time) {
+  ctx.clearRect(0, 0, 800, 600);
+
+  // 1. TITLE SCREEN
+  if (currentState === STATE.TITLE) {
+    drawTitleBackground(time);
+    drawHero2BackView(400, 480, time);
+
+    ctx.fillStyle = 'rgba(5, 15, 30, 0.8)';
+    ctx.fillRect(100, 45, 600, 110);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(100, 45, 600, 110);
+
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = '700 40px "Galmuri11", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#0099ff';
+    ctx.shadowBlur = 15;
+    ctx.fillText("세계를 구하자 2", 400, 105);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '700 16px "Galmuri11", monospace';
+    ctx.fillText("~ 마왕이 된 전직 용사의 귀환 ~", 400, 138);
+
+    const floatY = 320 + Math.sin(time * 4) * 10;
+    ctx.fillStyle = '#0f243d';
+    ctx.fillRect(260, floatY, 280, 50);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(260, floatY, 280, 50);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 18px "Press Start 2P", "Galmuri11", monospace';
+    ctx.fillText("PRESS SPACE", 400, floatY + 32);
+
+    ctx.fillStyle = '#7ba9d1';
+    ctx.font = '14px "Galmuri11", monospace';
+    ctx.fillText("스페이스바를 눌러 2대 용사의 여정을 시작하세요", 400, 570);
+  }
+
+  // 2. DEMON INTRO
+  else if (currentState === STATE.DEMON_INTRO) {
+    ctx.fillStyle = '#050308';
+    ctx.fillRect(0, 0, 800, 600);
+
+    const demonBounce = Math.sin(time * 14) * 8;
+    drawDemonHero(400, 240, demonBounce, demonSplit, time, true);
+
+    const curSpeaker = dialogList[currentDialogIndex]?.speaker || "마왕";
+    drawDialogBox(curSpeaker, dialogList[currentDialogIndex]?.text || "", displayedText);
+  }
+
+  // 3. HERO 2 APPEAR
+  else if (currentState === STATE.HERO2_APPEAR) {
+    ctx.fillStyle = '#070f1a';
+    ctx.fillRect(0, 0, 800, 600);
+    ctx.fillStyle = '#102238';
+    ctx.fillRect(0, 360, 800, 240);
+
+    drawDemonHero(560, 220, Math.sin(time * 6) * 4, demonSplit, time, true);
+    drawHero2FrontView(240, 320, time, false);
+
+    drawDialogBox("2대 용사", dialogList[currentDialogIndex]?.text || "", displayedText);
+  }
+
+  // 4. CHOICE SELECTION
+  else if (currentState === STATE.CHOICE) {
+    ctx.fillStyle = '#070f1a';
+    ctx.fillRect(0, 0, 800, 600);
+    ctx.fillStyle = '#102238';
+    ctx.fillRect(0, 360, 800, 240);
+
+    drawDemonHero(560, 220, 0, demonSplit, time, true);
+    drawHero2FrontView(240, 320, time, false);
+
+    drawChoiceUI();
+  }
+
+  // 5. SLASH ACTION
+  else if (currentState === STATE.SLASH) {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 800, 600);
+
+    drawHero2FrontView(260 + slashEffect.progress * 160, 300, time, false);
+
+    if (slashEffect.progress > 0.2 && slashEffect.progress < 1.2) {
+      ctx.fillStyle = '#ff0055';
+      ctx.fillRect(510, 130, 130, 45);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(510, 130, 130, 45);
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 22px "Galmuri11", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText("으악!!", 575, 161);
+    }
+
+    drawDemonHero(560, 220, 0, demonSplit, time, true);
+    drawSlashAnimation();
+    updateAndDrawParticles(0.016);
+  }
+
+  // 6. PASS HORN SCENE
+  else if (currentState === STATE.PASS_HORN) {
+    ctx.fillStyle = '#070f1a';
+    ctx.fillRect(0, 0, 800, 600);
+    ctx.fillStyle = '#102238';
+    ctx.fillRect(0, 360, 800, 240);
+
+    const exHeroX = 560 + passHornAnim.exHeroWalkOff;
+    const heroHasHorns = currentDialogIndex >= 2;
+
+    if (exHeroX < 900) {
+      drawDemonHero(exHeroX, 220, Math.sin(time * 8) * 3, { leftOffset: 0, rightOffset: 0, alpha: 1, split: false }, time, false);
+      if (currentDialogIndex === 0 || currentDialogIndex === 1) {
+        ctx.fillStyle = '#00e5ff';
+        ctx.fillRect(exHeroX + 30, 150, 8, 12);
+      }
+    }
+
+    drawHero2FrontView(240, 320, time, heroHasHorns);
+
+    if (currentDialogIndex === 1) {
+      const hornFloatX = 400 + Math.sin(time * 5) * 10;
+      const hornFloatY = 220 + Math.cos(time * 5) * 10;
+      drawPixelRect(hornFloatX - 16, hornFloatY, 8, 14, '#ffd700');
+      drawPixelRect(hornFloatX + 8, hornFloatY, 8, 14, '#ffd700');
+      drawPixelRect(hornFloatX - 20, hornFloatY - 8, 6, 10, '#ff5500');
+      drawPixelRect(hornFloatX + 14, hornFloatY - 8, 6, 10, '#ff5500');
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '700 14px "Galmuri11", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText("✨ 악마뿔 인수인계 ✨", 400, 190);
+    }
+
+    const curSpeaker = dialogList[currentDialogIndex]?.speaker || "마왕";
+    drawDialogBox(curSpeaker, dialogList[currentDialogIndex]?.text || "", displayedText);
+  }
+
+  // 7. ENDING: PEACE
+  else if (currentState === STATE.ENDING_PEACE) {
+    const peaceGrad = ctx.createLinearGradient(0, 0, 0, 400);
+    peaceGrad.addColorStop(0, '#4fc3f7');
+    peaceGrad.addColorStop(1, '#0288d1');
+    ctx.fillStyle = peaceGrad;
+    ctx.fillRect(0, 0, 800, 600);
+
+    ctx.fillStyle = '#ffeb3b';
+    ctx.beginPath();
+    ctx.arc(680, 100, 45, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#4caf50';
+    ctx.fillRect(0, 380, 800, 220);
+    ctx.fillStyle = '#388e3c';
+    ctx.fillRect(0, 440, 800, 160);
+
+    for (let i = 0; i < 16; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#ff4081' : '#00e5ff';
+      ctx.fillRect(30 + i * 48, 420 + (i % 3) * 20, 8, 8);
+    }
+
+    drawHero2FrontView(400, 360, time, false);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.fillRect(70, 75, 660, 135);
+    ctx.strokeStyle = '#2e7d32';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(70, 75, 660, 135);
+
+    ctx.fillStyle = '#1b5e20';
+    ctx.font = '700 24px "Galmuri11", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText("✨ 다시 한번 더 세상을 구했다! ✨", 400, 130);
+
+    ctx.fillStyle = '#333333';
+    ctx.font = '16px "Galmuri11", monospace';
+    ctx.fillText("2대 용사의 눈부신 검격으로 세계는 또다시 평화를 맞이했습니다.", 400, 172);
+
+    if (stateTime > 2.5) {
+      drawTheEndOverlay(time);
+    }
+  }
+
+  // 8. ENDING: SUCCESSION
+  else if (currentState === STATE.ENDING_SUCCESSION) {
+    const darkGrad = ctx.createLinearGradient(0, 0, 0, 500);
+    darkGrad.addColorStop(0, '#10001f');
+    darkGrad.addColorStop(0.7, '#24003d');
+    darkGrad.addColorStop(1, '#4a0072');
+    ctx.fillStyle = darkGrad;
+    ctx.fillRect(0, 0, 800, 600);
+
+    ctx.fillStyle = '#d500f9';
+    ctx.beginPath();
+    ctx.arc(400, 120, 60, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#130521';
+    ctx.fillRect(0, 380, 800, 220);
+
+    drawHero2FrontView(400, 360, time, true);
+
+    ctx.fillStyle = 'rgba(15, 5, 25, 0.92)';
+    ctx.fillRect(60, 75, 680, 140);
+    ctx.strokeStyle = '#d500f9';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(60, 75, 680, 140);
+
+    ctx.fillStyle = '#e040fb';
+    ctx.font = '700 24px "Galmuri11", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText("👑 마왕직 인수인계 완료 👑", 400, 125);
+
+    ctx.fillStyle = '#e1bee7';
+    ctx.font = '16px "Galmuri11", monospace';
+    ctx.fillText("전직 용사는 행복하게 퇴근했고, 2대 용사가 신임 마왕이 되었습니다!", 400, 168);
+
+    if (stateTime > 2.5) {
+      drawTheEndOverlay(time);
+    }
+  }
+}
+
+// 9. "The End" Overlay
+function drawTheEndOverlay(time) {
+  const alpha = Math.min(1, (stateTime - 2.5) * 1.5);
+
+  ctx.fillStyle = `rgba(0, 0, 0, ${alpha * 0.95})`;
+  ctx.fillRect(0, 0, 800, 600);
+
+  if (alpha > 0.5) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 48px "Press Start 2P", "Galmuri11", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText("The End", 400, 280);
+
+    if (Math.floor(Date.now() / 500) % 2 === 0) {
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = '16px "Galmuri11", monospace';
+      ctx.fillText("PRESS SPACE TO RESTART", 400, 380);
+    }
+  }
+}
+
+/* ============================================================
+   INPUT HANDLING
+============================================================ */
+function handleAdvance() {
+  audio.init();
+
+  if (currentState === STATE.TITLE) {
+    audio.playTitleBeep();
+    changeState(STATE.DEMON_INTRO);
+  }
+  else if (currentState === STATE.DEMON_INTRO) {
+    if (!isTextComplete) {
+      displayedText = dialogList[currentDialogIndex].text;
+      isTextComplete = true;
+    } else {
+      currentDialogIndex++;
+      if (currentDialogIndex < dialogList.length) {
+        displayedText = "";
+        isTextComplete = false;
+        charTimer = 0;
+        audio.playDemonHeroLaugh();
+      } else {
+        changeState(STATE.HERO2_APPEAR);
+      }
+    }
+  }
+  else if (currentState === STATE.HERO2_APPEAR) {
+    if (!isTextComplete) {
+      displayedText = dialogList[currentDialogIndex].text;
+      isTextComplete = true;
+    } else {
+      changeState(STATE.CHOICE);
+    }
+  }
+  else if (currentState === STATE.CHOICE) {
+    if (selectedChoice === 0) {
+      changeState(STATE.SLASH);
+    } else {
+      changeState(STATE.PASS_HORN);
+    }
+  }
+  else if (currentState === STATE.PASS_HORN) {
+    if (!isTextComplete) {
+      displayedText = dialogList[currentDialogIndex].text;
+      isTextComplete = true;
+    } else {
+      currentDialogIndex++;
+      if (currentDialogIndex < dialogList.length) {
+        displayedText = "";
+        isTextComplete = false;
+        charTimer = 0;
+        if (currentDialogIndex === 1) audio.playRetireSigh();
+        if (currentDialogIndex === 2) audio.playHornPop();
+      } else {
+        changeState(STATE.ENDING_SUCCESSION);
+      }
+    }
+  }
+  else if (currentState === STATE.ENDING_PEACE || currentState === STATE.ENDING_SUCCESSION) {
+    if (stateTime > 3.0) {
+      changeState(STATE.TITLE);
+    }
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    handleAdvance();
+  }
+  else if (currentState === STATE.CHOICE) {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      selectedChoice = 0;
+      audio.playTextBlip();
+    } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      selectedChoice = 1;
+      audio.playTextBlip();
+    } else if (e.key === '1') {
+      selectedChoice = 0;
+      handleAdvance();
+    } else if (e.key === '2') {
+      selectedChoice = 1;
+      handleAdvance();
+    } else if (e.key === 'Enter') {
+      handleAdvance();
+    }
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+  if (currentState === STATE.CHOICE) {
+    choiceButtons.forEach((btn, idx) => {
+      if (
+        mouseX >= btn.x && mouseX <= btn.x + btn.w &&
+        mouseY >= btn.y && mouseY <= btn.y + btn.h
+      ) {
+        selectedChoice = idx;
+        handleAdvance();
+      }
+    });
+  } else {
+    handleAdvance();
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (currentState !== STATE.CHOICE) return;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+  choiceButtons.forEach((btn, idx) => {
+    if (
+      mouseX >= btn.x && mouseX <= btn.x + btn.w &&
+      mouseY >= btn.y && mouseY <= btn.y + btn.h
+    ) {
+      if (selectedChoice !== idx) {
+        selectedChoice = idx;
+        audio.playTextBlip();
+      }
+    }
+  });
+});
+
+/* ============================================================
+   MAIN LOOP
+============================================================ */
+function loop(timestamp) {
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+  const time = timestamp / 1000;
+
+  update(dt, time);
+  render(time);
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame((timestamp) => {
+  lastTime = timestamp;
+  loop(timestamp);
+});
+</script>
+</body>
+</html>
