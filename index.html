@@ -3,66 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>게임 모음</title>
+<title>딸깍 게임스 (DDALKKAK GAMES) - 게임 모음</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
-    width: 100%; height: 100%; background: #0a0a1a;
+    width: 100%; height: 100%; background: #070714;
     font-family: 'Courier New', 'Malgun Gothic', monospace;
     overflow: hidden;
   }
   #app {
-    position: relative; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; padding: 16px;
+    position: relative; width: 100%; height: 100%; max-width: 460px; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 16px 14px 12px;
     background:
-      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 0, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.04) 0, transparent 40%),
-      #0a0a1a;
+      radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.08) 0, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.06) 0, transparent 40%),
+      #070714;
   }
 
-  .page-title {
-    color: #ffe15a; font-size: clamp(16px, 5.5vw, 24px); font-weight: 900;
-    letter-spacing: 2px; text-shadow: 2px 2px 0 #000, 0 0 14px rgba(255,225,90,.5);
-    margin-bottom: 2px; text-align: center;
+  /* ══ 딸깍 게임사 로고 & 헤더 ══ */
+  .company-header {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    width: 100%;
   }
 
-  .card-list { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 340px; max-height: 80vh; overflow-y: auto; padding: 4px; }
-  .card-list::-webkit-scrollbar { display: none; }
-
-  .game-card {
-    display: flex; align-items: center; gap: 12px;
-    background: #14142c; border: 3px solid #3a3a5c; border-radius: 6px;
-    padding: 8px 12px; text-decoration: none; cursor: pointer;
-    box-shadow: 0 4px 0 #05050f, 0 5px 12px rgba(0,0,0,.5);
-    transition: transform .1s ease;
+  .logo-box {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(18, 18, 40, 0.85);
+    border: 2px solid #3d3b70;
+    border-radius: 8px;
+    padding: 6px 14px;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.15), inset 0 0 10px rgba(0,0,0,0.5);
   }
-  .game-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #05050f; }
 
-  .icon-frame {
-    flex: none; width: 56px; height: 56px; background: #05050f;
-    border: 2px solid #4a4a72; border-radius: 4px;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  .logo-canvas-wrap {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: #000; border: 1.5px solid #00f0ff; border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
   }
-  .icon-frame canvas {
-    width: 46px; height: 46px;
+  .logo-canvas-wrap canvas {
+    width: 26px; height: 26px;
     image-rendering: pixelated; image-rendering: crisp-edges;
   }
 
-  .card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .card-title { color: #fff; font-size: clamp(13px, 3.8vw, 16px); font-weight: 900; letter-spacing: 0.5px; text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .card-desc { color: #a0a0c8; font-size: clamp(9.5px, 2.5vw, 11.5px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .card-arrow { margin-left: auto; color: #ffe15a; font-size: 18px; font-weight: 900; flex: none; padding-left: 4px; }
+  .brand-text {
+    display: flex; flex-direction: column;
+  }
+  .brand-title {
+    color: #00f0ff; font-size: 17px; font-weight: 900;
+    letter-spacing: 1.5px; text-shadow: 0 0 8px rgba(0,240,255,0.7), 2px 2px 0 #000;
+  }
+  .brand-slogan {
+    color: #ff55aa; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
 
+  .page-title {
+    color: #ffe15a; font-size: 13px; font-weight: 900;
+    letter-spacing: 2px; text-shadow: 1px 1px 0 #000;
+    margin-top: 4px;
+  }
+
+  /* ══ 게임 리스트 ══ */
+  .card-list {
+    display: flex; flex-direction: column; gap: 9px;
+    width: 100%; max-width: 350px;
+    flex: 1; overflow-y: auto;
+    padding: 6px 4px; margin: 6px 0;
+  }
+  .card-list::-webkit-scrollbar { display: none; }
+
+  .game-card {
+    display: flex; align-items: center; gap: 11px;
+    background: #121228; border: 2.5px solid #2e2c54; border-radius: 6px;
+    padding: 7px 11px; text-decoration: none; cursor: pointer;
+    box-shadow: 0 3px 0 #03030a, 0 4px 10px rgba(0,0,0,.6);
+    transition: transform .08s ease, border-color .15s ease;
+  }
+  .game-card:hover {
+    border-color: #00e5ff;
+  }
+  .game-card:active {
+    transform: translateY(2px); box-shadow: 0 1px 0 #03030a;
+  }
+
+  .icon-frame {
+    flex: none; width: 48px; height: 48px; background: #04040a;
+    border: 2px solid #43416a; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .icon-frame canvas {
+    width: 40px; height: 40px;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+  }
+
+  .card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .card-title {
+    color: #fff; font-size: 14px; font-weight: 900;
+    letter-spacing: 0.5px; text-shadow: 1px 1px 0 #000;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-desc {
+    color: #8e8eb8; font-size: 10.5px; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-arrow {
+    margin-left: auto; color: #ffe15a; font-size: 16px; font-weight: 900;
+    flex: none; padding-left: 2px;
+  }
+
+  /* ══ 하단 푸터 ══ */
+  .footer-box {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
   .footer-hint {
-    margin-top: 2px; color: #5a5a80; font-size: clamp(9px, 2vw, 11px); text-align: center; letter-spacing: .5px;
+    color: #55557a; font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  }
+  .footer-copy {
+    color: #383854; font-size: 8.5px; font-family: monospace;
   }
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="page-title">GAME SELECT</div>
 
+  <!-- 딸깍 게임사 로고 & 헤더 -->
+  <div class="company-header">
+    <div class="logo-box">
+      <div class="logo-canvas-wrap">
+        <canvas id="logoCanvas" width="24" height="24"></canvas>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">딸깍 게임스 ⚡</div>
+        <div class="brand-slogan">DDALKKAK · 100% AI RETRO STUDIO</div>
+      </div>
+    </div>
+    <div class="page-title">✦ SELECT CARTRIDGE ✦</div>
+  </div>
+
+  <!-- 게임 카트리지 목록 (총 7개) -->
   <div class="card-list">
     <!-- 1. 나 키우기 -->
     <a class="game-card" href="naup.html">
@@ -79,7 +159,7 @@
       <div class="icon-frame"><canvas id="iconUfo" width="24" height="24"></canvas></div>
       <div class="card-text">
         <div class="card-title">지구침공</div>
-        <div class="card-desc">횡스크롤 액션 게임</div>
+        <div class="card-desc">횡스크롤 액션 슈팅</div>
       </div>
       <div class="card-arrow">▶</div>
     </a>
@@ -94,7 +174,7 @@
       <div class="card-arrow">▶</div>
     </a>
 
-    <!-- 4. 삼국무쌍: 도원의 검 (NEW) -->
+    <!-- 4. 삼국무쌍: 도원의 검 -->
     <a class="game-card" href="three_kingdoms_slash.html">
       <div class="icon-frame"><canvas id="iconThreeKingdoms" width="24" height="24"></canvas></div>
       <div class="card-text">
@@ -109,7 +189,7 @@
       <div class="icon-frame"><canvas id="iconBattleship" width="24" height="24"></canvas></div>
       <div class="card-text">
         <div class="card-title">배틀 쉽</div>
-        <div class="card-desc">본격 해양 전투 시뮬레이션</div>
+        <div class="card-desc">본격 해양 전략 전투</div>
       </div>
       <div class="card-arrow">▶</div>
     </a>
@@ -135,12 +215,72 @@
     </a>
   </div>
 
-  <div class="footer-hint">PRESS TO START</div>
+  <div class="footer-box">
+    <div class="footer-hint">CLICK TO PLAY</div>
+    <div class="footer-copy">© 2026 DDALKKAK GAMES CORP. ALL AI RIGHTS RESERVED.</div>
+  </div>
 </div>
 
 <script>
-// 픽셀아트 아이콘을 캔버스에 직접 그립니다 (24x24 저해상도 → CSS로 확대해 픽셀 느낌 유지)
+// ═══════════════════════════════════════════════════════════════
+//  딸깍 게임스 로고 & 픽셀아트 아이콘 렌더러
+// ═══════════════════════════════════════════════════════════════
 
+// 0. 딸깍 게임사 로고 (마우스 커서 딸깍 클릭 + AI 번개 스파크 픽셀아트)
+function drawCompanyLogo(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 배경
+  ctx.fillStyle = '#060a17';
+  ctx.fillRect(0, 0, 24, 24);
+
+  // 딸깍! 클릭 스파크 충격파 (Sparkles)
+  ctx.fillStyle = '#ff007f';
+  ctx.fillRect(14, 2, 2, 2);
+  ctx.fillRect(19, 5, 2, 2);
+  ctx.fillRect(20, 11, 2, 2);
+  ctx.fillStyle = '#00f0ff';
+  ctx.fillRect(16, 3, 2, 2);
+  ctx.fillRect(18, 8, 2, 2);
+
+  // AI 번개 아이콘 (좌측 상단)
+  ctx.fillStyle = '#ffe600';
+  ctx.fillRect(3, 2, 4, 2);
+  ctx.fillRect(2, 4, 4, 2);
+  ctx.fillRect(1, 6, 7, 2);
+  ctx.fillRect(3, 8, 3, 2);
+  ctx.fillRect(2, 10, 2, 2);
+
+  // 픽셀 마우스 커서 (포인터 화살표)
+  ctx.fillStyle = '#000000'; // 외곽선
+  ctx.fillRect(5, 7, 2, 14);
+  ctx.fillRect(7, 9, 2, 10);
+  ctx.fillRect(9, 11, 2, 8);
+  ctx.fillRect(11, 13, 2, 7);
+  ctx.fillRect(13, 15, 2, 5);
+  ctx.fillRect(15, 17, 2, 3);
+  ctx.fillRect(7, 19, 7, 2);
+
+  ctx.fillStyle = '#ffffff'; // 메인 화살표 본체
+  ctx.fillRect(6, 8, 1, 12);
+  ctx.fillRect(7, 10, 1, 9);
+  ctx.fillRect(8, 11, 1, 7);
+  ctx.fillRect(9, 12, 1, 6);
+  ctx.fillRect(10, 13, 1, 5);
+  ctx.fillRect(11, 14, 1, 4);
+  ctx.fillRect(12, 15, 1, 3);
+
+  // 커서 클릭 하이라이트 (시안 블루 코어)
+  ctx.fillStyle = '#00f0ff';
+  ctx.fillRect(7, 11, 2, 3);
+  ctx.fillRect(9, 13, 2, 2);
+}
+
+// 1. 나 키우기
 function drawNaupIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -149,46 +289,26 @@ function drawNaupIcon(id) {
   ctx.clearRect(0,0,24,24);
 
   // 안테나
-  ctx.fillStyle = '#ff5a5a';
-  ctx.fillRect(11, 1, 2, 2);
-  ctx.fillStyle = '#b9c3cf';
-  ctx.fillRect(11, 3, 2, 3);
-
-  // 머리 (헬멧형)
-  ctx.fillStyle = '#eef3f8';
-  ctx.fillRect(7, 6, 10, 7);
-  ctx.fillStyle = '#2b3f66';
-  ctx.fillRect(9, 7, 6, 4);
-
+  ctx.fillStyle = '#ff5a5a'; ctx.fillRect(11, 1, 2, 2);
+  ctx.fillStyle = '#b9c3cf'; ctx.fillRect(11, 3, 2, 3);
+  // 머리
+  ctx.fillStyle = '#eef3f8'; ctx.fillRect(7, 6, 10, 7);
+  ctx.fillStyle = '#2b3f66'; ctx.fillRect(9, 7, 6, 4);
   // 눈
-  ctx.fillStyle = '#3a9bff';
-  ctx.fillRect(10, 8, 1, 1);
-  ctx.fillRect(13, 8, 1, 1);
-
+  ctx.fillStyle = '#3a9bff'; ctx.fillRect(10, 8, 1, 1); ctx.fillRect(13, 8, 1, 1);
   // 목
-  ctx.fillStyle = '#b9c3cf';
-  ctx.fillRect(10, 13, 4, 1);
-
+  ctx.fillStyle = '#b9c3cf'; ctx.fillRect(10, 13, 4, 1);
   // 몸통
-  ctx.fillStyle = '#3a72e0';
-  ctx.fillRect(6, 14, 12, 6);
-  ctx.fillStyle = '#eef3f8';
-  ctx.fillRect(9, 16, 6, 3);
-  ctx.fillStyle = '#ffd76a';
-  ctx.fillRect(10, 17, 1, 1);
-  ctx.fillRect(13, 17, 1, 1);
-
+  ctx.fillStyle = '#3a72e0'; ctx.fillRect(6, 14, 12, 6);
+  ctx.fillStyle = '#eef3f8'; ctx.fillRect(9, 16, 6, 3);
+  ctx.fillStyle = '#ffd76a'; ctx.fillRect(10, 17, 1, 1); ctx.fillRect(13, 17, 1, 1);
   // 팔
-  ctx.fillStyle = '#2652a8';
-  ctx.fillRect(4, 15, 2, 4);
-  ctx.fillRect(18, 15, 2, 4);
-
+  ctx.fillStyle = '#2652a8'; ctx.fillRect(4, 15, 2, 4); ctx.fillRect(18, 15, 2, 4);
   // 다리
-  ctx.fillStyle = '#22315c';
-  ctx.fillRect(8, 20, 3, 3);
-  ctx.fillRect(13, 20, 3, 3);
+  ctx.fillStyle = '#22315c'; ctx.fillRect(8, 20, 3, 3); ctx.fillRect(13, 20, 3, 3);
 }
 
+// 2. 지구침공
 function drawUfoIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -198,37 +318,28 @@ function drawUfoIcon(id) {
 
   // 별
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(3, 3, 1, 1);
-  ctx.fillRect(19, 5, 1, 1);
-  ctx.fillRect(20, 15, 1, 1);
-  ctx.fillRect(4, 18, 1, 1);
-
+  ctx.fillRect(3, 3, 1, 1); ctx.fillRect(19, 5, 1, 1);
+  ctx.fillRect(20, 15, 1, 1); ctx.fillRect(4, 18, 1, 1);
   // 빔
   ctx.fillStyle = 'rgba(150,255,180,0.35)';
   ctx.beginPath();
   ctx.moveTo(9, 13); ctx.lineTo(15, 13); ctx.lineTo(19, 22); ctx.lineTo(5, 22);
   ctx.closePath(); ctx.fill();
-
   // UFO 돔
   ctx.fillStyle = '#c3c8e0';
   ctx.beginPath();
   ctx.ellipse(12, 9, 5, 4, 0, Math.PI, 0);
   ctx.fill();
-
-  // UFO 몸체
-  ctx.fillStyle = '#8a8fa8';
-  ctx.fillRect(3, 11, 18, 3);
-  ctx.fillStyle = '#6a6f88';
-  ctx.fillRect(3, 13, 18, 1);
-
+  // 몸체
+  ctx.fillStyle = '#8a8fa8'; ctx.fillRect(3, 11, 18, 3);
+  ctx.fillStyle = '#6a6f88'; ctx.fillRect(3, 13, 18, 1);
   // 불빛
   ctx.fillStyle = '#5af06e';
-  ctx.fillRect(5, 12, 1, 1);
-  ctx.fillRect(9, 12, 1, 1);
-  ctx.fillRect(14, 12, 1, 1);
-  ctx.fillRect(18, 12, 1, 1);
+  ctx.fillRect(5, 12, 1, 1); ctx.fillRect(9, 12, 1, 1);
+  ctx.fillRect(14, 12, 1, 1); ctx.fillRect(18, 12, 1, 1);
 }
 
+// 3. 양상치 소녀
 function drawLettuceIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -236,56 +347,27 @@ function drawLettuceIcon(id) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 양상추 머리 베이스 (녹색 톤)
-  ctx.fillStyle = '#4fa348';
-  ctx.fillRect(6, 2, 12, 9);
-  ctx.fillRect(4, 4, 15, 7);
-
-  // 밝은 녹색 하이라이트
-  ctx.fillStyle = '#82cf6e';
-  ctx.fillRect(9, 3, 7, 5);
-  ctx.fillRect(8, 4, 8, 4);
-
-  // 하얀 윤기/광택 라인
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(11, 4, 3, 1);
-  ctx.fillRect(14, 5, 2, 1);
-
-  // 2. 얼굴 / 피부 (측면)
-  ctx.fillStyle = '#ffd0a6';
-  ctx.fillRect(12, 9, 4, 3);
-
-  // 눈 & 볼터치
-  ctx.fillStyle = '#4a2820';
-  ctx.fillRect(15, 9, 1, 2);
-  ctx.fillStyle = '#ff6b8b';
-  ctx.fillRect(14, 10, 3, 1);
-
-  // 3. 노란 셔츠 & 팔
-  ctx.fillStyle = '#ffc83b';
-  ctx.fillRect(10, 11, 5, 2);
-  ctx.fillStyle = '#ffd0a6';
-  ctx.fillRect(8, 13, 2, 3);
-  ctx.fillRect(14, 12, 3, 4);
-
-  // 4. 파란 멜빵 바지
-  ctx.fillStyle = '#357ae8';
-  ctx.fillRect(10, 13, 5, 5);
-  ctx.fillStyle = '#2459b8';
-  ctx.fillRect(12, 14, 2, 2);
-
-  // 5. 다리 & 신발
-  ctx.fillStyle = '#2459b8';
-  ctx.fillRect(10, 17, 3, 2);
-  ctx.fillStyle = '#ff9626';
-  ctx.fillRect(13, 17, 4, 3);
-  ctx.fillStyle = '#ffc83b';
-  ctx.fillRect(9, 18, 5, 3);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(9, 21, 5, 1);
+  // 양상추 머리
+  ctx.fillStyle = '#4fa348'; ctx.fillRect(6, 2, 12, 9); ctx.fillRect(4, 4, 15, 7);
+  ctx.fillStyle = '#82cf6e'; ctx.fillRect(9, 3, 7, 5); ctx.fillRect(8, 4, 8, 4);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(11, 4, 3, 1); ctx.fillRect(14, 5, 2, 1);
+  // 얼굴
+  ctx.fillStyle = '#ffd0a6'; ctx.fillRect(12, 9, 4, 3);
+  ctx.fillStyle = '#4a2820'; ctx.fillRect(15, 9, 1, 2);
+  ctx.fillStyle = '#ff6b8b'; ctx.fillRect(14, 10, 3, 1);
+  // 셔츠
+  ctx.fillStyle = '#ffc83b'; ctx.fillRect(10, 11, 5, 2);
+  ctx.fillStyle = '#ffd0a6'; ctx.fillRect(8, 13, 2, 3); ctx.fillRect(14, 12, 3, 4);
+  // 멜빵 & 바지
+  ctx.fillStyle = '#357ae8'; ctx.fillRect(10, 13, 5, 5);
+  ctx.fillStyle = '#2459b8'; ctx.fillRect(12, 14, 2, 2);
+  ctx.fillStyle = '#2459b8'; ctx.fillRect(10, 17, 3, 2);
+  ctx.fillStyle = '#ff9626'; ctx.fillRect(13, 17, 4, 3);
+  ctx.fillStyle = '#ffc83b'; ctx.fillRect(9, 18, 5, 3);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 21, 5, 1);
 }
 
-// 4. 삼국무쌍: 도원의 검 아이콘 (관우의 청룡언월도 + 흩날리는 도원 벚꽃잎)
+// 4. 삼국무쌍: 도원의 검
 function drawThreeKingdomsIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -293,56 +375,30 @@ function drawThreeKingdomsIcon(id) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 노을빛 전장/도원결의 배경
-  ctx.fillStyle = '#2b1418';
-  ctx.fillRect(0, 0, 24, 24);
-  ctx.fillStyle = '#4a2220';
-  ctx.fillRect(2, 2, 20, 20);
-
-  // 2. 도원의 흩날리는 분홍 벚꽃잎
+  // 배경
+  ctx.fillStyle = '#2b1418'; ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#4a2220'; ctx.fillRect(2, 2, 20, 20);
+  // 벚꽃
   ctx.fillStyle = '#ff8ea8';
-  ctx.fillRect(3, 4, 2, 2);
-  ctx.fillRect(19, 6, 2, 2);
-  ctx.fillRect(5, 17, 2, 2);
-  ctx.fillRect(17, 19, 2, 2);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(4, 4, 1, 1);
-  ctx.fillRect(19, 7, 1, 1);
-
-  // 3. 청룡언월도 대각선 자루 (나무 봉)
+  ctx.fillRect(3, 4, 2, 2); ctx.fillRect(19, 6, 2, 2);
+  ctx.fillRect(5, 17, 2, 2); ctx.fillRect(17, 19, 2, 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(4, 4, 1, 1); ctx.fillRect(19, 7, 1, 1);
+  // 자루
   ctx.fillStyle = '#4a2f1c';
-  ctx.fillRect(4, 18, 3, 3);
-  ctx.fillRect(6, 16, 3, 3);
-  ctx.fillRect(8, 14, 3, 3);
-  ctx.fillRect(10, 12, 3, 3);
-  ctx.fillRect(12, 10, 3, 3);
-
-  // 황금 술 / 용머리 장식
-  ctx.fillStyle = '#e8c93a';
-  ctx.fillRect(12, 9, 4, 4);
-  ctx.fillStyle = '#b8202a'; // 붉은 술
-  ctx.fillRect(11, 12, 3, 4);
-
-  // 4. 청룡언월도 푸른/은빛 대도날 (Guandao Blade)
-  ctx.fillStyle = '#dfe7ea'; // 메인 은빛 칼날
-  ctx.fillRect(14, 4, 4, 6);
-  ctx.fillRect(16, 2, 4, 5);
-  ctx.fillRect(18, 1, 3, 4);
-  ctx.fillRect(15, 6, 5, 4);
-
-  // 청룡 푸른 검기/광택 (Green Blade Glow)
-  ctx.fillStyle = '#43a96d';
-  ctx.fillRect(14, 5, 2, 4);
-  ctx.fillRect(16, 3, 2, 3);
-
-  // 칼등 돌기 & 칼날 끝 하이라이트
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(19, 1, 2, 2);
-  ctx.fillRect(18, 3, 1, 1);
-  ctx.fillRect(15, 9, 3, 1);
+  ctx.fillRect(4, 18, 3, 3); ctx.fillRect(6, 16, 3, 3);
+  ctx.fillRect(8, 14, 3, 3); ctx.fillRect(10, 12, 3, 3); ctx.fillRect(12, 10, 3, 3);
+  // 장식
+  ctx.fillStyle = '#e8c93a'; ctx.fillRect(12, 9, 4, 4);
+  ctx.fillStyle = '#b8202a'; ctx.fillRect(11, 12, 3, 4);
+  // 청룡언월도날
+  ctx.fillStyle = '#dfe7ea';
+  ctx.fillRect(14, 4, 4, 6); ctx.fillRect(16, 2, 4, 5);
+  ctx.fillRect(18, 1, 3, 4); ctx.fillRect(15, 6, 5, 4);
+  ctx.fillStyle = '#43a96d'; ctx.fillRect(14, 5, 2, 4); ctx.fillRect(16, 3, 2, 3);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(19, 1, 2, 2); ctx.fillRect(15, 9, 3, 1);
 }
 
-// 5. 배틀 쉽 아이콘 (바다 위 군함 전함 + 주포 포격 + 레이더 조준선)
+// 5. 배틀 쉽
 function drawBattleshipIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -350,74 +406,30 @@ function drawBattleshipIcon(id) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 하늘 & 바다 배경
-  ctx.fillStyle = '#0a1d37'; // 짙은 밤바다 하늘
-  ctx.fillRect(0, 0, 24, 13);
-  ctx.fillStyle = '#0c356a'; // 깊은 바다
-  ctx.fillRect(0, 13, 24, 11);
-
-  // 파도 물결 & 하이라이트
-  ctx.fillStyle = '#0174be';
-  ctx.fillRect(2, 16, 5, 1);
-  ctx.fillRect(15, 17, 6, 1);
-  ctx.fillRect(0, 21, 24, 3);
-  ctx.fillStyle = '#40f8ff'; // 흰 포말
-  ctx.fillRect(1, 15, 3, 1);
-  ctx.fillRect(19, 15, 4, 1);
-
-  // 레이더 그리드 원 & 탐지선
-  ctx.strokeStyle = 'rgba(0, 255, 180, 0.25)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(12, 10, 8, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // 2. 전함 선체 (Hull) - 웅장한 전함 실루엣
-  ctx.fillStyle = '#1e293b'; // 선체 하단 어두운 섀도우
-  ctx.beginPath();
-  ctx.moveTo(2, 15);
-  ctx.lineTo(21, 15);
-  ctx.lineTo(18, 18);
-  ctx.lineTo(4, 18);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = '#475569'; // 선체 메인 강철 장갑
-  ctx.fillRect(4, 13, 15, 2);
-  ctx.fillRect(19, 13, 2, 1); // 함수(선두) 경사
-
-  // 함교 (Bridge / Superstructure)
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillRect(8, 9, 6, 4);
-  ctx.fillStyle = '#cbd5e1'; // 함교 창문/탑
-  ctx.fillRect(9, 7, 4, 2);
-  ctx.fillRect(10, 5, 2, 2); // 마스트
-
-  // 레이다 안테나
-  ctx.fillStyle = '#00ffcc';
-  ctx.fillRect(10, 4, 2, 1);
-
-  // 3. 주포 터렛 & 포신 (Main Gun Turrets)
-  // 전방 주포 (포격 불꽃 발사!)
-  ctx.fillStyle = '#64748b';
-  ctx.fillRect(14, 11, 4, 2);
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(17, 10, 3, 1); // 포신 각도
-
-  // 포격 화염 이펙트 (Muzzle Flash)
-  ctx.fillStyle = '#ff9900';
-  ctx.fillRect(20, 9, 2, 2);
-  ctx.fillStyle = '#ffff00';
-  ctx.fillRect(21, 9, 1, 1);
-
-  // 후방 주포
-  ctx.fillStyle = '#64748b';
-  ctx.fillRect(5, 11, 3, 2);
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(4, 10, 2, 1);
+  // 바다 배경
+  ctx.fillStyle = '#0a1d37'; ctx.fillRect(0, 0, 24, 13);
+  ctx.fillStyle = '#0c356a'; ctx.fillRect(0, 13, 24, 11);
+  ctx.fillStyle = '#0174be'; ctx.fillRect(2, 16, 5, 1); ctx.fillRect(15, 17, 6, 1); ctx.fillRect(0, 21, 24, 3);
+  ctx.fillStyle = '#40f8ff'; ctx.fillRect(1, 15, 3, 1); ctx.fillRect(19, 15, 4, 1);
+  // 레이더
+  ctx.strokeStyle = 'rgba(0, 255, 180, 0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(12, 10, 8, 0, Math.PI * 2); ctx.stroke();
+  // 선체
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath(); ctx.moveTo(2, 15); ctx.lineTo(21, 15); ctx.lineTo(18, 18); ctx.lineTo(4, 18); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#475569'; ctx.fillRect(4, 13, 15, 2); ctx.fillRect(19, 13, 2, 1);
+  // 함교
+  ctx.fillStyle = '#94a3b8'; ctx.fillRect(8, 9, 6, 4);
+  ctx.fillStyle = '#cbd5e1'; ctx.fillRect(9, 7, 4, 2); ctx.fillRect(10, 5, 2, 2);
+  ctx.fillStyle = '#00ffcc'; ctx.fillRect(10, 4, 2, 1);
+  // 포격
+  ctx.fillStyle = '#64748b'; ctx.fillRect(14, 11, 4, 2); ctx.fillRect(5, 11, 3, 2);
+  ctx.fillStyle = '#334155'; ctx.fillRect(17, 10, 3, 1); ctx.fillRect(4, 10, 2, 1);
+  ctx.fillStyle = '#ff9900'; ctx.fillRect(20, 9, 2, 2);
+  ctx.fillStyle = '#ffff00'; ctx.fillRect(21, 9, 1, 1);
 }
 
-// 5. 세계를 구하자 아이콘 (2개의 뿔을 가진 마왕의 흉악한 얼굴 픽셀아트)
+// 6. 세계를 구하자 1
 function drawSaveWorldIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -425,77 +437,33 @@ function drawSaveWorldIcon(id) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 어둠/보라빛 오라 배경
-  ctx.fillStyle = '#1a0526';
-  ctx.fillRect(0, 0, 24, 24);
-  ctx.fillStyle = '#450a36';
-  ctx.fillRect(2, 2, 20, 20);
-
-  // 2. 2개의 거대한 마왕 뿔 (왼쪽 & 오른쪽)
+  // 배경
+  ctx.fillStyle = '#1a0526'; ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#450a36'; ctx.fillRect(2, 2, 20, 20);
+  // 뿔
   ctx.fillStyle = '#edd298';
-  // 왼쪽 뿔
-  ctx.fillRect(4, 2, 2, 4);
-  ctx.fillRect(5, 5, 2, 3);
-  ctx.fillRect(6, 7, 2, 2);
-  // 오른쪽 뿔
-  ctx.fillRect(18, 2, 2, 4);
-  ctx.fillRect(17, 5, 2, 3);
-  ctx.fillRect(16, 7, 2, 2);
-
-  // 뿔 끝부분 어두운 팁 & 그림자
-  ctx.fillStyle = '#c79a4b';
-  ctx.fillRect(4, 1, 2, 1);
-  ctx.fillRect(18, 1, 2, 1);
-  ctx.fillStyle = '#8f6826';
-  ctx.fillRect(6, 6, 1, 3);
-  ctx.fillRect(17, 6, 1, 3);
-
-  // 3. 마왕 붉은 피부 머리/얼굴 베이스
-  ctx.fillStyle = '#a81334';
-  ctx.fillRect(6, 8, 12, 11);
-  ctx.fillRect(5, 10, 14, 8);
-  ctx.fillRect(7, 19, 10, 2);
-
-  // 이마 & 볼 하이라이트
-  ctx.fillStyle = '#c72045';
-  ctx.fillRect(8, 9, 8, 2);
-  ctx.fillRect(6, 11, 2, 4);
-  ctx.fillRect(16, 11, 2, 4);
-
-  // 4. 사악하고 찢어진 눈 (노란 안광 + 붉은 눈동자)
-  ctx.fillStyle = '#5e071b'; // 눈썹 음영
-  ctx.fillRect(7, 11, 4, 1);
-  ctx.fillRect(13, 11, 4, 1);
-
-  ctx.fillStyle = '#ffee00'; // 노란 안광
-  ctx.fillRect(7, 12, 4, 2);
-  ctx.fillRect(13, 12, 4, 2);
-
-  ctx.fillStyle = '#ff0000'; // 붉은 동공
-  ctx.fillRect(9, 12, 2, 2);
-  ctx.fillRect(13, 12, 2, 2);
-
-  // 5. 비웃는 마왕 입 & 날카로운 이빨 (송곳니)
-  ctx.fillStyle = '#150308'; // 입 속 어둠
-  ctx.fillRect(8, 15, 8, 4);
-
-  ctx.fillStyle = '#ffffff'; // 상단/하단 뾰족한 이빨
-  ctx.fillRect(8, 15, 2, 2);  // 윗 송곳니 (좌)
-  ctx.fillRect(14, 15, 2, 2); // 윗 송곳니 (우)
-  ctx.fillRect(10, 15, 1, 1);
-  ctx.fillRect(13, 15, 1, 1);
-  ctx.fillRect(10, 18, 1, 1); // 아랫니
-  ctx.fillRect(13, 18, 1, 1);
-
-  // 6. 턱 & 어깨 망토 깃
-  ctx.fillStyle = '#22092c';
-  ctx.fillRect(4, 20, 4, 3);
-  ctx.fillRect(16, 20, 4, 3);
-  ctx.fillStyle = '#e5b83b'; // 목 장식 금테
-  ctx.fillRect(8, 21, 8, 2);
+  ctx.fillRect(4, 2, 2, 4); ctx.fillRect(5, 5, 2, 3); ctx.fillRect(6, 7, 2, 2);
+  ctx.fillRect(18, 2, 2, 4); ctx.fillRect(17, 5, 2, 3); ctx.fillRect(16, 7, 2, 2);
+  ctx.fillStyle = '#c79a4b'; ctx.fillRect(4, 1, 2, 1); ctx.fillRect(18, 1, 2, 1);
+  // 마왕 얼굴
+  ctx.fillStyle = '#a81334'; ctx.fillRect(6, 8, 12, 11); ctx.fillRect(5, 10, 14, 8); ctx.fillRect(7, 19, 10, 2);
+  ctx.fillStyle = '#c72045'; ctx.fillRect(8, 9, 8, 2); ctx.fillRect(6, 11, 2, 4); ctx.fillRect(16, 11, 2, 4);
+  // 눈
+  ctx.fillStyle = '#5e071b'; ctx.fillRect(7, 11, 4, 1); ctx.fillRect(13, 11, 4, 1);
+  ctx.fillStyle = '#ffee00'; ctx.fillRect(7, 12, 4, 2); ctx.fillRect(13, 12, 4, 2);
+  ctx.fillStyle = '#ff0000'; ctx.fillRect(9, 12, 2, 2); ctx.fillRect(13, 12, 2, 2);
+  // 이빨
+  ctx.fillStyle = '#150308'; ctx.fillRect(8, 15, 8, 4);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(8, 15, 2, 2); ctx.fillRect(14, 15, 2, 2);
+  ctx.fillRect(10, 15, 1, 1); ctx.fillRect(13, 15, 1, 1);
+  ctx.fillRect(10, 18, 1, 1); ctx.fillRect(13, 18, 1, 1);
+  // 망토
+  ctx.fillStyle = '#22092c'; ctx.fillRect(4, 20, 4, 3); ctx.fillRect(16, 20, 4, 3);
+  ctx.fillStyle = '#e5b83b'; ctx.fillRect(8, 21, 8, 2);
 }
 
-// 6. 세계를 구하자 2 아이콘 (푸른빛 2대 용사 투구 + 전설의 악마뿔 인수인계)
+// 7. 세계를 구하자 2
 function drawSaveWorld2Icon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -503,66 +471,34 @@ function drawSaveWorld2Icon(id) {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 차가운 블루 심연 배경
-  ctx.fillStyle = '#06101e';
-  ctx.fillRect(0, 0, 24, 24);
-  ctx.fillStyle = '#0f243d';
-  ctx.fillRect(2, 2, 20, 20);
-
-  // 2. 2대 용사에게 씌워지는 뿔 (황금 & 주황 그라데이션)
-  ctx.fillStyle = '#ffd700';
-  ctx.fillRect(4, 2, 2, 4);
-  ctx.fillRect(18, 2, 2, 4);
-  ctx.fillStyle = '#ff5500';
-  ctx.fillRect(5, 5, 2, 2);
-  ctx.fillRect(17, 5, 2, 2);
-
-  // 3. 2대 용사 은빛 투구 & 헤어
-  ctx.fillStyle = '#eceff1'; // 백은빛 투구
-  ctx.fillRect(7, 6, 10, 4);
-  ctx.fillRect(6, 8, 12, 10);
-  ctx.fillStyle = '#ffffff'; // 투구 광택
-  ctx.fillRect(8, 6, 4, 2);
-
-  // 4. 얼굴 & 눈 (푸른 안광)
-  ctx.fillStyle = '#ffd1b3'; // 피부
-  ctx.fillRect(8, 10, 8, 6);
-
-  ctx.fillStyle = '#00838f'; // 눈썹
-  ctx.fillRect(8, 11, 3, 1);
-  ctx.fillRect(13, 11, 3, 1);
-
-  ctx.fillStyle = '#00e5ff'; // 2대 용사의 시안색 눈동자
-  ctx.fillRect(9, 12, 2, 2);
-  ctx.fillRect(13, 12, 2, 2);
-  ctx.fillStyle = '#ffffff'; // 눈 하이라이트
-  ctx.fillRect(9, 12, 1, 1);
-  ctx.fillRect(13, 12, 1, 1);
-
-  // 입
-  ctx.fillStyle = '#c47a5a';
-  ctx.fillRect(11, 15, 2, 1);
-
-  // 5. 청록색 갑옷 & 망토 깃
-  ctx.fillStyle = '#00838f';
-  ctx.fillRect(4, 18, 4, 5);
-  ctx.fillRect(16, 18, 4, 5);
-  ctx.fillStyle = '#b0bec5'; // 흉갑
-  ctx.fillRect(8, 18, 8, 5);
-  ctx.fillStyle = '#00e5ff'; // 가슴 에메랄드 보석
-  ctx.fillRect(11, 19, 2, 2);
-
-  // 6. "2" 골드 배지 마크 (우측 하단)
-  ctx.fillStyle = '#ffd700';
-  ctx.fillRect(17, 17, 6, 6);
+  // 배경
+  ctx.fillStyle = '#06101e'; ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#0f243d'; ctx.fillRect(2, 2, 20, 20);
+  // 뿔
+  ctx.fillStyle = '#ffd700'; ctx.fillRect(4, 2, 2, 4); ctx.fillRect(18, 2, 2, 4);
+  ctx.fillStyle = '#ff5500'; ctx.fillRect(5, 5, 2, 2); ctx.fillRect(17, 5, 2, 2);
+  // 투구
+  ctx.fillStyle = '#eceff1'; ctx.fillRect(7, 6, 10, 4); ctx.fillRect(6, 8, 12, 10);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(8, 6, 4, 2);
+  // 얼굴 & 눈
+  ctx.fillStyle = '#ffd1b3'; ctx.fillRect(8, 10, 8, 6);
+  ctx.fillStyle = '#00838f'; ctx.fillRect(8, 11, 3, 1); ctx.fillRect(13, 11, 3, 1);
+  ctx.fillStyle = '#00e5ff'; ctx.fillRect(9, 12, 2, 2); ctx.fillRect(13, 12, 2, 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 12, 1, 1); ctx.fillRect(13, 12, 1, 1);
+  ctx.fillStyle = '#c47a5a'; ctx.fillRect(11, 15, 2, 1);
+  // 갑옷
+  ctx.fillStyle = '#00838f'; ctx.fillRect(4, 18, 4, 5); ctx.fillRect(16, 18, 4, 5);
+  ctx.fillStyle = '#b0bec5'; ctx.fillRect(8, 18, 8, 5);
+  ctx.fillStyle = '#00e5ff'; ctx.fillRect(11, 19, 2, 2);
+  // "2" 배지
+  ctx.fillStyle = '#ffd700'; ctx.fillRect(17, 17, 6, 6);
   ctx.fillStyle = '#102238';
-  ctx.fillRect(18, 18, 4, 1);
-  ctx.fillRect(21, 19, 1, 1);
-  ctx.fillRect(18, 20, 4, 1);
-  ctx.fillRect(18, 21, 1, 1);
-  ctx.fillRect(18, 22, 4, 1);
+  ctx.fillRect(18, 18, 4, 1); ctx.fillRect(21, 19, 1, 1);
+  ctx.fillRect(18, 20, 4, 1); ctx.fillRect(18, 21, 1, 1); ctx.fillRect(18, 22, 4, 1);
 }
 
+// 전체 렌더링 실행
+drawCompanyLogo('logoCanvas');
 drawNaupIcon('iconNaup');
 drawUfoIcon('iconUfo');
 drawLettuceIcon('iconLettuce');
