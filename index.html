@@ -14,7 +14,7 @@
   #app {
     position: relative; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; padding: 16px;
+    gap: 14px; padding: 16px;
     background:
       radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 0, transparent 40%),
       radial-gradient(circle at 80% 70%, rgba(255,255,255,0.04) 0, transparent 40%),
@@ -27,7 +27,8 @@
     margin-bottom: 2px; text-align: center;
   }
 
-  .card-list { display: flex; flex-direction: column; gap: 11px; width: 100%; max-width: 330px; }
+  .card-list { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 340px; max-height: 80vh; overflow-y: auto; padding: 4px; }
+  .card-list::-webkit-scrollbar { display: none; }
 
   .game-card {
     display: flex; align-items: center; gap: 12px;
@@ -54,7 +55,7 @@
   .card-arrow { margin-left: auto; color: #ffe15a; font-size: 18px; font-weight: 900; flex: none; padding-left: 4px; }
 
   .footer-hint {
-    margin-top: 4px; color: #5a5a80; font-size: clamp(9px, 2vw, 11px); text-align: center; letter-spacing: .5px;
+    margin-top: 2px; color: #5a5a80; font-size: clamp(9px, 2vw, 11px); text-align: center; letter-spacing: .5px;
   }
 </style>
 </head>
@@ -93,12 +94,22 @@
       <div class="card-arrow">▶</div>
     </a>
 
-    <!-- 4. 신마협전 -->
-    <a class="game-card" href="신마협전 v0.0.3.html">
-      <div class="icon-frame"><canvas id="iconSinma" width="24" height="24"></canvas></div>
+    <!-- 4. 배틀쉽 (Naval Combat Operation) -->
+    <a class="game-card" href="Battleship.html">
+      <div class="icon-frame"><canvas id="iconBattleship" width="24" height="24"></canvas></div>
       <div class="card-text">
-        <div class="card-title">신마협전</div>
-        <div class="card-desc">정통 무협 RPG 어드벤처</div>
+        <div class="card-title">배틀 쉽</div>
+        <div class="card-desc">본격 해양 전투 시뮬레이션</div>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+
+    <!-- 5. 세계를 구하자 -->
+    <a class="game-card" href="save_the_world_ver_01.html">
+      <div class="icon-frame"><canvas id="iconSaveWorld" width="24" height="24"></canvas></div>
+      <div class="card-text">
+        <div class="card-title">세계를 구하자</div>
+        <div class="card-desc">초단편 마왕 토벌 RPG</div>
       </div>
       <div class="card-arrow">▶</div>
     </a>
@@ -112,6 +123,7 @@
 
 function drawNaupIcon(id) {
   const c = document.getElementById(id);
+  if (!c) return;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0,0,24,24);
@@ -159,6 +171,7 @@ function drawNaupIcon(id) {
 
 function drawUfoIcon(id) {
   const c = document.getElementById(id);
+  if (!c) return;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0,0,24,24);
@@ -198,6 +211,7 @@ function drawUfoIcon(id) {
 
 function drawLettuceIcon(id) {
   const c = document.getElementById(id);
+  if (!c) return;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
@@ -251,75 +265,164 @@ function drawLettuceIcon(id) {
   ctx.fillRect(9, 21, 5, 1);
 }
 
-function drawSinmaIcon(id) {
+// 4. 배틀 쉽 아이콘 (바다 위 군함 전함 + 주포 포격 + 레이더 조준선)
+function drawBattleshipIcon(id) {
   const c = document.getElementById(id);
+  if (!c) return;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, 24, 24);
 
-  // 1. 포니테일 / 휘날리는 갈색 장발
-  ctx.fillStyle = '#2e1910';
-  ctx.fillRect(15, 2, 5, 6);
-  ctx.fillRect(18, 4, 4, 7);
-  ctx.fillRect(19, 9, 3, 5);
+  // 1. 하늘 & 바다 배경
+  ctx.fillStyle = '#0a1d37'; // 짙은 밤바다 하늘
+  ctx.fillRect(0, 0, 24, 13);
+  ctx.fillStyle = '#0c356a'; // 깊은 바다
+  ctx.fillRect(0, 13, 24, 11);
 
-  // 2. 메인 머리카락 (앞머리 및 볼륨)
-  ctx.fillStyle = '#3d2417';
-  ctx.fillRect(7, 2, 9, 4);
-  ctx.fillRect(5, 4, 11, 4);
-  ctx.fillStyle = '#543322';
-  ctx.fillRect(8, 3, 6, 2); // 하이라이트
+  // 파도 물결 & 하이라이트
+  ctx.fillStyle = '#0174be';
+  ctx.fillRect(2, 16, 5, 1);
+  ctx.fillRect(15, 17, 6, 1);
+  ctx.fillRect(0, 21, 24, 3);
+  ctx.fillStyle = '#40f8ff'; // 흰 포말
+  ctx.fillRect(1, 15, 3, 1);
+  ctx.fillRect(19, 15, 4, 1);
 
-  // 3. 얼굴 & 목 (살구색 톤)
-  ctx.fillStyle = '#f6cfa9';
-  ctx.fillRect(7, 6, 8, 7);
-  ctx.fillRect(9, 13, 4, 2); // 목
+  // 레이더 그리드 원 & 탐지선
+  ctx.strokeStyle = 'rgba(0, 255, 180, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(12, 10, 8, 0, Math.PI * 2);
+  ctx.stroke();
 
-  // 얼굴 음영
-  ctx.fillStyle = '#e2b38b';
-  ctx.fillRect(6, 8, 2, 4);
-  ctx.fillRect(13, 9, 2, 3);
+  // 2. 전함 선체 (Hull) - 웅장한 전함 실루엣
+  ctx.fillStyle = '#1e293b'; // 선체 하단 어두운 섀도우
+  ctx.beginPath();
+  ctx.moveTo(2, 15);
+  ctx.lineTo(21, 15);
+  ctx.lineTo(18, 18);
+  ctx.lineTo(4, 18);
+  ctx.closePath();
+  ctx.fill();
 
-  // 구레나룻 & 잔머리
-  ctx.fillStyle = '#2e1910';
-  ctx.fillRect(5, 6, 2, 5);
-  ctx.fillRect(7, 5, 2, 4);
-  ctx.fillRect(11, 4, 2, 3);
+  ctx.fillStyle = '#475569'; // 선체 메인 강철 장갑
+  ctx.fillRect(4, 13, 15, 2);
+  ctx.fillRect(19, 13, 2, 1); // 함수(선두) 경사
 
-  // 눈썹 & 이목구비
-  ctx.fillStyle = '#24140c';
-  ctx.fillRect(8, 7, 2, 1);  // 왼쪽 눈썹
-  ctx.fillRect(12, 7, 2, 1); // 오른쪽 눈썹
-  ctx.fillRect(8, 8, 2, 1);  // 왼쪽 눈
-  ctx.fillRect(12, 8, 2, 1); // 오른쪽 눈
-  ctx.fillStyle = '#9e624b';
-  ctx.fillRect(10, 9, 1, 2); // 코
-  ctx.fillRect(10, 11, 2, 1); // 입
+  // 함교 (Bridge / Superstructure)
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(8, 9, 6, 4);
+  ctx.fillStyle = '#cbd5e1'; // 함교 창문/탑
+  ctx.fillRect(9, 7, 4, 2);
+  ctx.fillRect(10, 5, 2, 2); // 마스트
 
-  // 4. 무협 의복 (어깨 깃 & 노란 끈 / 띠 장식)
-  ctx.fillStyle = '#dcd8d0'; // 연회색 도포 깃
-  ctx.fillRect(6, 14, 11, 7);
-  ctx.fillStyle = '#495a6a'; // 청회색 겉옷
-  ctx.fillRect(4, 16, 3, 7);
-  ctx.fillRect(16, 16, 4, 7);
+  // 레이다 안테나
+  ctx.fillStyle = '#00ffcc';
+  ctx.fillRect(10, 4, 2, 1);
 
-  ctx.fillStyle = '#d89b34'; // 황금색/황토색 가슴 띠
-  ctx.fillRect(8, 16, 6, 2);
-  ctx.fillRect(9, 18, 5, 2);
+  // 3. 주포 터렛 & 포신 (Main Gun Turrets)
+  // 전방 주포 (포격 불꽃 발사!)
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(14, 11, 4, 2);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(17, 10, 3, 1); // 포신 각도
 
-  // 5. 무협 손목 아대 (팔)
-  ctx.fillStyle = '#3a271d'; // 가죽 완갑
-  ctx.fillRect(3, 19, 4, 4);
-  ctx.fillRect(16, 19, 4, 4);
-  ctx.fillStyle = '#d89b34'; // 완갑 금속 테두리
-  ctx.fillRect(3, 18, 4, 1);
-  ctx.fillRect(16, 18, 4, 1);
+  // 포격 화염 이펙트 (Muzzle Flash)
+  ctx.fillStyle = '#ff9900';
+  ctx.fillRect(20, 9, 2, 2);
+  ctx.fillStyle = '#ffff00';
+  ctx.fillRect(21, 9, 1, 1);
+
+  // 후방 주포
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(5, 11, 3, 2);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(4, 10, 2, 1);
+}
+
+// 5. 세계를 구하자 아이콘 (2개의 뿔을 가진 마왕의 흉악한 얼굴 픽셀아트)
+function drawSaveWorldIcon(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 1. 어둠/보라빛 오라 배경
+  ctx.fillStyle = '#1a0526';
+  ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#450a36';
+  ctx.fillRect(2, 2, 20, 20);
+
+  // 2. 2개의 거대한 마왕 뿔 (왼쪽 & 오른쪽)
+  ctx.fillStyle = '#edd298';
+  // 왼쪽 뿔
+  ctx.fillRect(4, 2, 2, 4);
+  ctx.fillRect(5, 5, 2, 3);
+  ctx.fillRect(6, 7, 2, 2);
+  // 오른쪽 뿔
+  ctx.fillRect(18, 2, 2, 4);
+  ctx.fillRect(17, 5, 2, 3);
+  ctx.fillRect(16, 7, 2, 2);
+
+  // 뿔 끝부분 어두운 팁 & 그림자
+  ctx.fillStyle = '#c79a4b';
+  ctx.fillRect(4, 1, 2, 1);
+  ctx.fillRect(18, 1, 2, 1);
+  ctx.fillStyle = '#8f6826';
+  ctx.fillRect(6, 6, 1, 3);
+  ctx.fillRect(17, 6, 1, 3);
+
+  // 3. 마왕 붉은 피부 머리/얼굴 베이스
+  ctx.fillStyle = '#a81334';
+  ctx.fillRect(6, 8, 12, 11);
+  ctx.fillRect(5, 10, 14, 8);
+  ctx.fillRect(7, 19, 10, 2);
+
+  // 이마 & 볼 하이라이트
+  ctx.fillStyle = '#c72045';
+  ctx.fillRect(8, 9, 8, 2);
+  ctx.fillRect(6, 11, 2, 4);
+  ctx.fillRect(16, 11, 2, 4);
+
+  // 4. 사악하고 찢어진 눈 (노란 안광 + 붉은 눈동자)
+  ctx.fillStyle = '#5e071b'; // 눈썹 음영
+  ctx.fillRect(7, 11, 4, 1);
+  ctx.fillRect(13, 11, 4, 1);
+
+  ctx.fillStyle = '#ffee00'; // 노란 안광
+  ctx.fillRect(7, 12, 4, 2);
+  ctx.fillRect(13, 12, 4, 2);
+
+  ctx.fillStyle = '#ff0000'; // 붉은 동공
+  ctx.fillRect(9, 12, 2, 2);
+  ctx.fillRect(13, 12, 2, 2);
+
+  // 5. 비웃는 마왕 입 & 날카로운 이빨 (송곳니)
+  ctx.fillStyle = '#150308'; // 입 속 어둠
+  ctx.fillRect(8, 15, 8, 4);
+
+  ctx.fillStyle = '#ffffff'; // 상단/하단 뾰족한 이빨
+  ctx.fillRect(8, 15, 2, 2);  // 윗 송곳니 (좌)
+  ctx.fillRect(14, 15, 2, 2); // 윗 송곳니 (우)
+  ctx.fillRect(10, 15, 1, 1);
+  ctx.fillRect(13, 15, 1, 1);
+  ctx.fillRect(10, 18, 1, 1); // 아랫니
+  ctx.fillRect(13, 18, 1, 1);
+
+  // 6. 턱 & 어깨 망토 깃
+  ctx.fillStyle = '#22092c';
+  ctx.fillRect(4, 20, 4, 3);
+  ctx.fillRect(16, 20, 4, 3);
+  ctx.fillStyle = '#e5b83b'; // 목 장식 금테
+  ctx.fillRect(8, 21, 8, 2);
 }
 
 drawNaupIcon('iconNaup');
 drawUfoIcon('iconUfo');
 drawLettuceIcon('iconLettuce');
-drawSinmaIcon('iconSinma');
+drawBattleshipIcon('iconBattleship');
+drawSaveWorldIcon('iconSaveWorld');
 </script>
 </body>
 </html>
