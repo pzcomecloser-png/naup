@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>세계를 구하자 2 (Save the World Part 2)</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Galmuri11:wght@400;700&display=swap');
@@ -12,6 +12,8 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
@@ -24,17 +26,20 @@
       justify-content: center;
       min-height: 100vh;
       overflow: hidden;
+      touch-action: none;
     }
 
     #game-container {
       position: relative;
       width: 800px;
-      height: 600px;
+      max-width: 95vw;
+      aspect-ratio: 4 / 3;
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 200, 255, 0.25);
       border: 4px solid #1a3350;
       border-radius: 12px;
       overflow: hidden;
       background: #000;
+      touch-action: none;
     }
 
     canvas {
@@ -43,6 +48,7 @@
       height: 100%;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
+      touch-action: none;
     }
 
     .audio-btn {
@@ -52,16 +58,17 @@
       background: rgba(10, 20, 35, 0.85);
       color: #00e5ff;
       border: 2px solid #205080;
-      padding: 6px 12px;
+      padding: 8px 14px;
       font-family: 'Galmuri11', monospace;
-      font-size: 12px;
+      font-size: 13px;
       border-radius: 6px;
       cursor: pointer;
       z-index: 10;
       transition: all 0.2s ease;
+      touch-action: manipulation;
     }
 
-    .audio-btn:hover {
+    .audio-btn:hover, .audio-btn:active {
       background: #205080;
       color: #fff;
     }
@@ -72,6 +79,7 @@
       font-size: 13px;
       letter-spacing: 1px;
       text-align: center;
+      padding: 0 10px;
     }
   </style>
 </head>
@@ -82,7 +90,7 @@
     <canvas id="gameCanvas" width="800" height="600"></canvas>
   </div>
   <div class="instructions">
-    [SPACE] 키 또는 [마우스 클릭 / 1, 2 키] 로 진행합니다
+    [화면 터치 / 마우스 클릭 / SPACE 키] 로 진행합니다
   </div>
 
 <script>
@@ -244,11 +252,15 @@ class SoundEngine {
 }
 
 const audio = new SoundEngine();
-document.getElementById('audio-toggle').addEventListener('click', (e) => {
+const audioToggleBtn = document.getElementById('audio-toggle');
+const toggleAudio = (e) => {
+  e.stopPropagation();
   audio.init();
   audio.muted = !audio.muted;
-  e.target.textContent = audio.muted ? '🔇 사운드: OFF' : '🔊 사운드: ON';
-});
+  audioToggleBtn.textContent = audio.muted ? '🔇 사운드: OFF' : '🔊 사운드: ON';
+};
+audioToggleBtn.addEventListener('click', toggleAudio);
+audioToggleBtn.addEventListener('touchend', toggleAudio);
 
 /* ============================================================
    GAME LOGIC & RENDERER
@@ -837,18 +849,18 @@ function render(time) {
 
     const floatY = 320 + Math.sin(time * 4) * 10;
     ctx.fillStyle = '#0f243d';
-    ctx.fillRect(260, floatY, 280, 50);
+    ctx.fillRect(240, floatY, 320, 50);
     ctx.strokeStyle = '#ffd700';
     ctx.lineWidth = 3;
-    ctx.strokeRect(260, floatY, 280, 50);
+    ctx.strokeRect(240, floatY, 320, 50);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 18px "Press Start 2P", "Galmuri11", monospace';
-    ctx.fillText("PRESS SPACE", 400, floatY + 32);
+    ctx.font = '700 16px "Press Start 2P", "Galmuri11", monospace';
+    ctx.fillText("START / TOUCH", 400, floatY + 32);
 
     ctx.fillStyle = '#7ba9d1';
     ctx.font = '14px "Galmuri11", monospace';
-    ctx.fillText("스페이스바를 눌러 2대 용사의 여정을 시작하세요", 400, 570);
+    ctx.fillText("화면을 터치하거나 스페이스바를 누르세요", 400, 570);
   }
 
   // 2. DEMON INTRO
@@ -1052,13 +1064,13 @@ function drawTheEndOverlay(time) {
     if (Math.floor(Date.now() / 500) % 2 === 0) {
       ctx.fillStyle = '#00e5ff';
       ctx.font = '16px "Galmuri11", monospace';
-      ctx.fillText("PRESS SPACE TO RESTART", 400, 380);
+      ctx.fillText("PRESS SPACE OR TOUCH TO RESTART", 400, 380);
     }
   }
 }
 
 /* ============================================================
-   INPUT HANDLING
+   INPUT HANDLING (KEYBOARD & TOUCH / CLICK)
 ============================================================ */
 function handleAdvance() {
   audio.init();
@@ -1122,6 +1134,28 @@ function handleAdvance() {
   }
 }
 
+// 터치 & 마우스 클릭 공통 처리 함수
+function handlePointerDown(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = (clientX - rect.left) * (canvas.width / rect.width);
+  const mouseY = (clientY - rect.top) * (canvas.height / rect.height);
+
+  if (currentState === STATE.CHOICE) {
+    choiceButtons.forEach((btn, idx) => {
+      if (
+        mouseX >= btn.x && mouseX <= btn.x + btn.w &&
+        mouseY >= btn.y && mouseY <= btn.y + btn.h
+      ) {
+        selectedChoice = idx;
+        handleAdvance();
+      }
+    });
+  } else {
+    handleAdvance();
+  }
+}
+
+// 키보드 조작
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
     e.preventDefault();
@@ -1146,26 +1180,21 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-  if (currentState === STATE.CHOICE) {
-    choiceButtons.forEach((btn, idx) => {
-      if (
-        mouseX >= btn.x && mouseX <= btn.x + btn.w &&
-        mouseY >= btn.y && mouseY <= btn.y + btn.h
-      ) {
-        selectedChoice = idx;
-        handleAdvance();
-      }
-    });
-  } else {
-    handleAdvance();
+// 터치 이벤트 (모바일)
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (e.touches.length > 0) {
+    const t = e.touches[0];
+    handlePointerDown(t.clientX, t.clientY);
   }
+}, { passive: false });
+
+// 마우스 클릭 (PC)
+canvas.addEventListener('mousedown', (e) => {
+  handlePointerDown(e.clientX, e.clientY);
 });
 
+// 마우스 호버 선택지 반응
 canvas.addEventListener('mousemove', (e) => {
   if (currentState !== STATE.CHOICE) return;
   const rect = canvas.getBoundingClientRect();
