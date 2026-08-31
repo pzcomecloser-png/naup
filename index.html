@@ -94,7 +94,17 @@
       <div class="card-arrow">▶</div>
     </a>
 
-    <!-- 4. 배틀쉽 (Naval Combat Operation) -->
+    <!-- 4. 삼국무쌍: 도원의 검 (NEW) -->
+    <a class="game-card" href="three_kingdoms_slash.html">
+      <div class="icon-frame"><canvas id="iconThreeKingdoms" width="24" height="24"></canvas></div>
+      <div class="card-text">
+        <div class="card-title">삼국무쌍: 도원의 검</div>
+        <div class="card-desc">2D 도트 핵앤슬래시 무협 액션</div>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+
+    <!-- 5. 배틀 쉽 -->
     <a class="game-card" href="Battleship.html">
       <div class="icon-frame"><canvas id="iconBattleship" width="24" height="24"></canvas></div>
       <div class="card-text">
@@ -104,12 +114,22 @@
       <div class="card-arrow">▶</div>
     </a>
 
-    <!-- 5. 세계를 구하자 -->
+    <!-- 6. 세계를 구하자 -->
     <a class="game-card" href="save_the_world_ver_01.html">
       <div class="icon-frame"><canvas id="iconSaveWorld" width="24" height="24"></canvas></div>
       <div class="card-text">
         <div class="card-title">세계를 구하자</div>
         <div class="card-desc">초단편 마왕 토벌 RPG</div>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+
+    <!-- 7. 세계를 구하자 2 -->
+    <a class="game-card" href="save_the_world_part2.html">
+      <div class="icon-frame"><canvas id="iconSaveWorld2" width="24" height="24"></canvas></div>
+      <div class="card-text">
+        <div class="card-title">세계를 구하자 2</div>
+        <div class="card-desc">마왕이 된 전직 용사의 귀환</div>
       </div>
       <div class="card-arrow">▶</div>
     </a>
@@ -265,7 +285,64 @@ function drawLettuceIcon(id) {
   ctx.fillRect(9, 21, 5, 1);
 }
 
-// 4. 배틀 쉽 아이콘 (바다 위 군함 전함 + 주포 포격 + 레이더 조준선)
+// 4. 삼국무쌍: 도원의 검 아이콘 (관우의 청룡언월도 + 흩날리는 도원 벚꽃잎)
+function drawThreeKingdomsIcon(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 1. 노을빛 전장/도원결의 배경
+  ctx.fillStyle = '#2b1418';
+  ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#4a2220';
+  ctx.fillRect(2, 2, 20, 20);
+
+  // 2. 도원의 흩날리는 분홍 벚꽃잎
+  ctx.fillStyle = '#ff8ea8';
+  ctx.fillRect(3, 4, 2, 2);
+  ctx.fillRect(19, 6, 2, 2);
+  ctx.fillRect(5, 17, 2, 2);
+  ctx.fillRect(17, 19, 2, 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(4, 4, 1, 1);
+  ctx.fillRect(19, 7, 1, 1);
+
+  // 3. 청룡언월도 대각선 자루 (나무 봉)
+  ctx.fillStyle = '#4a2f1c';
+  ctx.fillRect(4, 18, 3, 3);
+  ctx.fillRect(6, 16, 3, 3);
+  ctx.fillRect(8, 14, 3, 3);
+  ctx.fillRect(10, 12, 3, 3);
+  ctx.fillRect(12, 10, 3, 3);
+
+  // 황금 술 / 용머리 장식
+  ctx.fillStyle = '#e8c93a';
+  ctx.fillRect(12, 9, 4, 4);
+  ctx.fillStyle = '#b8202a'; // 붉은 술
+  ctx.fillRect(11, 12, 3, 4);
+
+  // 4. 청룡언월도 푸른/은빛 대도날 (Guandao Blade)
+  ctx.fillStyle = '#dfe7ea'; // 메인 은빛 칼날
+  ctx.fillRect(14, 4, 4, 6);
+  ctx.fillRect(16, 2, 4, 5);
+  ctx.fillRect(18, 1, 3, 4);
+  ctx.fillRect(15, 6, 5, 4);
+
+  // 청룡 푸른 검기/광택 (Green Blade Glow)
+  ctx.fillStyle = '#43a96d';
+  ctx.fillRect(14, 5, 2, 4);
+  ctx.fillRect(16, 3, 2, 3);
+
+  // 칼등 돌기 & 칼날 끝 하이라이트
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(19, 1, 2, 2);
+  ctx.fillRect(18, 3, 1, 1);
+  ctx.fillRect(15, 9, 3, 1);
+}
+
+// 5. 배틀 쉽 아이콘 (바다 위 군함 전함 + 주포 포격 + 레이더 조준선)
 function drawBattleshipIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -418,11 +495,81 @@ function drawSaveWorldIcon(id) {
   ctx.fillRect(8, 21, 8, 2);
 }
 
+// 6. 세계를 구하자 2 아이콘 (푸른빛 2대 용사 투구 + 전설의 악마뿔 인수인계)
+function drawSaveWorld2Icon(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 1. 차가운 블루 심연 배경
+  ctx.fillStyle = '#06101e';
+  ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#0f243d';
+  ctx.fillRect(2, 2, 20, 20);
+
+  // 2. 2대 용사에게 씌워지는 뿔 (황금 & 주황 그라데이션)
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(4, 2, 2, 4);
+  ctx.fillRect(18, 2, 2, 4);
+  ctx.fillStyle = '#ff5500';
+  ctx.fillRect(5, 5, 2, 2);
+  ctx.fillRect(17, 5, 2, 2);
+
+  // 3. 2대 용사 은빛 투구 & 헤어
+  ctx.fillStyle = '#eceff1'; // 백은빛 투구
+  ctx.fillRect(7, 6, 10, 4);
+  ctx.fillRect(6, 8, 12, 10);
+  ctx.fillStyle = '#ffffff'; // 투구 광택
+  ctx.fillRect(8, 6, 4, 2);
+
+  // 4. 얼굴 & 눈 (푸른 안광)
+  ctx.fillStyle = '#ffd1b3'; // 피부
+  ctx.fillRect(8, 10, 8, 6);
+
+  ctx.fillStyle = '#00838f'; // 눈썹
+  ctx.fillRect(8, 11, 3, 1);
+  ctx.fillRect(13, 11, 3, 1);
+
+  ctx.fillStyle = '#00e5ff'; // 2대 용사의 시안색 눈동자
+  ctx.fillRect(9, 12, 2, 2);
+  ctx.fillRect(13, 12, 2, 2);
+  ctx.fillStyle = '#ffffff'; // 눈 하이라이트
+  ctx.fillRect(9, 12, 1, 1);
+  ctx.fillRect(13, 12, 1, 1);
+
+  // 입
+  ctx.fillStyle = '#c47a5a';
+  ctx.fillRect(11, 15, 2, 1);
+
+  // 5. 청록색 갑옷 & 망토 깃
+  ctx.fillStyle = '#00838f';
+  ctx.fillRect(4, 18, 4, 5);
+  ctx.fillRect(16, 18, 4, 5);
+  ctx.fillStyle = '#b0bec5'; // 흉갑
+  ctx.fillRect(8, 18, 8, 5);
+  ctx.fillStyle = '#00e5ff'; // 가슴 에메랄드 보석
+  ctx.fillRect(11, 19, 2, 2);
+
+  // 6. "2" 골드 배지 마크 (우측 하단)
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(17, 17, 6, 6);
+  ctx.fillStyle = '#102238';
+  ctx.fillRect(18, 18, 4, 1);
+  ctx.fillRect(21, 19, 1, 1);
+  ctx.fillRect(18, 20, 4, 1);
+  ctx.fillRect(18, 21, 1, 1);
+  ctx.fillRect(18, 22, 4, 1);
+}
+
 drawNaupIcon('iconNaup');
 drawUfoIcon('iconUfo');
 drawLettuceIcon('iconLettuce');
+drawThreeKingdomsIcon('iconThreeKingdoms');
 drawBattleshipIcon('iconBattleship');
 drawSaveWorldIcon('iconSaveWorld');
+drawSaveWorld2Icon('iconSaveWorld2');
 </script>
 </body>
 </html>
