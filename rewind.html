@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>REWIND — 아까의 나야 도와줘</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Galmuri11:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      background-color: #0a0a14;
+      color: #fff;
+      font-family: 'Galmuri11', monospace, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #game-container {
+      position: relative;
+      width: 800px;
+      max-width: 95vw;
+      aspect-ratio: 4 / 3;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.9), 0 0 20px rgba(100, 150, 255, 0.25);
+      border: 4px solid #2a2a55;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: none;
+    }
+
+    .instructions {
+      margin-top: 10px;
+      color: #8e9bd6;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+  </div>
+  <div class="instructions">
+    [WASD / 방향키 이동] &nbsp; [E 또는 ⏳ 버튼 = 제자리 대기] &nbsp; [Space/R = 되감기]
+  </div>
+
+<script>
+/* ============================================================
+   8-BIT SOUND ENGINE
+============================================================ */
+class SoundEngine {
+  constructor() { this.ctx = null; this.muted = false; }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  }
+  playTone(freq, type, duration, gainVal = 0.1) {
+    if (this.muted || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + duration);
+    } catch (e) {}
+  }
+  playMove() { this.init(); this.playTone(320, 'square', 0.05, 0.06); }
+  playBlocked() { this.init(); this.playTone(120, 'sawtooth', 0.08, 0.12); }
+  playKey() { this.init(); this.playTone(660, 'triangle', 0.15, 0.12); }
+  playDoorOpen() {
+    this.init();
+    this.playTone(523.25, 'sine', 0.1, 0.1);
+    setTimeout(() => this.playTone(783.99, 'sine', 0.2, 0.12), 90);
+  }
+  playRewind() {
+    this.init();
+    this.playTone(700, 'sawtooth', 0.25, 0.1);
+    setTimeout(() => this.playTone(300, 'sawtooth', 0.2, 0.1), 120);
+  }
+  playVanish() {
+    this.init();
+    this.playTone(500, 'sine', 0.12, 0.08);
+    setTimeout(() => this.playTone(280, 'sine', 0.18, 0.08), 80);
+  }
+  playWin() {
+    this.init();
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.14), i * 100);
+    });
+  }
+  playFail() {
+    this.init();
+    this.playTone(220, 'sawtooth', 0.3, 0.15);
+    setTimeout(() => this.playTone(140, 'sawtooth', 0.4, 0.15), 200);
+  }
+  playClick() { this.init(); this.playTone(500, 'square', 0.06, 0.08); }
+}
+const audio = new SoundEngine();
+
+/* ============================================================
+   GRID CONSTANTS
+============================================================ */
+const GRID_SIZE = 10;
+const CELL = 42;
+const gridX = 190, gridY = 90;
+const FLOOR = 0, WALL = 1, KEY = 2, DOOR = 3;
+
+/* ============================================================
+   STAGE DEFINITIONS (여러 스테이지를 하나의 파일에서 관리)
+============================================================ */
+const STAGES = [
+  {
+    name: "첫 되감기",
+    sub: "열쇠를 지키며 문으로 — 되감기 기본 학습",
+    totalTime: 60,
+    startPos: { col: 1, row: 7 },
+    doorPos: { col: 8, row: 7 },
+    keyPositions: [{ col: 1, row: 3 }],
+    build: (g) => {
+      g[3][1] = KEY;
+      g[7][8] = DOOR;
+    }
+  },
+  {
+    name: "열쇠는 두 개다",
+    sub: "두 열쇠를 동시에 지켜야 문이 열립니다 — 다중 되감기",
+    totalTime: 120,
+    startPos: { col: 1, row: 7 },
+    doorPos: { col: 8, row: 7 },
+    keyPositions: [{ col: 2, row: 2 }, { col: 8, row: 2 }],
+    build: (g) => {
+      // 중앙 세로 벽 (위/아래 두 곳이 뚫려 우회로가 두 개 존재)
+      for (let r = 1; r < GRID_SIZE - 1; r++) {
+        if (r !== 4 && r !== 7) g[r][5] = WALL;
+      }
+      g[2][2] = KEY;
+      g[2][8] = KEY;
+      g[7][8] = DOOR;
+    }
+  }
+];
+
+function buildBaseGrid() {
+  const g = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    const row = [];
+    for (let c = 0; c < GRID_SIZE; c++) {
+      row.push((r === 0 || r === GRID_SIZE - 1 || c === 0 || c === GRID_SIZE - 1) ? WALL : FLOOR);
+    }
+    g.push(row);
+  }
+  return g;
+}
+
+/* ============================================================
+   GAME STATE
+============================================================ */
+const SCREEN = { TITLE: 'TITLE', SELECT: 'SELECT', PLAYING: 'PLAYING', WIN: 'WIN', TIMEUP: 'TIMEUP', ENDING: 'ENDING' };
+let currentScreen = SCREEN.TITLE;
+
+let stageIdx = 0;
+let grid = null;
+let startPos = null, doorPos = null, keyPositions = null;
+
+let player = { col: 0, row: 0, history: [] };
+let ghosts = [];
+let currentTick = 0;
+let loopCount = 1;
+
+let TOTAL_TIME = 60;
+let timeLeft = TOTAL_TIME;
+
+let popups = [];
+let flashAlpha = 0;
+let lastTime = performance.now();
+
+function showPopup(txt, x, y, col = '#ffffff') {
+  popups.push({ txt, x, y, col, alpha: 1, vy: -0.6 });
+}
+
+/* ============================================================
+   STAGE LOADING
+============================================================ */
+function loadStage(idx) {
+  const stage = STAGES[idx];
+  stageIdx = idx;
+  grid = buildBaseGrid();
+  stage.build(grid);
+  startPos = stage.startPos;
+  doorPos = stage.doorPos;
+  keyPositions = stage.keyPositions;
+  TOTAL_TIME = stage.totalTime;
+  timeLeft = TOTAL_TIME;
+
+  player = { col: startPos.col, row: startPos.row, history: [] };
+  ghosts = [];
+  currentTick = 0;
+  loopCount = 1;
+  popups = [];
+  currentScreen = SCREEN.PLAYING;
+}
+
+/* ============================================================
+   CORE LOGIC
+   ── 유령(과거의 나)의 위치는 매번 "시작점 + 현재 틱까지의 기록"을
+   ── 처음부터 다시 계산하는 순수 함수 방식이라, 되감기를 몇 번을
+   ── 반복해도 절대 오차(드리프트)가 쌓이지 않습니다.
+============================================================ */
+const MAX_REWINDS = 5; // 되감기(과거의 나) 최대 유지 수
+
+// tick 시점의 유령 상태(위치/생존여부)를 매번 새로 계산 — 상태를 저장하지 않는다
+function ghostStateAt(ghost, tick) {
+  const H = ghost.history.length;
+  const effective = Math.min(tick, H);
+  let col = startPos.col, row = startPos.row;
+  for (let i = 0; i < effective; i++) {
+    const d = DIRS[ghost.history[i]];
+    col += d.dc;
+    row += d.dr;
+  }
+  // H턴에 마지막 이동(=발판 도착), 그 다음 턴(H+1)이 되는 순간 즉시 사라짐
+  const alive = tick <= H;
+  const grace = tick === H;
+  return { col, row, alive, grace };
+}
+
+function isEntityOnKey(entCol, entRow, keyPos) {
+  return entCol === keyPos.col && entRow === keyPos.row;
+}
+
+function keysHeldStatusAt(tick, pCol, pRow) {
+  return keyPositions.map(kp => {
+    if (isEntityOnKey(pCol, pRow, kp)) return true;
+    return ghosts.some(g => {
+      const s = ghostStateAt(g, tick);
+      return s.alive && isEntityOnKey(s.col, s.row, kp);
+    });
+  });
+}
+function keysHeldStatus() {
+  return keysHeldStatusAt(currentTick, player.col, player.row);
+}
+function isDoorOpenNow() {
+  return keysHeldStatus().every(h => h);
+}
+
+const DIRS = {
+  up: { dc: 0, dr: -1 },
+  down: { dc: 0, dr: 1 },
+  left: { dc: -1, dr: 0 },
+  right: { dc: 1, dr: 0 }
+};
+
+function attemptMove(dirName) {
+  if (currentScreen !== SCREEN.PLAYING) return;
+  const d = DIRS[dirName];
+  const targetCol = player.col + d.dc;
+  const targetRow = player.row + d.dr;
+
+  if (targetCol < 0 || targetCol >= GRID_SIZE || targetRow < 0 || targetRow >= GRID_SIZE) {
+    audio.playBlocked();
+    return;
+  }
+
+  const tile = grid[targetRow][targetCol];
+  const nextTick = currentTick + 1;
+
+  if (tile === WALL) { audio.playBlocked(); return; }
+
+  // 문 판정: "현재 턴(이동하기 직전)"에 문이 열려있다면 닫히는 순간이더라도 슬라이딩해서 들어갈 수 있게 허용 (인디아나 존스 판정!)
+  if (tile === DOOR) {
+    const openBefore = isDoorOpenNow();
+    if (!openBefore) {
+      audio.playBlocked();
+      showPopup(keyPositions.length > 1 ? "열쇠가 부족해!" : "문이 잠겼다!", targetCol * CELL + gridX, targetRow * CELL + gridY - 10, '#ff6b6b');
+      return;
+    }
+  }
+
+  const doorOpenBefore = isDoorOpenNow();
+
+  // 이번 이동으로 어떤 유령이 방금 사라졌는지 체크 (효과음/팝업용)
+  ghosts.forEach(g => {
+    const before = ghostStateAt(g, currentTick);
+    const after = ghostStateAt(g, nextTick);
+    if (before.alive && !after.alive) {
+      audio.playVanish();
+      showPopup("💨 사라짐", before.col * CELL + gridX + CELL/2, before.row * CELL + gridY - 6, '#9aa8d8');
+    }
+  });
+
+  // Move player
+  player.col = targetCol;
+  player.row = targetRow;
+  player.history.push(dirName);
+  currentTick = nextTick;
+
+  audio.playMove();
+
+  if (tile === KEY) {
+    audio.playKey();
+    showPopup("🔑 열쇠 확보!", targetCol * CELL + gridX + CELL/2, targetRow * CELL + gridY - 6, '#ffe66d');
+  }
+
+  const doorOpenAfter = isDoorOpenNow();
+  if (doorOpenAfter && !doorOpenBefore) {
+    audio.playDoorOpen();
+    if (keyPositions.length > 1) showPopup("🔓 문이 열렸다!", 400, 300, '#3ddc84');
+  } else if (!doorOpenAfter && doorOpenBefore) {
+    showPopup("🔒 문이 다시 잠겼다...", 400, 300, '#ff9f6b');
+  }
+
+  if (player.col === doorPos.col && player.row === doorPos.row) {
+    currentScreen = SCREEN.WIN;
+    audio.playWin();
+  }
+}
+
+function doRewind() {
+  if (currentScreen !== SCREEN.PLAYING) return;
+  if (player.history.length === 0) {
+    showPopup("아직 이동을 안 했어요!", 400, 300, '#ffcf6b');
+    return;
+  }
+  if (ghosts.length >= MAX_REWINDS) {
+    showPopup(`최대 ${MAX_REWINDS}번까지만 되감을 수 있어요!`, 400, 300, '#ff9f6b');
+    audio.playBlocked();
+    return;
+  }
+  audio.playRewind();
+  flashAlpha = 1;
+  ghosts.push({ history: [...player.history], colorIdx: ghosts.length % 3 });
+  player.col = startPos.col;
+  player.row = startPos.row;
+  player.history = [];
+  currentTick = 0;
+  loopCount++;
+  showPopup("⏪ 되감기!", 400, 300, '#8ecdf7');
+}
+
+function resetLevel() {
+  loadStage(stageIdx);
+}
+
+function goToSelect() {
+  currentScreen = SCREEN.SELECT;
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawRect(x, y, w, h, col) {
+  ctx.fillStyle = col;
+  ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
+}
+function drawText(txt, x, y, size = 16, col = '#fff', align = 'center', weight = '700') {
+  ctx.fillStyle = col;
+  ctx.font = `${weight} ${size}px "Galmuri11", monospace`;
+  ctx.textAlign = align;
+  ctx.fillText(txt, x, y);
+}
+
+const GHOST_COLORS = ['#a8d8f0', '#f7c9e0', '#c8f0c0'];
+
+// In-game control buttons
+const BTN = {
+  up: { x: 110, y: 522, w: 50, h: 32 },
+  left: { x: 55, y: 558, w: 50, h: 32 },
+  down: { x: 110, y: 558, w: 50, h: 32 },
+  right: { x: 165, y: 558, w: 50, h: 32 },
+  rewind: { x: 292, y: 528, w: 190, h: 60 },
+  reset: { x: 620, y: 10, w: 60, h: 28 },
+  menu: { x: 690, y: 10, w: 100, h: 28 }
+};
+
+// Stage select card buttons (computed per render)
+let selectCards = [];
+
+function drawGrid() {
+  const held = keysHeldStatus();
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const x = gridX + c * CELL, y = gridY + r * CELL;
+      const tile = grid[r][c];
+
+      if (tile === WALL) {
+        drawRect(x, y, CELL, CELL, '#2b2b45');
+        drawRect(x + 2, y + 2, CELL - 4, CELL - 4, '#3d3d63');
+      } else {
+        drawRect(x, y, CELL, CELL, (r + c) % 2 === 0 ? '#1a1a30' : '#1e1e38');
+
+        if (tile === KEY) {
+          const keyIdx = keyPositions.findIndex(kp => kp.col === c && kp.row === r);
+          const pressed = held[keyIdx];
+
+          ctx.save();
+          ctx.translate(x + CELL/2, y + CELL/2);
+          if (pressed) { ctx.shadowColor = '#ffe66d'; ctx.shadowBlur = 14; }
+          ctx.font = `${pressed ? '700' : '400'} 26px "Galmuri11", monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = pressed ? '#ffe66d' : '#c9a227';
+          ctx.fillText('🔑', 0, 2);
+          ctx.restore();
+
+          if (pressed) {
+            ctx.strokeStyle = 'rgba(255,230,109,0.5)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(x + CELL/2, y + CELL/2, CELL/2 - 2, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        } else if (tile === DOOR) {
+          const open = isDoorOpenNow();
+          drawRect(x + 3, y + 3, CELL - 6, CELL - 6, open ? '#3ddc84' : '#8b2e2e');
+          drawRect(x + 8, y + 8, CELL - 16, CELL - 16, open ? '#2bb96b' : '#5e1e1e');
+          drawText(open ? '🔓' : '🔒', x + CELL/2, y + CELL/2 + 6, 16, '#fff');
+        }
+      }
+    }
+  }
+
+  ctx.strokeStyle = 'rgba(120,140,255,0.15)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= GRID_SIZE; i++) {
+    ctx.beginPath();
+    ctx.moveTo(gridX + i * CELL, gridY);
+    ctx.lineTo(gridX + i * CELL, gridY + GRID_SIZE * CELL);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(gridX, gridY + i * CELL);
+    ctx.lineTo(gridX + GRID_SIZE * CELL, gridY + i * CELL);
+    ctx.stroke();
+  }
+}
+
+function drawEntity(col, row, color, alpha, label, outline) {
+  const x = gridX + col * CELL, y = gridY + row * CELL;
+  const cx = x + CELL / 2, cy = y + CELL / 2;
+  const bob = 0; // static bob offset (reserved for future animation)
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 그림자
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(cx, y + CELL - 6, 11, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 몸통 (둥근 사각형 캐릭터 본체)
+  const bw = CELL - 16, bh = CELL - 14;
+  const bx = cx - bw / 2, by = cy - bh / 2 + 2;
+  ctx.fillStyle = color;
+  roundRect(bx, by, bw, bh, 8);
+  ctx.fill();
+
+  if (outline) {
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 2;
+    roundRect(bx, by, bw, bh, 8);
+    ctx.stroke();
+  }
+
+  // 배 하이라이트 (입체감)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  roundRect(bx + 3, by + 3, bw - 6, bh * 0.4, 6);
+  ctx.fill();
+
+  // 작은 발 2개
+  ctx.fillStyle = color;
+  ctx.fillRect(cx - 9, by + bh - 3, 6, 5);
+  ctx.fillRect(cx + 3, by + bh - 3, 6, 5);
+
+  // 눈 (귀여운 동그란 눈 + 눈동자)
+  const eyeY = cy - 3;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx - 6, eyeY, 4.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 6, eyeY, 4.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#20203a';
+  ctx.beginPath(); ctx.arc(cx - 5.2, eyeY + 0.5, 2.1, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 6.8, eyeY + 0.5, 2.1, 0, Math.PI * 2); ctx.fill();
+
+  // 볼터치
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.arc(cx - 10, cy + 4, 2.4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 10, cy + 4, 2.4, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
+
+  if (label) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, alpha + 0.35);
+    drawText(label, cx, y - 4, 10, color);
+    ctx.restore();
+  }
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ── 캐릭터 아트웍 그리기 헬퍼 (자유 좌표, 크기 조절 가능) ──
+function drawChar(cx, cy, scale, color, alpha, outline, opts = {}) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const bw = 26 * scale, bh = 28 * scale;
+  const bx = cx - bw / 2, by = cy - bh / 2;
+
+  // 그림자
+  if (opts.shadow !== false) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(cx, by + bh + 5 * scale, 11 * scale, 4 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 몸통
+  ctx.fillStyle = color;
+  roundRect(bx, by, bw, bh, 8 * scale);
+  ctx.fill();
+
+  if (outline) {
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 2 * scale;
+    roundRect(bx, by, bw, bh, 8 * scale);
+    ctx.stroke();
+  }
+
+  // 하이라이트
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  roundRect(bx + 3 * scale, by + 3 * scale, bw - 6 * scale, bh * 0.4, 6 * scale);
+  ctx.fill();
+
+  // 발
+  ctx.fillStyle = color;
+  ctx.fillRect(cx - 9 * scale, by + bh - 3 * scale, 6 * scale, 5 * scale);
+  ctx.fillRect(cx + 3 * scale, by + bh - 3 * scale, 6 * scale, 5 * scale);
+
+  // 눈
+  const eyeY = cy - 3 * scale;
+  const eyeR = 4.2 * scale;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx - 6 * scale, eyeY, eyeR, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 6 * scale, eyeY, eyeR, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#20203a';
+  const pupR = 2.1 * scale;
+  const px = (opts.lookRight ? 0.9 : opts.lookLeft ? -0.9 : 0) * scale;
+  ctx.beginPath(); ctx.arc(cx - 5.2 * scale + px, eyeY + 0.5 * scale, pupR, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 6.8 * scale + px, eyeY + 0.5 * scale, pupR, 0, Math.PI * 2); ctx.fill();
+
+  // 볼터치
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.arc(cx - 10 * scale, cy + 4 * scale, 2.4 * scale, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 10 * scale, cy + 4 * scale, 2.4 * scale, 0, Math.PI * 2); ctx.fill();
+
+  // 웃는 입 (옵션)
+  if (opts.smile) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1.6 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 5 * scale, 4 * scale, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ── 타이틀 화면 (내가 둘로 나뉘는 아트웍) ──
+let titleBtn = { x: 300, y: 470, w: 200, h: 58 };
+
+function renderTitle() {
+  const t = performance.now() / 1000;
+
+  // 배경 그라데이션
+  const bg = ctx.createLinearGradient(0, 0, 0, 600);
+  bg.addColorStop(0, '#0d0d22');
+  bg.addColorStop(0.6, '#141433');
+  bg.addColorStop(1, '#0a0a16');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 800, 600);
+
+  // 시간의 소용돌이 (동심원 링)
+  ctx.save();
+  ctx.translate(400, 300);
+  for (let i = 0; i < 5; i++) {
+    const r = 90 + i * 40 + Math.sin(t * 1.2 + i) * 8;
+    ctx.strokeStyle = `rgba(142, 205, 247, ${0.14 - i * 0.022})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 반짝이는 시간 입자
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2 + t * 0.25;
+    const rad = 150 + Math.sin(t * 1.6 + i * 1.3) * 60;
+    const px = 400 + Math.cos(a) * rad;
+    const py = 300 + Math.sin(a) * rad * 0.55;
+    const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * 2.2 + i));
+    ctx.fillStyle = `rgba(200, 230, 255, ${tw * 0.5})`;
+    ctx.fillRect(px, py, 2.5, 2.5);
+  }
+
+  // ══ 아트웍: 현재의 나 + 갈라지는 과거의 나들 ══
+  const artY = 300;
+  const split = 60 + Math.sin(t * 1.1) * 14;
+
+  // 분열 궤적 (현재→과거 잔상 라인)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(168, 216, 240, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 6]);
+  ctx.beginPath(); ctx.moveTo(400, artY); ctx.lineTo(400 - split - 40, artY + 6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(400, artY); ctx.lineTo(400 + split + 40, artY + 6); ctx.stroke();
+  ctx.restore();
+
+  // 과거의 나 (왼쪽 - 하늘색 잔상)
+  drawChar(400 - split - 42, artY + 6, 1.5, '#a8d8f0', 0.42, null, { lookRight: true, smile: true });
+  // 과거의 나 (오른쪽 - 핑크 잔상)
+  drawChar(400 + split + 42, artY + 6, 1.5, '#f7c9e0', 0.42, null, { lookLeft: true, smile: true });
+  // 중간 잔상 2개 (더 옅음)
+  drawChar(400 - split * 0.5 - 16, artY + 3, 1.5, '#c8f0c0', 0.2, null, { smile: true });
+  drawChar(400 + split * 0.5 + 16, artY + 3, 1.5, '#a8d8f0', 0.2, null, { smile: true });
+
+  // 현재의 나 (중앙 - 밝은 주황, 글로우)
+  ctx.save();
+  ctx.shadowColor = '#ff9f43';
+  ctx.shadowBlur = 26;
+  drawChar(400, artY, 1.75, '#ff9f43', 1, '#ffd9a0', { smile: true });
+  ctx.restore();
+
+  // 타이틀 로고
+  ctx.save();
+  ctx.shadowColor = '#4a90d9';
+  ctx.shadowBlur = 22;
+  drawText("⏪ REWIND", 400, 118, 54, '#8ecdf7');
+  ctx.restore();
+  drawText("— 아까의 나야 도와줘 —", 400, 158, 18, '#f7c9e0');
+  drawText("움직이면 기록되고, 되감으면 과거의 내가 나타난다", 400, 192, 13, '#6a7ab0');
+
+  // 시작 버튼 (펄스 글로우)
+  const pulse = (Math.sin(t * 2.6) + 1) / 2;
+  const b = titleBtn;
+  ctx.save();
+  ctx.shadowColor = `rgba(255, 230, 109, ${0.4 + pulse * 0.5})`;
+  ctx.shadowBlur = 16 + pulse * 12;
+  drawRect(b.x, b.y, b.w, b.h, '#6a3fa0');
+  ctx.restore();
+  drawRect(b.x + 4, b.y + 4, b.w - 8, b.h - 8, '#8654c4');
+  ctx.strokeStyle = `rgba(255, 230, 109, ${0.55 + pulse * 0.45})`;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(b.x, b.y, b.w, b.h);
+  drawText("▶  START", 400, b.y + 38, 24, '#ffffff');
+
+  drawText("© 2026 DDALKKAK GAMES · REWIND PROTOTYPE", 400, 585, 9, '#3a3a5a');
+}
+
+// ── 엔딩 화면 (둘이 치킨 먹는 아트웍) ──
+let endingBtn = { x: 300, y: 500, w: 200, h: 52 };
+let selectBackBtn = { x: 20, y: 20, w: 80, h: 28 };
+
+function renderEnding() {
+  const t = performance.now() / 1000;
+
+  // 따뜻한 실내 배경
+  const bg = ctx.createLinearGradient(0, 0, 0, 600);
+  bg.addColorStop(0, '#3a2418');
+  bg.addColorStop(0.55, '#54341f');
+  bg.addColorStop(1, '#2b1a10');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 800, 600);
+
+  // 벽지 무늬
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  for (let i = 0; i < 12; i++) ctx.fillRect(i * 70, 0, 26, 400);
+
+  // 천장 조명
+  ctx.fillStyle = '#3a2a1a';
+  ctx.fillRect(396, 0, 8, 60);
+  ctx.fillStyle = '#f5d76e';
+  ctx.beginPath();
+  ctx.moveTo(360, 60); ctx.lineTo(440, 60); ctx.lineTo(424, 92); ctx.lineTo(376, 92);
+  ctx.closePath(); ctx.fill();
+  // 조명 빛
+  const lampGrad = ctx.createRadialGradient(400, 100, 10, 400, 100, 260);
+  lampGrad.addColorStop(0, 'rgba(255, 225, 150, 0.30)');
+  lampGrad.addColorStop(1, 'rgba(255, 225, 150, 0)');
+  ctx.fillStyle = lampGrad;
+  ctx.fillRect(140, 60, 520, 340);
+
+  // 텍스트 (상단)
+  ctx.save();
+  ctx.shadowColor = '#000';
+  ctx.shadowBlur = 8;
+  drawText("🍗 THE END 🍗", 400, 150, 34, '#ffe66d');
+  ctx.restore();
+  drawText("\"아까의 나야! 도와줘서 고마워\"", 400, 196, 21, '#ffffff');
+  drawText("— 시간을 넘어온 우리는, 함께 치킨을 먹었다 —", 400, 226, 12, '#e0c9a6');
+
+  // ══ 식탁 ══
+  const tableY = 400;
+  // 식탁보
+  ctx.fillStyle = '#c94f4f';
+  roundRect(180, tableY, 440, 22, 6); ctx.fill();
+  ctx.fillStyle = '#e06565';
+  roundRect(180, tableY, 440, 12, 6); ctx.fill();
+  // 체크 무늬
+  ctx.fillStyle = 'rgba(255,255,255,0.16)';
+  for (let i = 0; i < 11; i++) ctx.fillRect(190 + i * 40, tableY, 16, 22);
+  // 식탁 다리
+  ctx.fillStyle = '#6b3f24';
+  ctx.fillRect(230, tableY + 22, 16, 78);
+  ctx.fillRect(554, tableY + 22, 16, 78);
+  // 바닥
+  ctx.fillStyle = '#22150d';
+  ctx.fillRect(0, tableY + 100, 800, 100);
+
+  // ══ 치킨 접시 (중앙) ══
+  const plateY = tableY - 6;
+  // 접시
+  ctx.fillStyle = '#f0ece4';
+  ctx.beginPath(); ctx.ellipse(400, plateY, 74, 20, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d8d2c6';
+  ctx.beginPath(); ctx.ellipse(400, plateY + 2, 60, 14, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 치킨 조각들 (드럼스틱 3개 + 조각)
+  function drumstick(x, y, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    // 살
+    ctx.fillStyle = '#d98a2b';
+    ctx.beginPath(); ctx.ellipse(0, 0, 15, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8a94a';
+    ctx.beginPath(); ctx.ellipse(-3, -3, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+    // 뼈
+    ctx.fillStyle = '#f5efe0';
+    ctx.fillRect(12, -3, 16, 6);
+    ctx.beginPath(); ctx.arc(29, -3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(29, 3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  drumstick(368, plateY - 12, -0.35);
+  drumstick(424, plateY - 10, 0.3);
+  drumstick(396, plateY - 2, -0.05);
+
+  // 김 (모락모락 올라오는 증기)
+  for (let i = 0; i < 3; i++) {
+    const sx = 370 + i * 30;
+    const off = (t * 26 + i * 40) % 70;
+    ctx.strokeStyle = `rgba(255,255,255,${0.30 * (1 - off / 70)})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(sx, plateY - 22 - off);
+    ctx.quadraticCurveTo(sx + 9, plateY - 34 - off, sx, plateY - 46 - off);
+    ctx.stroke();
+  }
+
+  // 콜라 컵 2개
+  function cup(x, y) {
+    ctx.fillStyle = '#e8e8f0';
+    ctx.beginPath();
+    ctx.moveTo(x - 9, y - 24); ctx.lineTo(x + 9, y - 24);
+    ctx.lineTo(x + 6, y); ctx.lineTo(x - 6, y);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a2416';
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y - 20); ctx.lineTo(x + 8, y - 20);
+    ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(x + 2, y - 36, 3, 16);
+  }
+  cup(300, plateY - 2);
+  cup(500, plateY - 2);
+
+  // ══ 두 캐릭터 (식탁에 앉아 마주보기) ══
+  const charY = tableY - 48;
+  const bob1 = Math.sin(t * 2.1) * 2.5;
+  const bob2 = Math.sin(t * 2.1 + 1.1) * 2.5;
+
+  // 의자 등받이
+  ctx.fillStyle = '#5c3520';
+  ctx.fillRect(200, charY - 30, 12, 90);
+  ctx.fillRect(588, charY - 30, 12, 90);
+
+  // 과거의 나 (왼쪽, 하늘색)
+  drawChar(255, charY + bob1, 2.0, '#a8d8f0', 0.9, '#d4ecf8', { lookRight: true, smile: true, shadow: false });
+  // 현재의 나 (오른쪽, 주황)
+  drawChar(545, charY + bob2, 2.0, '#ff9f43', 1, '#ffd9a0', { lookLeft: true, smile: true, shadow: false });
+
+  // 하트 & 반짝임
+  for (let i = 0; i < 5; i++) {
+    const hy = charY - 50 - ((t * 30 + i * 45) % 110);
+    const hx = 400 + Math.sin(t * 1.7 + i * 1.4) * 60;
+    const a = 1 - ((t * 30 + i * 45) % 110) / 110;
+    ctx.save();
+    ctx.globalAlpha = a * 0.85;
+    drawText(i % 2 === 0 ? '💛' : '✨', hx, hy, 18, '#fff');
+    ctx.restore();
+  }
+
+  // 말풍선 (왼쪽 캐릭터)
+  ctx.save();
+  ctx.globalAlpha = 0.95;
+  drawRect(150, charY - 96, 180, 44, '#ffffff');
+  drawRect(153, charY - 93, 174, 38, '#f7f7ff');
+  ctx.fillStyle = '#f7f7ff';
+  ctx.beginPath();
+  ctx.moveTo(240, charY - 52); ctx.lineTo(258, charY - 52); ctx.lineTo(246, charY - 38);
+  ctx.closePath(); ctx.fill();
+  drawText("천만에, 미래의 나!", 240, charY - 68, 13, '#2f3640');
+  ctx.restore();
+
+  // 다시 시작 버튼
+  const pulse = (Math.sin(t * 2.6) + 1) / 2;
+  const b = endingBtn;
+  ctx.save();
+  ctx.shadowColor = `rgba(255, 230, 109, ${0.35 + pulse * 0.45})`;
+  ctx.shadowBlur = 14 + pulse * 10;
+  drawRect(b.x, b.y, b.w, b.h, '#6a3fa0');
+  ctx.restore();
+  drawRect(b.x + 4, b.y + 4, b.w - 8, b.h - 8, '#8654c4');
+  ctx.strokeStyle = `rgba(255, 230, 109, ${0.5 + pulse * 0.45})`;
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(b.x, b.y, b.w, b.h);
+  drawText("타이틀로 돌아가기", 400, b.y + 33, 16, '#ffffff');
+}
+
+// ── Stage Select Screen ──
+function renderSelect() {
+  drawRect(0, 0, 800, 600, '#0a0a16');
+
+  drawText("⏪ REWIND", 400, 90, 40, '#8ecdf7');
+  drawText("— 아까의 나야 도와줘 —", 400, 122, 15, '#f7c9e0');
+  drawText("움직이면 기록되고, 되감으면 과거의 내가 나타납니다.", 400, 155, 12, '#6a7ab0');
+  drawText("과거의 나와 협력해서 퍼즐을 풀어보세요.", 400, 173, 12, '#6a7ab0');
+
+  drawText("✦ STAGE SELECT (PROTOTYPE) ✦", 400, 215, 14, '#ffe66d');
+
+  selectCards = [];
+  const cardW = 460, cardH = 78, startY = 240, gap = 14;
+
+  STAGES.forEach((stage, i) => {
+    const cy = startY + i * (cardH + gap);
+    const cx = 400 - cardW / 2;
+    selectCards.push({ x: cx, y: cy, w: cardW, h: cardH, idx: i });
+
+    drawRect(cx, cy, cardW, cardH, '#12122a');
+    drawRect(cx + 3, cy + 3, cardW - 6, cardH - 6, '#171735');
+    ctx.strokeStyle = '#2a2a55';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx, cy, cardW, cardH);
+
+    // number badge
+    drawRect(cx + 14, cy + 14, 50, 50, '#1c1c3a');
+    ctx.strokeStyle = '#3f3f75';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx + 14, cy + 14, 50, 50);
+    drawText(`${i + 1}`, cx + 39, cy + 47, 24, '#8ecdf7');
+
+    drawText(stage.name, cx + 82, cy + 32, 17, '#ffffff', 'left');
+    drawText(stage.sub, cx + 82, cy + 51, 11, '#a0aee0', 'left');
+    const tagTxt = `🔑 x${stage.keyPositions.length}   ⏱ ${stage.totalTime}초`;
+    drawText(tagTxt, cx + 82, cy + 68, 10, '#8ecdf7', 'left');
+
+    drawText('▶', cx + cardW - 26, cy + cardH/2 + 6, 18, '#ffe66d');
+  });
+
+  // Locked stage 3 placeholder
+  const lockY = startY + STAGES.length * (cardH + gap);
+  const lockX = 400 - cardW / 2;
+  drawRect(lockX, lockY, cardW, cardH, '#12122a');
+  ctx.globalAlpha = 0.45;
+  drawRect(lockX + 14, lockY + 14, 50, 50, '#1c1c3a');
+  drawText("3", lockX + 39, lockY + 47, 24, '#55557a');
+  drawText("???", lockX + 82, lockY + 32, 17, '#888', 'left');
+  drawText("추후 업데이트 예정 (레이저 / 상자 기믹)", lockX + 82, lockY + 51, 11, '#666', 'left');
+  ctx.globalAlpha = 1;
+  drawText('🔒 SOON', lockX + cardW - 50, lockY + cardH/2 + 4, 11, '#666');
+
+  // 타이틀로 돌아가기 버튼
+  drawRect(selectBackBtn.x, selectBackBtn.y, selectBackBtn.w, selectBackBtn.h, '#3a3a5c');
+  drawText("◀ 타이틀", selectBackBtn.x + selectBackBtn.w/2, selectBackBtn.y + 19, 11, '#a0aee0');
+
+  drawText("© 2026 DDALKKAK GAMES · REWIND PROTOTYPE", 400, 585, 9, '#3a3a5a');
+}
+
+function render() {
+  ctx.clearRect(0, 0, 800, 600);
+
+  if (currentScreen === SCREEN.TITLE) {
+    renderTitle();
+    return;
+  }
+
+  if (currentScreen === SCREEN.ENDING) {
+    renderEnding();
+    return;
+  }
+
+  if (currentScreen === SCREEN.SELECT) {
+    renderSelect();
+    return;
+  }
+
+  drawRect(0, 0, 800, 600, '#0a0a16');
+
+  // Top bar
+  drawRect(0, 0, 800, 80, '#12122a');
+  drawText("REWIND", 20, 32, 22, '#8ecdf7', 'left');
+  drawText(`Stage ${stageIdx + 1} · ${STAGES[stageIdx].name}`, 20, 54, 12, '#6a7ab0', 'left');
+
+  const timeColor = timeLeft <= Math.min(15, TOTAL_TIME * 0.2) ? '#ff6b6b' : '#ffffff';
+  drawText(`⏱ ${Math.ceil(timeLeft)}초`, 400, 30, 20, timeColor);
+
+  const held = keysHeldStatus();
+  const heldCount = held.filter(h => h).length;
+  drawText(`🔑 ${heldCount}/${keyPositions.length} | 이동 ${player.history.length} | 되감기 ${ghosts.length}/${MAX_REWINDS}`, 400, 55, 13, '#a0aee0');
+
+  drawRect(BTN.reset.x, BTN.reset.y, BTN.reset.w, BTN.reset.h, '#4a4a75');
+  drawText("RESET", BTN.reset.x + BTN.reset.w/2, BTN.reset.y + 19, 10, '#fff');
+
+  drawRect(BTN.menu.x, BTN.menu.y, BTN.menu.w, BTN.menu.h, '#4a4a75');
+  drawText("STAGE 목록", BTN.menu.x + BTN.menu.w/2, BTN.menu.y + 19, 10, '#fff');
+
+  drawGrid();
+
+  ghosts.forEach((g, i) => {
+    const s = ghostStateAt(g, currentTick);
+    if (!s.alive) return;
+    drawEntity(s.col, s.row, GHOST_COLORS[g.colorIdx], 0.55, `과거${i+1}`);
+  });
+
+  drawEntity(player.col, player.row, '#ff9f43', 0.98, '현재', '#ffd9a0');
+
+  // Bottom control bar
+  drawRect(0, 510, 800, 90, '#12122a');
+
+  Object.entries(BTN).forEach(([key, b]) => {
+    if (key === 'reset' || key === 'menu') return;
+    if (key === 'rewind') {
+      drawRect(b.x, b.y, b.w, b.h, '#6a3fa0');
+      drawRect(b.x + 3, b.y + 3, b.w - 6, b.h - 6, '#8654c4');
+      drawText("⏪ 되감기", b.x + b.w/2, b.y + b.h/2 + 6, 16, '#fff');
+    } else {
+      drawRect(b.x, b.y, b.w, b.h, '#2f2f55');
+      drawRect(b.x + 2, b.y + 2, b.w - 4, b.h - 4, '#3f3f75');
+      const arrow = { up: '▲', down: '▼', left: '◀', right: '▶' }[key];
+      drawText(arrow, b.x + b.w/2, b.y + b.h/2 + 6, 18, '#a8d8f0');
+    }
+  });
+
+  popups.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.alpha);
+    drawText(p.txt, p.x, p.y, 15, p.col);
+    ctx.restore();
+  });
+
+  if (flashAlpha > 0) {
+    ctx.fillStyle = `rgba(140, 180, 255, ${flashAlpha * 0.35})`;
+    ctx.fillRect(0, 0, 800, 600);
+  }
+
+  if (currentScreen === SCREEN.WIN) {
+    drawRect(0, 0, 800, 600, 'rgba(0,0,0,0.8)');
+    drawText("🎉 CLEAR! 🎉", 400, 250, 40, '#8ecdf7');
+    drawText(`총 이동 ${player.history.length + ghosts.reduce((s,g)=>s+g.history.length,0)}회 | 되감기 ${ghosts.length}회`, 400, 300, 16, '#fff');
+
+    const hasNext = stageIdx + 1 < STAGES.length;
+    if (hasNext) {
+      drawRect(300, 340, 200, 50, '#6a3fa0');
+      drawText("다음 스테이지 ▶", 400, 371, 15, '#fff');
+      drawRect(300, 400, 200, 50, '#4a4a75');
+      drawText("스테이지 목록", 400, 431, 15, '#fff');
+    } else {
+      // 마지막 스테이지 클리어 → 엔딩 보기
+      drawRect(300, 340, 200, 50, '#c94f4f');
+      drawRect(303, 343, 194, 44, '#e06565');
+      drawText("🍗 엔딩 보기", 400, 371, 16, '#fff');
+      drawRect(300, 400, 200, 50, '#4a4a75');
+      drawText("스테이지 목록", 400, 431, 15, '#fff');
+    }
+
+  } else if (currentScreen === SCREEN.TIMEUP) {
+    drawRect(0, 0, 800, 600, 'rgba(0,0,0,0.8)');
+    drawText("⏰ 시간 초과...", 400, 250, 34, '#ff6b6b');
+    drawText("과거의 나도 결국 시간에 쫓겼다", 400, 295, 15, '#c0c0e0');
+    drawRect(300, 340, 200, 50, '#4a4a75');
+    drawText("다시 시도", 400, 371, 15, '#fff');
+    drawRect(300, 400, 200, 50, '#4a4a75');
+    drawText("스테이지 목록", 400, 431, 15, '#fff');
+  }
+}
+
+/* ============================================================
+   UPDATE LOOP
+============================================================ */
+function update(dt) {
+  for (let i = popups.length - 1; i >= 0; i--) {
+    popups[i].y += popups[i].vy;
+    popups[i].alpha -= dt * 1.0;
+    if (popups[i].alpha <= 0) popups.splice(i, 1);
+  }
+  if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - dt * 2.5);
+
+  if (currentScreen === SCREEN.PLAYING) {
+    timeLeft -= dt;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      currentScreen = SCREEN.TIMEUP;
+      audio.playFail();
+    }
+  }
+}
+
+/* ============================================================
+   INPUT HANDLING
+============================================================ */
+function hit(b, x, y) { return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h; }
+
+function handlePointer(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (clientX - rect.left) * (canvas.width / rect.width);
+  const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+  if (currentScreen === SCREEN.TITLE) {
+    if (hit(titleBtn, x, y)) {
+      audio.playClick();
+      currentScreen = SCREEN.SELECT;
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.ENDING) {
+    if (hit(endingBtn, x, y)) {
+      audio.playClick();
+      currentScreen = SCREEN.TITLE;
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.SELECT) {
+    if (hit(selectBackBtn, x, y)) {
+      audio.playClick();
+      currentScreen = SCREEN.TITLE;
+      return;
+    }
+    for (const card of selectCards) {
+      if (hit(card, x, y)) {
+        audio.playClick();
+        loadStage(card.idx);
+        return;
+      }
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.WIN) {
+    const hasNext = stageIdx + 1 < STAGES.length;
+    // 상단 버튼: 다음 스테이지(있으면) / 엔딩 보기(마지막이면)
+    if (x >= 300 && x <= 500 && y >= 340 && y <= 390) {
+      audio.playClick();
+      if (hasNext) {
+        loadStage(stageIdx + 1);
+      } else {
+        audio.playWin();
+        currentScreen = SCREEN.ENDING;
+      }
+      return;
+    }
+    // 하단 버튼: 스테이지 목록
+    if (x >= 300 && x <= 500 && y >= 400 && y <= 450) {
+      audio.playClick();
+      goToSelect();
+      return;
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.TIMEUP) {
+    if (x >= 300 && x <= 500 && y >= 340 && y <= 390) {
+      audio.playClick();
+      resetLevel();
+      return;
+    }
+    if (x >= 300 && x <= 500 && y >= 400 && y <= 450) {
+      audio.playClick();
+      goToSelect();
+      return;
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.PLAYING) {
+    if (hit(BTN.up, x, y)) attemptMove('up');
+    else if (hit(BTN.down, x, y)) attemptMove('down');
+    else if (hit(BTN.left, x, y)) attemptMove('left');
+    else if (hit(BTN.right, x, y)) attemptMove('right');
+    else if (hit(BTN.rewind, x, y)) doRewind();
+    else if (hit(BTN.reset, x, y)) { audio.playClick(); resetLevel(); }
+    else if (hit(BTN.menu, x, y)) { audio.playClick(); goToSelect(); }
+  }
+}
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  audio.init();
+  if (e.touches.length > 0) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+
+canvas.addEventListener('mousedown', (e) => {
+  audio.init();
+  handlePointer(e.clientX, e.clientY);
+});
+
+window.addEventListener('keydown', (e) => {
+  audio.init();
+  const key = e.code;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','KeyR','Space'].includes(key)) {
+    e.preventDefault();
+  }
+  if (currentScreen !== SCREEN.PLAYING) return;
+  if (key === 'KeyW' || key === 'ArrowUp') attemptMove('up');
+  else if (key === 'KeyS' || key === 'ArrowDown') attemptMove('down');
+  else if (key === 'KeyA' || key === 'ArrowLeft') attemptMove('left');
+  else if (key === 'KeyD' || key === 'ArrowRight') attemptMove('right');
+  else if (key === 'KeyR' || key === 'Space') doRewind();
+});
+
+/* ============================================================
+   MAIN LOOP
+============================================================ */
+function loop(timestamp) {
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame((t) => { lastTime = t; loop(t); });
+</script>
+</body>
+</html>
