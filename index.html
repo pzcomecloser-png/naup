@@ -223,6 +223,16 @@
       </div>
       <div class="card-arrow">▶</div>
     </a>
+
+    <!-- 9. REWIND (NEW) -->
+    <a class="game-card" href="rewind.html">
+      <div class="icon-frame"><canvas id="iconRewind" width="24" height="24"></canvas></div>
+      <div class="card-text">
+        <div class="card-title">REWIND — 아까의 나야 도와줘</div>
+        <div class="card-desc">시간 되감기 협력 퍼즐</div>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
   </div>
 
   <div class="footer-box">
@@ -501,6 +511,64 @@ function drawSaveWorld2Icon(id) {
   ctx.fillRect(18, 20, 4, 1); ctx.fillRect(18, 21, 1, 1); ctx.fillRect(18, 22, 4, 1);
 }
 
+// 9. REWIND (되감기 아이콘)
+function drawRewindIcon(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 24, 24);
+
+  // 배경 (시간의 소용돌이 느낌의 다크 네이비)
+  ctx.fillStyle = '#0a0a14';
+  ctx.fillRect(0, 0, 24, 24);
+  ctx.fillStyle = '#171735';
+  ctx.fillRect(2, 2, 20, 20);
+
+  // 빛나는 열쇠 아이콘 (우측 상단)
+  ctx.fillStyle = '#c9a227';
+  ctx.fillRect(15, 4, 4, 3);
+  ctx.fillRect(16, 7, 2, 6);
+  ctx.fillRect(18, 9, 2, 2);
+  ctx.fillStyle = '#ffe66d';
+  ctx.fillRect(16, 5, 2, 1);
+  ctx.fillRect(17, 8, 1, 4);
+
+  // 두 갈래로 나뉘는 캐릭터 (현재와 과거)
+  // 왼쪽: 과거의 나 (하늘색 반투명)
+  ctx.fillStyle = '#a8d8f0';
+  ctx.fillRect(4, 10, 6, 8);
+  ctx.fillRect(5, 18, 1, 2);
+  ctx.fillRect(8, 18, 1, 2);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(5, 12, 1, 1);
+  ctx.fillRect(8, 12, 1, 1);
+
+  // 오른쪽: 현재의 나 (진한 주황색)
+  ctx.fillStyle = '#ff9f43';
+  ctx.fillRect(10, 10, 6, 8);
+  ctx.fillRect(11, 18, 1, 2);
+  ctx.fillRect(14, 18, 1, 2);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(11, 12, 1, 1);
+  ctx.fillRect(14, 12, 1, 1);
+
+  // 되감기 궤적 선 (점선)
+  ctx.fillStyle = '#8ecdf7';
+  ctx.fillRect(6, 8, 2, 1);
+  ctx.fillRect(9, 7, 2, 1);
+  ctx.fillRect(12, 8, 2, 1);
+
+  // 하단 REWIND 재생/되감기 버튼 기호
+  ctx.fillStyle = '#8ecdf7';
+  ctx.beginPath();
+  ctx.moveTo(11, 21); ctx.lineTo(15, 19); ctx.lineTo(15, 23);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(7, 21); ctx.lineTo(11, 19); ctx.lineTo(11, 23);
+  ctx.fill();
+}
+
 // 전체 렌더링
 drawCompanyLogo('logoCanvas');
 drawNaupIcon('iconNaup');
@@ -511,6 +579,7 @@ drawThreeKingdomsIcon('iconThreeKingdoms');
 drawBattleshipIcon('iconBattleship');
 drawSaveWorldIcon('iconSaveWorld');
 drawSaveWorld2Icon('iconSaveWorld2');
+drawRewindIcon('iconRewind');
 </script>
 </body>
 </html>
