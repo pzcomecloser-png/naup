@@ -9,119 +9,119 @@
   html, body {
     width: 100%; height: 100%; background: #070714;
     font-family: 'Courier New', 'Malgun Gothic', monospace;
-    overflow: hidden;
+    overflow-x: hidden;
   }
   #app {
-    position: relative; width: 100%; height: 100%; max-width: 460px; margin: 0 auto;
-    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    padding: 12px 14px 10px;
+    position: relative; width: 100%; min-height: 100%; max-width: 480px; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 16px 24px;
+    gap: 16px;
     background:
-      radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.08) 0, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.06) 0, transparent 40%),
+      radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.09) 0, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.07) 0, transparent 40%),
       #070714;
   }
 
   /* ══ 딸깍 게임사 로고 & 헤더 ══ */
   .company-header {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
     width: 100%;
   }
 
   .logo-box {
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(18, 18, 40, 0.85);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(18, 18, 40, 0.88);
     border: 2px solid #3d3b70;
     border-radius: 8px;
-    padding: 5px 14px;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.15), inset 0 0 10px rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.18), inset 0 0 10px rgba(0,0,0,0.5);
   }
 
   .logo-canvas-wrap {
-    width: 30px; height: 30px;
+    width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
     background: #000; border: 1.5px solid #00f0ff; border-radius: 4px;
     box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
   }
   .logo-canvas-wrap canvas {
-    width: 24px; height: 24px;
+    width: 30px; height: 30px;
     image-rendering: pixelated; image-rendering: crisp-edges;
   }
 
   .brand-text {
-    display: flex; flex-direction: column;
+    display: flex; flex-direction: column; gap: 1px;
   }
   .brand-title {
-    color: #00f0ff; font-size: 16px; font-weight: 900;
+    color: #00f0ff; font-size: 18px; font-weight: 900;
     letter-spacing: 1.5px; text-shadow: 0 0 8px rgba(0,240,255,0.7), 2px 2px 0 #000;
   }
   .brand-slogan {
-    color: #ff55aa; font-size: 8.5px; font-weight: 700;
+    color: #ff55aa; font-size: 9.5px; font-weight: 700;
     letter-spacing: 0.5px;
   }
 
   .page-title {
-    color: #ffe15a; font-size: 11px; font-weight: 900;
+    color: #ffe15a; font-size: 13px; font-weight: 900;
     letter-spacing: 2px; text-shadow: 1px 1px 0 #000;
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
-  /* ══ 게임 리스트 ══ */
+  /* ══ 게임 리스트 (원래 큼직한 카드 사이즈 유지 & 자연스러운 세로 스크롤) ══ */
   .card-list {
-    display: flex; flex-direction: column; gap: 7px;
-    width: 100%; max-width: 350px;
-    flex: 1; overflow-y: auto;
-    padding: 3px 4px; margin: 3px 0;
+    display: flex; flex-direction: column; gap: 12px;
+    width: 100%; max-width: 380px;
+    padding: 4px 2px;
   }
-  .card-list::-webkit-scrollbar { display: none; }
 
   .game-card {
-    display: flex; align-items: center; gap: 10px;
-    background: #121228; border: 2px solid #2e2c54; border-radius: 6px;
-    padding: 5px 10px; text-decoration: none; cursor: pointer;
-    box-shadow: 0 3px 0 #03030a, 0 4px 10px rgba(0,0,0,.6);
+    display: flex; align-items: center; gap: 14px;
+    background: #14142c; border: 3px solid #3a3a5c; border-radius: 8px;
+    padding: 10px 14px; text-decoration: none; cursor: pointer;
+    box-shadow: 0 4px 0 #05050f, 0 6px 14px rgba(0,0,0,.55);
     transition: transform .08s ease, border-color .15s ease;
   }
   .game-card:hover {
     border-color: #00e5ff;
   }
   .game-card:active {
-    transform: translateY(2px); box-shadow: 0 1px 0 #03030a;
+    transform: translateY(3px); box-shadow: 0 1px 0 #05050f;
   }
 
   .icon-frame {
-    flex: none; width: 42px; height: 42px; background: #04040a;
-    border: 2px solid #43416a; border-radius: 4px;
+    flex: none; width: 56px; height: 56px; background: #05050f;
+    border: 2px solid #4a4a72; border-radius: 6px;
     display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
   .icon-frame canvas {
-    width: 34px; height: 34px;
+    width: 46px; height: 46px;
     image-rendering: pixelated; image-rendering: crisp-edges;
   }
 
-  .card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .card-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .card-title {
-    color: #fff; font-size: 13px; font-weight: 900;
+    color: #fff; font-size: 16px; font-weight: 900;
     letter-spacing: 0.5px; text-shadow: 1px 1px 0 #000;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .card-desc {
-    color: #8e8eb8; font-size: 9.5px; font-weight: 700;
+    color: #a0a0c8; font-size: 11.5px; font-weight: 700;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .card-arrow {
-    margin-left: auto; color: #ffe15a; font-size: 14px; font-weight: 900;
-    flex: none; padding-left: 2px;
+    margin-left: auto; color: #ffe15a; font-size: 18px; font-weight: 900;
+    flex: none; padding-left: 4px;
   }
 
   /* ══ 하단 푸터 ══ */
   .footer-box {
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    margin-top: 10px; padding-bottom: 8px;
   }
   .footer-hint {
-    color: #55557a; font-size: 9px; font-weight: 700; letter-spacing: .5px;
+    color: #6a6a95; font-size: 11px; font-weight: 700; letter-spacing: .5px;
   }
   .footer-copy {
-    color: #383854; font-size: 7.5px; font-family: monospace;
+    color: #404060; font-size: 9px; font-family: monospace;
   }
 </style>
 </head>
@@ -139,10 +139,10 @@
         <div class="brand-slogan">DDALKKAK · 100% AI RETRO STUDIO</div>
       </div>
     </div>
-    <div class="page-title">✦ SELECT CARTRIDGE (8 TITLES) ✦</div>
+    <div class="page-title">✦ SELECT CARTRIDGE ✦</div>
   </div>
 
-  <!-- 전체 게임 카트리지 목록 (선협전을 4번에 넣고 한 칸씩 밀림) -->
+  <!-- 전체 게임 카트리지 목록 (시원시원한 원래 크기 & 스크롤 지원) -->
   <div class="card-list">
     <!-- 1. 나 키우기 -->
     <a class="game-card" href="naup.html">
@@ -174,7 +174,7 @@
       <div class="card-arrow">▶</div>
     </a>
 
-    <!-- 4. 선협전 (정식 4번째 작품) -->
+    <!-- 4. 선협전 -->
     <a class="game-card" href="선협전 v0.0.3.html">
       <div class="icon-frame"><canvas id="iconSeonhyeop" width="24" height="24"></canvas></div>
       <div class="card-text">
@@ -356,7 +356,7 @@ function drawLettuceIcon(id) {
   ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 21, 5, 1);
 }
 
-// 4. 선협전 (비검 어검술 + 태극/선협 검기)
+// 4. 선협전
 function drawSeonhyeopIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -389,7 +389,7 @@ function drawSeonhyeopIcon(id) {
   ctx.fillRect(20, 2, 2, 2);
 }
 
-// 5. 삼국무쌍: 도원의 검 (관우의 청룡언월도 + 분홍 벚꽃잎)
+// 5. 삼국무쌍: 도원의 검
 function drawThreeKingdomsIcon(id) {
   const c = document.getElementById(id);
   if (!c) return;
@@ -501,7 +501,7 @@ function drawSaveWorld2Icon(id) {
   ctx.fillRect(18, 20, 4, 1); ctx.fillRect(18, 21, 1, 1); ctx.fillRect(18, 22, 4, 1);
 }
 
-// 전체 렌더링 (8개 아이콘 순서대로)
+// 전체 렌더링
 drawCompanyLogo('logoCanvas');
 drawNaupIcon('iconNaup');
 drawUfoIcon('iconUfo');
