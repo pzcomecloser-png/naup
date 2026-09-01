@@ -157,7 +157,7 @@
       border-color: rgba(46, 213, 115, 0.8);
     }
 
-    /* 타이틀 화면 HTML 오버레이 컨트롤 영역 (화이트 박스 내부 배치) */
+    /* 타이틀 화면 HTML 오버레이 컨트롤 영역 (모바일 최적화 & 반응형) */
     #title-overlay {
       position: absolute;
       top: 0;
@@ -168,7 +168,7 @@
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      padding-bottom: 22px;
+      padding-bottom: 20px;
       z-index: 120;
       pointer-events: none;
     }
@@ -178,40 +178,42 @@
       flex-direction: column;
       align-items: center;
       gap: 10px;
-      width: 100%;
-      max-width: 550px;
+      width: 90%;
+      max-width: 540px;
     }
     .control-guide-panel {
-      background: #f8fafc;
+      background: rgba(248, 250, 252, 0.95);
       border: 1.5px solid #cbd5e1;
-      border-radius: 16px;
-      padding: 12px 16px;
-      width: 94%;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+      border-radius: 14px;
+      padding: 10px 14px;
+      width: 100%;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
     .guide-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
     }
     .guide-item {
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 8px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      gap: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
     .guide-key-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -222,25 +224,31 @@
       background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
       border: 1.5px solid #94a3b8;
       border-bottom: 3px solid #64748b;
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 13px;
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-size: 11px;
       font-weight: 800;
       color: #0f172a;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-      font-family: monospace, -apple-system, sans-serif;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-family: monospace, sans-serif;
     }
     .key-wide {
-      padding: 3px 14px;
+      padding: 2px 10px;
+    }
+    .key-touch {
+      background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+      border-color: #38bdf8;
+      border-bottom-color: #0284c7;
+      color: #0369a1;
     }
     .key-or {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: #94a3b8;
-      margin: 0 2px;
+      margin: 0 1px;
     }
     .guide-label {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 800;
       color: #1e293b;
     }
@@ -248,16 +256,16 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
       flex-wrap: wrap;
     }
     .tip-badge {
       background: #e2e8f0;
       color: #334155;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
     }
     .highlight-badge {
       background: #fef08a;
@@ -266,27 +274,100 @@
     }
     .start-btn {
       pointer-events: auto;
-      padding: 12px 42px;
-      font-size: 18px;
+      width: 100%;
+      padding: 12px 24px;
+      font-size: 16px;
       font-weight: 900;
       border: 2px solid #b9f6ca;
-      border-radius: 40px;
+      border-radius: 35px;
       cursor: pointer;
       background: linear-gradient(135deg, #00c853, #64dd17);
       color: #ffffff;
-      box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+      box-shadow: 0 5px 18px rgba(0, 200, 83, 0.4);
       transition: transform 0.1s, box-shadow 0.1s;
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       letter-spacing: 0.5px;
-    }
-    .start-btn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 8px 24px rgba(0, 200, 83, 0.55);
     }
     .start-btn:active {
       transform: scale(0.96);
+    }
+
+    /* 🎮 모바일 터치 가상 컨트롤러 패널 */
+    #mobile-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 140;
+      display: none; /* 인게임 시 활성화 */
+      padding: 16px 20px;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+    .touch-dpad-left {
+      position: absolute;
+      bottom: 18px;
+      left: 20px;
+      display: flex;
+      gap: 14px;
+      pointer-events: auto;
+    }
+    .touch-dpad-right {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+    .touch-btn {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.65);
+      border: 2.5px solid rgba(255, 255, 255, 0.6);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: 900;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      transition: background 0.08s, transform 0.08s, border-color 0.08s;
+    }
+    .touch-btn span {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-top: -2px;
+      opacity: 0.85;
+    }
+    .touch-btn.pressed, .touch-btn:active {
+      background: rgba(34, 197, 94, 0.85);
+      border-color: #bbf7d0;
+      transform: scale(0.92);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.6), inset 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    .touch-btn-jump {
+      width: 74px;
+      height: 74px;
+      background: rgba(234, 88, 12, 0.75);
+      border-color: #fed7aa;
+    }
+    .touch-btn-jump.pressed, .touch-btn-jump:active {
+      background: rgba(249, 115, 22, 0.95);
+      border-color: #ffedd5;
     }
 
     /* 2스테이지 컨티뉴 오버레이 */
@@ -389,6 +470,45 @@
       color: #ffffff;
       border-color: #fca5a5;
     }
+
+    /* 작은 모바일 화면 반응형 최적화 */
+    @media (max-height: 520px) or (max-width: 640px) {
+      .title-controls-card {
+        gap: 6px;
+      }
+      .control-guide-panel {
+        padding: 6px 10px;
+      }
+      .guide-item {
+        padding: 4px 6px;
+      }
+      .keycap {
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+      .start-btn {
+        padding: 9px 18px;
+        font-size: 14px;
+      }
+      .touch-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+      }
+      .touch-btn-jump {
+        width: 64px;
+        height: 64px;
+      }
+      .touch-dpad-left {
+        bottom: 12px;
+        left: 12px;
+        gap: 8px;
+      }
+      .touch-dpad-right {
+        bottom: 12px;
+        right: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -412,46 +532,63 @@
       
       <canvas id="gameCanvas"></canvas>
       
+      <!-- 🎮 모바일 전용 가상 조작 패드 -->
+      <div id="mobile-controls">
+        <div class="touch-dpad-left">
+          <div class="touch-btn" id="touch-left">
+            ◀
+            <span>LEFT</span>
+          </div>
+          <div class="touch-btn" id="touch-right">
+            ▶
+            <span>RIGHT</span>
+          </div>
+        </div>
+        <div class="touch-dpad-right">
+          <div class="touch-btn touch-btn-jump" id="touch-jump">
+            ▲
+            <span>JUMP</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 1회 한정 CONTINUE? 오버레이 (모든 스테이지 공통) -->
       <div id="continue-overlay">
         <div class="continue-card">
           <div class="continue-title">CONTINUE?</div>
-          <div class="continue-sub">★ 1회 한정 재도전 기회 (Space: 컨티뉴) ★</div>
+          <div class="continue-sub">★ 1회 한정 재도전 기회 ★</div>
           <div class="continue-timer-box" id="continue-timer-num">10</div>
           <div class="continue-desc" id="continue-desc-text">죽었던 스테이지 처음부터 다시 시작하시겠습니까?</div>
           <div class="continue-btn-row">
             <button class="continue-btn btn-yes" id="btn-continue-yes">
-              ⭕ 예 / CONTINUE (Space)
+              ⭕ 예 / CONTINUE
             </button>
             <button class="continue-btn btn-no" id="btn-continue-no">
-              ❌ 아니오 / GIVE UP (Esc)
+              ❌ 아니오 / GIVE UP
             </button>
           </div>
         </div>
       </div>
 
-      <!-- 타이틀 화면 풍성한 조작 설명 & 게임 시작 패널 -->
+      <!-- 타이틀 화면 풍성한 조작 설명 & 게임 시작 패널 (모바일 최적화) -->
       <div id="title-overlay">
         <div class="title-controls-card">
           <div class="control-guide-panel">
             <div class="guide-grid">
               <div class="guide-item">
                 <div class="guide-key-row">
-                  <span class="keycap">A</span>
-                  <span class="keycap">D</span>
+                  <span class="keycap key-touch">◀ ▶ 터치</span>
                   <span class="key-or">또는</span>
-                  <span class="keycap">◀</span>
-                  <span class="keycap">▶</span>
+                  <span class="keycap">A·D</span>
                 </div>
                 <div class="guide-label">좌우 이동 & 달리기</div>
               </div>
               
               <div class="guide-item">
                 <div class="guide-key-row">
-                  <span class="keycap key-wide">Space</span>
+                  <span class="keycap key-touch key-wide">▲ JUMP</span>
                   <span class="key-or">또는</span>
-                  <span class="keycap">W</span>
-                  <span class="keycap">▲</span>
+                  <span class="keycap">Space</span>
                 </div>
                 <div class="guide-label">점프 & 로프 도약</div>
               </div>
@@ -674,6 +811,7 @@
   const continueTimerNum = document.getElementById('continue-timer-num');
   const menuDropdownEl = document.getElementById('menu-dropdown');
   const menuToggleBtn = document.getElementById('btn-menu-toggle');
+  const mobileControlsEl = document.getElementById('mobile-controls');
 
   const sound = new SoundManager();
   document.getElementById('audio-prompt').addEventListener('click', (e) => {
@@ -698,16 +836,73 @@
     gameViewport.style.height = `${V_HEIGHT * scale}px`;
   }
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
   resizeCanvas();
 
   // ==========================================
-  // [3] 입력 처리 및 제어
+  // [3] 입력 처리 및 모바일 터치 제어
   // ==========================================
   const keys = {
     left: false,
     right: false,
     jump: false
   };
+
+  function updateControlsVisibility() {
+    if (!mobileControlsEl) return;
+    if (gameState.inTitle || gameState.inContinueScreen || gameState.gameOver || gameState.gameWon) {
+      mobileControlsEl.style.display = 'none';
+    } else {
+      mobileControlsEl.style.display = 'block';
+    }
+  }
+
+  // 모바일 터치 가상 버튼 멀티터치 바인딩
+  function bindTouchButton(elementId, onPress, onRelease) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const handlePress = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sound.init();
+      el.classList.add('pressed');
+      onPress();
+    };
+
+    const handleRelease = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('pressed');
+      onRelease();
+    };
+
+    el.addEventListener('touchstart', handlePress, { passive: false });
+    el.addEventListener('touchend', handleRelease, { passive: false });
+    el.addEventListener('touchcancel', handleRelease, { passive: false });
+    
+    el.addEventListener('mousedown', handlePress);
+    el.addEventListener('mouseup', handleRelease);
+    el.addEventListener('mouseleave', handleRelease);
+  }
+
+  bindTouchButton('touch-left', 
+    () => { keys.left = true; }, 
+    () => { keys.left = false; }
+  );
+
+  bindTouchButton('touch-right', 
+    () => { keys.right = true; }, 
+    () => { keys.right = false; }
+  );
+
+  bindTouchButton('touch-jump', 
+    () => { 
+      if (!keys.jump && typeof player !== 'undefined') player.jumpRequested = true;
+      keys.jump = true; 
+    }, 
+    () => { keys.jump = false; }
+  );
 
   function updateDevMenuUI() {
     const isDev = !!gameState.godMode;
@@ -726,6 +921,7 @@
     gameState.inTitle = false;
     titleOverlayEl.style.display = 'none';
     loadStage(stageNum);
+    updateControlsVisibility();
     sound.init();
     if (!sound.bgmPlaying) sound.startBGM();
   }
@@ -754,9 +950,10 @@
       gameState.continueAccumulator = 0;
       if (continueTimerNum) continueTimerNum.textContent = '10';
       if (continueDescText) {
-        continueDescText.textContent = `[STAGE ${gameState.currentStage}] 처음부터 다시 도전하시겠습니까? (Space: 컨티뉴)`;
+        continueDescText.textContent = `[STAGE ${gameState.currentStage}] 처음부터 다시 도전하시겠습니까?`;
       }
       if (continueOverlayEl) continueOverlayEl.style.display = 'flex';
+      updateControlsVisibility();
       sound.init();
       sound.playTone(440, 'triangle', 0.25, 0.15, true);
     } else {
@@ -764,6 +961,7 @@
       if (continueOverlayEl) continueOverlayEl.style.display = 'none';
       gameState.inContinueScreen = false;
       gameState.gameOver = true;
+      updateControlsVisibility();
     }
   }
 
@@ -773,6 +971,7 @@
       gameState.continueUsed = true; // 1회 컨티뉴 사용 완료
       continueOverlayEl.style.display = 'none';
       gameState.lives = 3; // 생명 3개로 회복
+      updateControlsVisibility();
       sound.init();
       sound.playBonus();
       loadStage(gameState.currentStage); // 죽었던 해당 스테이지 처음부터 다시 시작
@@ -784,6 +983,7 @@
       gameState.inContinueScreen = false;
       continueOverlayEl.style.display = 'none';
       gameState.gameOver = true; // 일반 게임오버 화면 전환
+      updateControlsVisibility();
       sound.playHurt();
     }
   }
@@ -802,6 +1002,7 @@
       gameState.inTitle = false;
       titleOverlayEl.style.display = 'none';
       menuDropdownEl.classList.remove('show');
+      updateControlsVisibility();
 
       sound.init();
       sound.playJump();
@@ -1275,6 +1476,7 @@
     if (keepTitle) {
       titleOverlayEl.style.display = 'flex';
     }
+    updateControlsVisibility();
 
     loadStage(stageNum);
   }
@@ -1761,6 +1963,7 @@
             if (gameState.stageScore >= greedyThreshold && !gameState.greedyGameOver) {
               gameState.greedyGameOver = true;
               gameState.gameOver = true;
+              updateControlsVisibility();
               sound.playGreedySound();
               createParticle(player.x + player.width / 2, player.y + player.height / 2, '#ff4757', 35, 6);
               createParticle(player.x + player.width / 2, player.y + player.height / 2, '#f59e0b', 30, 5);
@@ -1773,6 +1976,7 @@
     const goalX = LEVEL_LENGTH - 300;
     if (player.x >= goalX && !gameState.gameWon) {
       gameState.gameWon = true;
+      updateControlsVisibility();
       sound.playStageClear();
       createParticle(goalX + 60, GROUND_Y - 100, '#ffd700', 40, 6);
       createParticle(goalX + 120, GROUND_Y - 140, '#ff4d4d', 40, 6);
@@ -3262,9 +3466,10 @@
         resetGame(true, 1);
       }
     } else if (gameState.gameOver) {
-      // 남은 Life가 없거나 게임오버 시 타이틀 화면으로 복귀 (1스테이지부터 새로 시작, Life 2개 리셋)
+      // 남은 Life가 없거나 게임오버 시 타이틀 화면으로 복귀 (1스테이지부터 새로 시작)
       resetGame(true, 1);
     }
+    updateControlsVisibility();
   }
 
   // 캔버스 터치 재시작 / 스테이지 진행 / 컨티뉴 터치
