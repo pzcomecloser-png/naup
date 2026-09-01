@@ -295,7 +295,7 @@
       transform: scale(0.96);
     }
 
-    /* 🎮 모바일 터치 가상 컨트롤러 패널 */
+    /* 🎮 모바일 터치 가상 컨트롤러 패널 (크기 축소 & 반투명 글래스 디자인) */
     #mobile-controls {
       position: absolute;
       bottom: 0;
@@ -305,69 +305,70 @@
       pointer-events: none;
       z-index: 140;
       display: none; /* 인게임 시 활성화 */
-      padding: 16px 20px;
+      padding: 12px 16px;
       box-sizing: border-box;
       touch-action: none;
     }
     .touch-dpad-left {
       position: absolute;
-      bottom: 18px;
-      left: 20px;
+      bottom: 14px;
+      left: 16px;
       display: flex;
-      gap: 14px;
+      gap: 8px;
       pointer-events: auto;
     }
     .touch-dpad-right {
       position: absolute;
-      bottom: 18px;
-      right: 20px;
+      bottom: 14px;
+      right: 16px;
       display: flex;
-      gap: 12px;
+      gap: 8px;
       pointer-events: auto;
     }
     .touch-btn {
-      width: 66px;
-      height: 66px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
-      background: rgba(15, 23, 42, 0.65);
-      border: 2.5px solid rgba(255, 255, 255, 0.6);
-      color: #ffffff;
+      background: rgba(15, 23, 42, 0.18);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.78);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 24px;
+      font-size: 18px;
       font-weight: 900;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
       transition: background 0.08s, transform 0.08s, border-color 0.08s;
     }
     .touch-btn span {
-      font-size: 10px;
+      font-size: 7.5px;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       margin-top: -2px;
-      opacity: 0.85;
+      opacity: 0.65;
     }
     .touch-btn.pressed, .touch-btn:active {
-      background: rgba(34, 197, 94, 0.85);
-      border-color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.45);
+      border-color: rgba(187, 247, 208, 0.65);
       transform: scale(0.92);
-      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.6), inset 0 2px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
     }
     .touch-btn-jump {
-      width: 74px;
-      height: 74px;
-      background: rgba(234, 88, 12, 0.75);
-      border-color: #fed7aa;
+      width: 56px;
+      height: 56px;
+      background: rgba(234, 88, 12, 0.18);
+      border-color: rgba(254, 215, 170, 0.28);
+      color: rgba(255, 255, 255, 0.82);
     }
     .touch-btn-jump.pressed, .touch-btn-jump:active {
-      background: rgba(249, 115, 22, 0.95);
-      border-color: #ffedd5;
+      background: rgba(249, 115, 22, 0.48);
+      border-color: rgba(255, 237, 213, 0.75);
     }
 
     /* 2스테이지 컨티뉴 오버레이 */
@@ -491,22 +492,26 @@
         font-size: 14px;
       }
       .touch-btn {
-        width: 56px;
-        height: 56px;
-        font-size: 20px;
+        width: 46px;
+        height: 46px;
+        font-size: 16px;
+      }
+      .touch-btn span {
+        font-size: 7.5px;
       }
       .touch-btn-jump {
-        width: 64px;
-        height: 64px;
+        width: 52px;
+        height: 52px;
+        font-size: 16px;
       }
       .touch-dpad-left {
-        bottom: 12px;
-        left: 12px;
-        gap: 8px;
+        bottom: 10px;
+        left: 10px;
+        gap: 6px;
       }
       .touch-dpad-right {
-        bottom: 12px;
-        right: 12px;
+        bottom: 10px;
+        right: 10px;
       }
     }
   </style>
