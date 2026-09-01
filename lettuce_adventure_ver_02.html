@@ -2,7 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>양상치 소녀의 대모험 - 스테이지 1</title>
   <style>
     * {
@@ -17,7 +20,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #111222;
+      background-color: #4da8f0;
       font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: flex;
       justify-content: center;
@@ -32,7 +35,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #090a14;
+      background: linear-gradient(180deg, #4da8f0 0%, #73c8f8 40%, #b8e6fc 70%, #689f38 70%, #5d4037 100%);
+      overflow: hidden;
     }
     #game-viewport {
       position: relative;
@@ -53,11 +57,11 @@
       touch-action: none;
     }
 
-    /* 상단 메뉴 시스템 */
+    /* 상단 메뉴 시스템 (iOS Safe Area 지원) */
     .top-bar {
-      position: absolute;
-      top: 14px;
-      right: 18px;
+      position: fixed;
+      top: max(14px, env(safe-area-inset-top, 14px));
+      right: max(16px, env(safe-area-inset-right, 16px));
       z-index: 200;
       display: flex;
       flex-direction: column;
@@ -311,16 +315,16 @@
     }
     .touch-dpad-left {
       position: absolute;
-      bottom: 14px;
-      left: 16px;
+      bottom: max(14px, env(safe-area-inset-bottom, 14px));
+      left: max(16px, env(safe-area-inset-left, 16px));
       display: flex;
       gap: 8px;
       pointer-events: auto;
     }
     .touch-dpad-right {
       position: absolute;
-      bottom: 14px;
-      right: 16px;
+      bottom: max(14px, env(safe-area-inset-bottom, 14px));
+      right: max(16px, env(safe-area-inset-right, 16px));
       display: flex;
       gap: 8px;
       pointer-events: auto;
@@ -472,6 +476,42 @@
       border-color: #fca5a5;
     }
 
+    /* iOS 세로 모드(Portrait) 전체화면 최적화 */
+    @media (orientation: portrait) {
+      body, html {
+        background-color: #4da8f0;
+      }
+      #game-container {
+        background: linear-gradient(180deg, #3d9be8 0%, #73c8f8 35%, #bfe8fc 65%, #689f38 65%, #4e342e 100%);
+      }
+      #game-viewport {
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .top-bar {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top, 12px));
+        right: max(14px, env(safe-area-inset-right, 14px));
+      }
+      #title-overlay {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        padding-top: max(16px, env(safe-area-inset-top, 16px));
+        padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+        padding-left: max(16px, env(safe-area-inset-left, 16px));
+        padding-right: max(16px, env(safe-area-inset-right, 16px));
+      }
+      .title-controls-card {
+        width: 94%;
+        max-width: 480px;
+        gap: 8px;
+      }
+      .control-guide-panel {
+        padding: 8px 12px;
+      }
+    }
+
     /* 작은 모바일 화면 반응형 최적화 */
     @media (max-height: 520px) or (max-width: 640px) {
       .title-controls-card {
@@ -530,6 +570,7 @@
           <div class="menu-item-btn dev-stage-btn" id="btn-goto-stage1" style="display: none; background: rgba(56, 189, 248, 0.25); color: #38bdf8; border-color: rgba(56, 189, 248, 0.6);">☀️ STAGE 1 (낮) 이동</div>
           <div class="menu-item-btn dev-stage-btn" id="btn-goto-stage2" style="display: none; background: rgba(249, 115, 22, 0.25); color: #fb923c; border-color: rgba(249, 115, 22, 0.6);">🌅 STAGE 2 (노을) 이동</div>
           <div class="menu-item-btn" id="btn-dev-mode">🛠️ 개발자 모드 (무적)</div>
+          <div class="menu-item-btn" id="btn-fullscreen">⛶ 전체화면 모드</div>
           <div class="menu-item-btn" id="audio-prompt">🔊 BGM ON/OFF</div>
           <div class="menu-item-btn" id="btn-title-return">🏠 타이틀 화면</div>
         </div>
@@ -603,6 +644,7 @@
               <span class="tip-badge">🌵 선인장·통나무 피하기</span>
               <span class="tip-badge">🌿 넝쿨 잡고 점프</span>
               <span class="tip-badge highlight-badge">⭐ 4천 / 1만2천 / 2만점 달성 시 LIFE +1</span>
+              <span class="tip-badge" style="background: rgba(224, 242, 254, 0.95); color: #0284c7; border: 1px solid #7dd3fc; font-weight: 800;">📱 가로로 돌리면 와이드 전체화면!</span>
             </div>
           </div>
 
@@ -826,6 +868,60 @@
     document.getElementById('audio-prompt').textContent = isMuted ? '🔇 BGM ON' : '🔊 BGM OFF';
     menuDropdownEl.classList.remove('show');
   });
+
+  const fullscreenBtn = document.getElementById('btn-fullscreen');
+
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  function updateFullscreenBtnText() {
+    if (fullscreenBtn) {
+      fullscreenBtn.textContent = isFullscreen() ? '⛶ 전체화면 해제' : '⛶ 전체화면 모드';
+    }
+  }
+
+  function toggleFullscreen() {
+    const elem = document.documentElement;
+    if (!isFullscreen()) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.webkitRequestFullScreen) {
+        elem.webkitRequestFullScreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.webkitCancelFullScreen) {
+        document.webkitCancelFullScreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+    window.scrollTo(0, 1);
+    setTimeout(resizeCanvas, 150);
+  }
+
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menuDropdownEl.classList.remove('show');
+      toggleFullscreen();
+    });
+  }
+
+  document.addEventListener('fullscreenchange', updateFullscreenBtnText);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenBtnText);
 
   const V_WIDTH = 960;
   const V_HEIGHT = 540;
