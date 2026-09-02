@@ -1,0 +1,3230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>창고담당 김대리 - 레트로 창고 퍼즐</title>
+  <style>
+    :root {
+      --bg-color: #0b0d14;
+      --card-bg: #141824;
+      --panel-border: #222a3d;
+      --accent-color: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.45);
+      --success-color: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.4);
+      --danger-color: #ef4444;
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+      --btn-bg: #1e2536;
+      --btn-hover: #2c364d;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 10px;
+    }
+
+    .game-container {
+      background: var(--card-bg);
+      border: 2px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      max-width: 720px;
+      width: 100%;
+      position: relative;
+    }
+
+    /* 상단 상태바 */
+    .header-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--panel-border);
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-badge {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .level-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stats-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-item span.label {
+      color: var(--text-sub);
+      font-size: 11px;
+    }
+
+    .home-btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .home-btn:hover {
+      background: var(--btn-hover);
+      border-color: #4b5563;
+    }
+
+    /* 15개 스테이지 선택 바 */
+    .stage-selector-container {
+      width: 100%;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .stage-selector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--text-sub);
+    }
+
+    .level-grid-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      width: 100%;
+    }
+
+    .lvl-dot {
+      flex: 1 0 calc(6.66% - 5px);
+      min-width: 32px;
+      height: 28px;
+      border-radius: 6px;
+      background: #1a2030;
+      border: 1px solid #2e384c;
+      color: #94a3b8;
+      font-size: 11.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .lvl-dot:hover {
+      background: #283348;
+      color: #fff;
+    }
+
+    .lvl-dot.active {
+      background: var(--accent-color);
+      color: #000;
+      border-color: #fbbf24;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .lvl-dot.cleared {
+      border-color: var(--success-color);
+      color: var(--success-color);
+    }
+
+    .lvl-dot.cleared::after {
+      content: '✓';
+      position: absolute;
+      top: 0px;
+      right: 2px;
+      font-size: 8px;
+      font-weight: bold;
+    }
+
+    /* 게임 캔버스 래퍼 */
+    .canvas-wrapper {
+      position: relative;
+      background: #080a0f;
+      border: 2px solid #202738;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 4px 24px rgba(0, 0, 0, 0.9);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: pointer;
+    }
+
+    /* 클리어 팝업 */
+    .banner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(8, 11, 18, 0.9);
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 10;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .banner-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .banner-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #34d399;
+      text-shadow: 0 0 18px rgba(52, 211, 153, 0.6);
+      margin-bottom: 6px;
+    }
+
+    .banner-desc {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+    }
+
+    .banner-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      transition: transform 0.1s, filter 0.2s;
+    }
+
+    .banner-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* 모바일 친화 컨트롤 바 */
+    .gamepad-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px;
+      gap: 16px;
+    }
+
+    .dpad-cross {
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: repeat(3, 40px);
+      gap: 3px;
+    }
+
+    .dpad-btn {
+      background: linear-gradient(180deg, #242d40, #1b2232);
+      border: 1px solid #36425c;
+      color: var(--text-main);
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+      transition: all 0.1s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dpad-btn:active {
+      background: var(--accent-color);
+      color: #000;
+      transform: translateY(2px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .dpad-up    { grid-column: 2; grid-row: 1; }
+    .dpad-left  { grid-column: 1; grid-row: 2; }
+    .dpad-center{ grid-column: 2; grid-row: 2; background: #151a26; border: 1px solid #273044; border-radius: 6px; }
+    .dpad-right { grid-column: 3; grid-row: 2; }
+    .dpad-down  { grid-column: 2; grid-row: 3; }
+
+    .action-circle-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .circle-btn-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .key-badge {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 1px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .circle-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 2px solid;
+      background: #1a202e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.12s ease;
+      position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .circle-btn:active {
+      transform: scale(0.92) translateY(2px);
+    }
+
+    .circle-btn.hint {
+      border-color: #f59e0b;
+      background: linear-gradient(145deg, #b45309, #78350f);
+    }
+    .circle-btn.hint:active {
+      background: #f59e0b;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+    }
+
+    .circle-btn.undo {
+      border-color: #3b82f6;
+      background: linear-gradient(145deg, #1d4ed8, #172554);
+    }
+    .circle-btn.undo:active {
+      background: #3b82f6;
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+    }
+
+    .circle-btn.reset {
+      border-color: #ef4444;
+      background: linear-gradient(145deg, #b91c1c, #450a0a);
+    }
+    .circle-btn.reset:active {
+      background: #ef4444;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+    }
+
+    .circle-btn .btn-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      text-align: center;
+      letter-spacing: -0.3px;
+    }
+
+    /* 하단 힌트 바 */
+    .help-hint {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: #fcd34d;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- 상단 상태바 -->
+  <div class="header-bar">
+    <div class="title-group">
+      <button class="home-btn" id="titleScreenBtn" title="타이틀 화면으로 이동">🏠 타이틀</button>
+      <div class="level-title" id="stageName">Stage 1</div>
+    </div>
+    <div class="stats-group">
+      <div class="stat-item" style="padding: 2px 6px; display: flex; align-items: center; gap: 3px;">
+        <button id="bgmMuteBtn" title="BGM 켜기/끄기 (ON/OFF)" style="border:none; background:transparent; font-size:13px; color:#f59e0b; cursor:pointer; padding:2px;">🎵</button>
+        <button id="bgmVolumeStepBtn" title="볼륨 조절 (5% > 15% > 30% > 60% > 100%)" style="border:none; background:transparent; font-size:11px; font-weight:800; color:#f59e0b; cursor:pointer; padding:2px 4px;">30%</button>
+      </div>
+      <div class="stat-item">
+        <span class="label">난이도</span>
+        <span id="diffBadge" style="color:#34d399">입문 (Easy)</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">이동</span>
+        <span id="moveCount">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">남은 목표</span>
+        <span id="targetRemaining">1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15개 스테이지 선택 바 -->
+  <div class="stage-selector-container">
+    <div class="stage-selector-header">
+      <span>스테이지 선택 (1~15)</span>
+      <span id="clearedCount">클리어: 0 / 15</span>
+    </div>
+    <div class="level-grid-nav" id="levelNav"></div>
+  </div>
+
+  <!-- 게임 화면 캔버스 -->
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas" width="600" height="410"></canvas>
+    
+    <!-- 스테이지 클리어 오버레이 -->
+    <div class="banner-overlay" id="clearBanner">
+      <div class="banner-title">✨ 칼퇴 확정! 스테이지 클리어!</div>
+      <div class="banner-desc" id="clearDesc">김대리가 모든 상자를 완벽하게 정리했습니다.</div>
+      <button class="banner-btn" id="nextStageBtn">다음 업무로 (Space / Enter)</button>
+    </div>
+  </div>
+
+  <!-- 🎮 모바일 터치 컨트롤 (왼쪽 D-Pad / 오른쪽 동그란 액션 버튼) -->
+  <div class="gamepad-container">
+    <!-- 좌측 D-PAD -->
+    <div class="dpad-cross">
+      <button class="dpad-btn dpad-up" data-dir="up" aria-label="위로">▲</button>
+      <button class="dpad-btn dpad-left" data-dir="left" aria-label="왼쪽">◀</button>
+      <div class="dpad-center"></div>
+      <button class="dpad-btn dpad-right" data-dir="right" aria-label="오른쪽">▶</button>
+      <button class="dpad-btn dpad-down" data-dir="down" aria-label="아래로">▼</button>
+    </div>
+
+    <!-- 우측 원형 액션 버튼 (힌트 / 되돌리기 / 재시작) -->
+    <div class="action-circle-group">
+      <!-- 힌트 버튼 (최대 5회, 단축키 H) -->
+      <div class="circle-btn-wrapper">
+        <button class="circle-btn hint" id="hintBtn" title="스테이지 힌트 보기 (단축키: H)">
+          <span class="btn-text">힌트 (5)</span>
+        </button>
+        <span class="key-badge">H</span>
+      </div>
+
+      <!-- 되돌리기 (Undo, 최대 3회, 단축키 Z) -->
+      <div class="circle-btn-wrapper">
+        <button class="circle-btn undo" id="undoBtn" title="되돌리기 (단축키: Z)">
+          <span class="btn-text">되돌리기 (3)</span>
+        </button>
+        <span class="key-badge">Z</span>
+      </div>
+
+      <!-- 재시작 (Reset, 단축키 R) -->
+      <div class="circle-btn-wrapper">
+        <button class="circle-btn reset" id="resetBtn" title="재시작 (단축키: R)">
+          <span class="btn-text">재시작</span>
+        </button>
+        <span class="key-badge">R</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 힌트 & 가이드 바 (기본 숨김, 힌트 버튼 클릭 시 노출) -->
+  <div class="help-hint" id="hintText" style="display: none;"></div>
+</div>
+
+<script>
+/* =====================================================================
+   1. 사운드 시스템 (Web Audio API)
+   ===================================================================== */
+/* =====================================================================
+   1. 사운드 & 8비트 레트로 BGM 시스템 (Web Audio API 완전 통합)
+   ===================================================================== */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.bgmGain = null;
+    this.sfxGain = null;
+    
+    this.bgmTimer = null;
+    this.bgmVolume = 0.3; // 기본값 30% (나른하고 평온한 볼륨)
+    this.bgmPlaying = false;
+    this.bgmStep = 0;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+
+      // 마스터 노드 구조: Source -> (BGM/SFX Gain) -> Master Gain -> Destination
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
+
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+      this.bgmGain.connect(this.masterGain);
+
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+      this.sfxGain.connect(this.masterGain);
+    }
+    
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  // 🎵 인게임 전용: 나른하고 평온한 로파이 앰비언트 BGM
+  startBGM() {
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    if (this.bgmPlaying) return;
+    this.bgmPlaying = true;
+    this.scheduleBgmTick();
+  }
+
+  stopBGM() {
+    this.bgmPlaying = false;
+    if (this.bgmTimer) {
+      clearTimeout(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  }
+
+  setBgmVolume(val) {
+    this.bgmVolume = Math.max(0, Math.min(1, val));
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+    }
+  }
+
+  scheduleBgmTick() {
+    if (!this.bgmPlaying || !this.ctx) return;
+    
+    // ☕ 김대리의 느긋하고 평온한 휴식 테마 (Cmaj9 - Em7 - Fmaj7 - Gsus4)
+    // 여유롭고 몽환적인 16단계 루프 (약 600ms 간격)
+    const progression = [
+      // 1. Cmaj9 (나른한 쉼)
+      { bass: 130.81, pad: [261.63, 329.63, 392.00], lead: 587.33 },
+      { bass: null,   pad: [329.63, 392.00],         lead: null },
+      { bass: null,   pad: [261.63, 493.88],         lead: 659.25 },
+      { bass: null,   pad: [329.63, 392.00],         lead: 523.25 },
+
+      // 2. Em7 (포근한 오후)
+      { bass: 82.41,  pad: [246.94, 329.63, 392.00], lead: 493.88 },
+      { bass: null,   pad: [293.66, 392.00],         lead: null },
+      { bass: null,   pad: [246.94, 329.63],         lead: 587.33 },
+      { bass: null,   pad: [293.66, 392.00],         lead: 493.88 },
+
+      // 3. Fmaj7 (노을빛 창고)
+      { bass: 87.31,  pad: [261.63, 329.63, 440.00], lead: 523.25 },
+      { bass: null,   pad: [329.63, 440.00],         lead: null },
+      { bass: null,   pad: [261.63, 329.63],         lead: 659.25 },
+      { bass: null,   pad: [329.63, 440.00],         lead: 587.33 },
+
+      // 4. Gsus4 -> G7 (칼퇴를 꿈꾸며)
+      { bass: 98.00,  pad: [261.63, 293.66, 392.00], lead: 493.88 },
+      { bass: null,   pad: [246.94, 392.00],         lead: null },
+      { bass: null,   pad: [293.66, 392.00],         lead: 523.25 },
+      { bass: null,   pad: [246.94, 392.00],         lead: 392.00 }
+    ];
+
+    const stepData = progression[this.bgmStep % progression.length];
+
+    // 1. 깊고 포근한 저음 베이스 (4박마다 롱테일)
+    if (stepData.bass) {
+      this.playBgmNote(stepData.bass, 1.8, 'sine', 0.26, 320);
+    }
+
+    // 2. 몽환적인 코드 패드 (부드럽게 퍼지는 삼각파)
+    if (stepData.pad) {
+      stepData.pad.forEach((pFreq, i) => {
+        setTimeout(() => {
+          this.playBgmNote(pFreq, 1.4, 'sine', 0.12, 480);
+        }, i * 35);
+      });
+    }
+
+    // 3. 은은한 멜로디 차임벨 (맑은 사인파)
+    if (stepData.lead) {
+      setTimeout(() => {
+        this.playBgmNote(stepData.lead, 1.2, 'sine', 0.14, 650);
+      }, 70);
+    }
+
+    this.bgmStep++;
+    // 640ms의 느긋한 템포 (느릿느릿 여유로운 로파이 펄스)
+    this.bgmTimer = setTimeout(() => this.scheduleBgmTick(), 640);
+  }
+
+  playBgmNote(freq, dur, waveType = 'sine', vol = 0.15, cutoff = 500) {
+    if (!this.ctx || this.bgmVolume <= 0) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(cutoff, this.ctx.currentTime);
+
+      osc.type = waveType;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+      const now = this.ctx.currentTime;
+      const peak = vol * this.bgmVolume;
+      gain.gain.setValueAtTime(0.0001, now);
+      // 부드러운 어택 (0.12초)과 긴 릴리즈
+      gain.gain.linearRampToValueAtTime(peak, now + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain || this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + dur + 0.05);
+    } catch (e) {}
+  }
+
+  playStep() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(75, this.ctx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(this.sfxGain || this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.04);
+  }
+
+  playPush() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(55, this.ctx.currentTime + 0.09);
+    gain.gain.setValueAtTime(0.28, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
+    osc.connect(gain);
+    gain.connect(this.sfxGain || this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.09);
+  }
+
+  playGoal() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + i * 0.06);
+      gain.gain.setValueAtTime(0.24, now + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.25);
+      osc.connect(gain);
+      gain.connect(this.sfxGain || this.ctx.destination);
+      osc.start(now + i * 0.06);
+      osc.stop(now + i * 0.06 + 0.26);
+    });
+  }
+
+  playUndo() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(520, this.ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+    osc.connect(gain);
+    gain.connect(this.sfxGain || this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.06);
+  }
+
+  playTalk() {
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(650, this.ctx.currentTime);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(240 + Math.random() * 40, this.ctx.currentTime);
+
+      const now = this.ctx.currentTime;
+      // 볼륨을 0.08 -> 0.012로 대폭 낮춰 부드러운 타자기 느낌 부여
+      gain.gain.setValueAtTime(0.012, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.sfxGain || this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (e) {}
+  }
+
+  playDoor() {
+    this.init();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(this.sfxGain || this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.36);
+  }
+
+  playVictory() {
+    this.init();
+    if (!this.ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    const now = this.ctx.currentTime;
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+      gain.gain.setValueAtTime(0.3, now + idx * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.32);
+      osc.connect(gain);
+      gain.connect(this.sfxGain || this.ctx.destination);
+      osc.start(now + idx * 0.09);
+      osc.stop(now + idx * 0.09 + 0.33);
+    });
+  }
+
+  playStart() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [330, 440, 554.37, 659.25, 880].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+      gain.gain.setValueAtTime(0.25, now + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.2);
+      osc.connect(gain);
+      gain.connect(this.sfxGain || this.ctx.destination);
+      osc.start(now + idx * 0.05);
+      osc.stop(now + idx * 0.05 + 0.22);
+    });
+  }
+}
+
+const sound = new SoundEngine();
+
+/* =====================================================================
+   2. 스토리 컷씬 데이터
+   ===================================================================== */
+const STORY_SCENES = [
+  {
+    type: 'building',
+    speaker: '해설',
+    speakerColor: '#94a3b8',
+    text: '도심 한복판, 하늘을 찌를 듯 웅장하게 솟아있는 대한민국 굴지의 대기업...',
+    sub: '대한민국 제1의 대기업 [엄청그룹] 본사'
+  },
+  {
+    type: 'office',
+    speaker: '박부장',
+    speakerColor: '#ef4444',
+    text: '“김대리!! 5년 전 그... 무슨 기획서류였지? 그거 지금 당장 찾아와!!”',
+    sub: '기획1팀 부서장 박부장 (칼퇴 킬러)'
+  },
+  {
+    type: 'office',
+    speaker: '김대리',
+    speakerColor: '#38bdf8',
+    text: '“네...? 5년 전 서류면... 지하 7층 폐쇄 창고에 박혀있을 텐데요...?”',
+    sub: '기획1팀 김대리 (오늘 6시 칼퇴가 꿈)'
+  },
+  {
+    type: 'office',
+    speaker: '박부장',
+    speakerColor: '#ef4444',
+    text: '“그래서 뭐? 지금 나한테 말대꾸하는 거야? 퇴근 전에 못 찾으면 오늘 야근이야!!”',
+    sub: '박부장의 필살기: 그래서 뭐?'
+  },
+  {
+    type: 'office',
+    speaker: '김대리',
+    speakerColor: '#38bdf8',
+    text: '“...알겠습니다. (하... 내 황금 같은 저녁 약속이 날아가는 소리가 들린다...)”',
+    sub: '김대리의 눈물겨운 대답'
+  },
+  {
+    type: 'warehouse_inside',
+    speaker: '김대리',
+    speakerColor: '#38bdf8',
+    text: '“으악... 상자들이 온 사방에 어지럽게 널려있잖아...?! 여기서 어떻게 서류를 찾지? ...일단 상자들부터 정리해야겠다!!”',
+    sub: '지하 7층 폐쇄 창고 내부'
+  }
+];
+
+/* =====================================================================
+   3. 100% 알고리즘 검증 완료 15개 정통 소코반 레벨 (단계별 급상승 난이도 곡선)
+   ===================================================================== */
+const STAGES = [
+  // 🟢 Stage 1 (16수, Microban 2)
+  {
+    name: "Stage 1",
+    diff: "입문 (Easy)",
+    diffColor: "#34d399",
+    hint: "💡 <strong>튜토리얼:</strong> 상자 뒤로 돌아가 목표 발판(💠)으로 밉니다.",
+    map: [
+      "  ######",
+      "  #....#",
+      "  #.#@.#",
+      "  #.$&.#",
+      "  #.*&.#",
+      "  #....#",
+      "  ######"
+    ]
+  },
+  // 🟠 Stage 2~5: 2스테이지부터 본격 난이도 급상승! (17~29수)
+  {
+    name: "Stage 2",
+    diff: "중급 (Moderate)",
+    diffColor: "#fbbf24",
+    hint: "⚡ <strong>난이도 상승:</strong> 두 상자의 경로가 겹치지 않게 순서를 정하세요.",
+    map: [
+      "  ####  ",
+      "  #..####",
+      "  #.*.*.#",
+      "  #.$$#@#",
+      "  ##....#",
+      "   ######"
+    ]
+  },
+  {
+    name: "Stage 3",
+    diff: "중급 (Moderate)",
+    diffColor: "#fbbf24",
+    hint: "🧠 <strong>공간 관리:</strong> 좁은 공간에서 상자들의 자리를 뒤바꾸세요.",
+    map: [
+      " ########",
+      " #......#",
+      " #.*&&$@#",
+      " #......#",
+      " #####..#",
+      "     ####"
+    ]
+  },
+  {
+    name: "Stage 4",
+    diff: "중급 (Moderate)",
+    diffColor: "#fbbf24",
+    hint: "🧠 <strong>순서의 미학:</strong> L자 골목에서 상자들의 진입 순서를 계산하세요.",
+    map: [
+      "  ####",
+      "  #.*#",
+      "  #..###",
+      "  #&@..#",
+      "  #..$.#",
+      "  #..###",
+      "  ####"
+    ]
+  },
+  {
+    name: "Stage 5",
+    diff: "중급 (Moderate)",
+    diffColor: "#fbbf24",
+    hint: "🧠 <strong>중앙 방벽:</strong> 십자 방벽을 이용해 3개의 상자를 분산 배치하세요.",
+    map: [
+      "#######",
+      "#.....#",
+      "#.$#$.#",
+      "#..#..#",
+      "#.*#*.#",
+      "#..$..#",
+      "#..*..#",
+      "#..@..#",
+      "#######"
+    ]
+  },
+  // 🔴 Stage 6~10: 고급 창고 관리 (32~40수)
+  {
+    name: "Stage 6",
+    diff: "고급 (Hard)",
+    diffColor: "#f97316",
+    hint: "🔥 <strong>고난이도:</strong> 기둥 뒤로 상자를 우회시켜 골인시키세요.",
+    map: [
+      "######",
+      "#....#",
+      "#.$$.#",
+      "#..$.#",
+      "#.*#.#",
+      "#.*..#",
+      "#.*@.#",
+      "######"
+    ]
+  },
+  {
+    name: "Stage 7",
+    diff: "고급 (Hard)",
+    diffColor: "#f97316",
+    hint: "🔥 <strong>고난이도:</strong> 지그재그 통로를 따라 3개의 상자를 차례로 정렬하세요.",
+    map: [
+      " ##### ",
+      " #...# ",
+      " #.$..#",
+      "##.$.# ",
+      "#..$.# ",
+      "#..*## ",
+      "#.*..# ",
+      "#.*@.# ",
+      "###### "
+    ]
+  },
+  {
+    name: "Stage 8",
+    diff: "고급 (Hard)",
+    diffColor: "#f97316",
+    hint: "🔥 <strong>고난이도:</strong> 지그재그 벽을 따라 상자를 순서대로 유도하세요.",
+    map: [
+      "  #.#####",
+      "    #...#",
+      "  ###$$@#",
+      "  #...###",
+      "  #.....#",
+      "  #.*.*.#",
+      "  #######"
+    ]
+  },
+  {
+    name: "Stage 9",
+    diff: "고급 (Hard)",
+    diffColor: "#f97316",
+    hint: "🔥 <strong>고난이도:</strong> 좁은 통로의 병목을 해결하고 상자를 안착시키세요.",
+    map: [
+      "      ###",
+      " ######@##",
+      " #....*&.#",
+      " #...#...#",
+      " #####$#.#",
+      "     #...#",
+      "     #####"
+    ]
+  },
+  {
+    name: "Stage 10",
+    diff: "고급 (Hard)",
+    diffColor: "#f97316",
+    hint: "⚡ <strong>고난이도:</strong> 40수 이상의 정밀한 연쇄 밀기가 요구됩니다.",
+    map: [
+      " ##### ",
+      " #...# ",
+      " #.$..#",
+      "##.$.# ",
+      "#..$.# ",
+      "#.*### ",
+      "#.*..# ",
+      "#.*@.# ",
+      "###### "
+    ]
+  },
+  // 🟣 Stage 11~15: 초심층 마스터클래스 (41~107수)
+  {
+    name: "Stage 11",
+    diff: "초심층 (Ultra Deep)",
+    diffColor: "#ef4444",
+    hint: "🧠 <strong>상자 2개:</strong> 통로 끝 포켓으로 상자를 순차 운반하세요.",
+    map: [
+      "########",
+      "#...**.#",
+      "#..@$$.#",
+      "#####.##",
+      "   #..# ",
+      "   #..# ",
+      "   #..# ",
+      "   #### "
+    ]
+  },
+  {
+    name: "Stage 12",
+    diff: "초심층 (Ultra Deep)",
+    diffColor: "#ef4444",
+    hint: "🧠 <strong>상자 2개:</strong> 49수 이상의 장거리 수읽기가 필요한 정통 명작입니다.",
+    map: [
+      " #####   ",
+      " #...##  ",
+      " #.$..#  ",
+      " ##.$.####",
+      "  ###@*..#",
+      "   #..*#.#",
+      "   #.....#",
+      "   #######"
+    ]
+  },
+  {
+    name: "Stage 13",
+    diff: "두뇌 한계 (Brain Melter)",
+    diffColor: "#dc2626",
+    hint: "👑 <strong>상자 2개:</strong> 50수의 치밀한 이동으로 좁은 방벽을 뚫어내세요.",
+    map: [
+      " #######  ",
+      " #.....###",
+      " #..@$$**#",
+      " ####.##.#",
+      "   #.....#",
+      "   #..####",
+      "   #..#   ",
+      "   ####   "
+    ]
+  },
+  {
+    name: "Stage 14",
+    diff: "두뇌 한계 (Brain Melter)",
+    diffColor: "#dc2626",
+    hint: "👑 <strong>상자 2개:</strong> 51수 이상의 정밀한 공간 기동 퍼즐입니다.",
+    map: [
+      "  #######",
+      "  #.....#",
+      "  #.#.#.#",
+      "  #*.$&@#",
+      "  #...###",
+      "  #####  "
+    ]
+  },
+  {
+    name: "Stage 15",
+    diff: "마스터 (Grandmaster)",
+    diffColor: "#a855f7",
+    hint: "🏆 <strong>궁극의 107수:</strong> 소코반의 정점! 100수 이상의 장거리 연쇄 밀기로 칼퇴를 완성하세요!",
+    map: [
+      "###### #####",
+      "#....###...#",
+      "#.$$.....#@#",
+      "#.$.#***...#",
+      "#...########",
+      "#####       "
+    ]
+  }
+];
+
+/* =====================================================================
+   4. 게임 상태 & 컷씬 & 세이브 관리 (LocalStorage 연동)
+   ===================================================================== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = 'TITLE';
+let titleTimer = 0;
+
+let storyIndex = 0;
+let storyTextProgress = 0;
+let doorOpenProgress = 0;
+let isDoorOpening = false;
+
+let currentStageIndex = 0;
+let grid = [];
+let rows = 0;
+let cols = 0;
+let tileSize = 44;
+let offsetX = 0;
+let offsetY = 0;
+
+let player = { x: 0, y: 0, facing: 'down', animFrame: 0 };
+let moveHistory = [];
+let moveCount = 0;
+let undoRemaining = 3;
+let hintRemaining = 5;
+let isCleared = false;
+let devModeActive = false;
+let particles = [];
+
+// 세이브 불러오기
+let clearedStages = new Set();
+try {
+  const saved = localStorage.getItem('kimdaeri_cleared_stages');
+  if (saved) {
+    clearedStages = new Set(JSON.parse(saved));
+  }
+} catch (e) {
+  console.log('Storage not accessible', e);
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem('kimdaeri_cleared_stages', JSON.stringify([...clearedStages]));
+  } catch (e) {}
+}
+
+function clearProgress() {
+  if (confirm('모든 스테이지 클리어 기록을 삭제하시겠습니까?')) {
+    clearedStages.clear();
+    try {
+      localStorage.removeItem('kimdaeri_cleared_stages');
+    } catch (e) {}
+    sound.init();
+    sound.playUndo();
+    updateUI();
+    renderNav();
+  }
+}
+
+// 타이틀 버튼 히트박스
+const pushStartBtnRect = { x: 190, y: 308, w: 220, h: 44 };
+const storyReplayBtnRect = { x: 155, y: 362, w: 135, h: 32 };
+const resetProgressBtnRect = { x: 310, y: 362, w: 135, h: 32 };
+const singleResetBtnRect = { x: 232, y: 362, w: 135, h: 32 };
+const devModeBtnRect = { x: 520, y: 370, w: 66, h: 26 };
+
+// 타이틀 화면에서 PUSH START 눌렀을 때 동작
+function onTitlePushStart() {
+  sound.init();
+  if (clearedStages.size >= 1) {
+    // 1스테이지 이상 클리어했으면 스토리 건너뛰고 바로 게임 시작 (가장 최근 미클리어 스테이지 또는 0번)
+    let targetStage = 0;
+    for (let i = 0; i < STAGES.length; i++) {
+      if (!clearedStages.has(i)) {
+        targetStage = i;
+        break;
+      }
+    }
+    sound.playStart();
+    startGame(targetStage);
+  } else {
+    // 최초 플레이 시 프롤로그 스토리 시작
+    startStory();
+  }
+}
+
+function startStory() {
+  sound.init();
+  sound.stopBGM();
+  sound.playStart();
+  gameState = 'STORY';
+  storyIndex = 0;
+  storyTextProgress = 0;
+  doorOpenProgress = 0;
+  isDoorOpening = false;
+  document.getElementById('stageName').innerText = "스토리 프롤로그";
+  document.getElementById('diffBadge').innerText = "프롤로그";
+  document.getElementById('diffBadge').style.color = "#38bdf8";
+  document.getElementById('hintText').innerHTML = "💬 <strong>스토리:</strong> 화면 터치나 [Space / Enter] 키를 눌러 다음 대사로 넘어가세요. (우상단 SKIP 가능)";
+}
+
+function advanceStory() {
+  sound.init();
+  const currentScene = STORY_SCENES[storyIndex];
+
+  if (storyTextProgress < currentScene.text.length) {
+    storyTextProgress = currentScene.text.length;
+    sound.playTalk();
+    return;
+  }
+
+  if (storyIndex < STORY_SCENES.length - 1) {
+    storyIndex++;
+    storyTextProgress = 0;
+    sound.playTalk();
+  } else {
+    if (!isDoorOpening) {
+      isDoorOpening = true;
+      sound.playDoor();
+    }
+  }
+}
+
+function skipStory() {
+  sound.init();
+  sound.playStart();
+  startGame(0);
+}
+
+function startGame(stageIdx = 0) {
+  sound.init();
+  gameState = 'PLAYING';
+  sound.startBGM();
+  initStage(stageIdx);
+}
+
+function showTitleScreen() {
+  gameState = 'TITLE';
+  sound.stopBGM();
+  document.getElementById('clearBanner').classList.remove('active');
+  document.getElementById('stageName').innerText = "메인 타이틀";
+  document.getElementById('diffBadge').innerText = devModeActive ? "개발자 모드" : "창고담당 김대리";
+  document.getElementById('diffBadge').style.color = devModeActive ? "#34d399" : "#f59e0b";
+  document.getElementById('hintText').innerHTML = "🕹️ <strong>PUSH START</strong> 버튼을 눌러 김대리의 칼퇴 여정을 시작하세요!";
+}
+
+function initStage(index) {
+  currentStageIndex = index;
+  const stageData = STAGES[index];
+  
+  if (gameState === 'PLAYING') {
+    sound.startBGM();
+  }
+  
+  document.getElementById('stageName').innerText = stageData.name;
+  const diffEl = document.getElementById('diffBadge');
+  diffEl.innerText = stageData.diff;
+  diffEl.style.color = stageData.diffColor;
+  
+  // 힌트는 기본적으로 숨김 처리 (힌트 버튼 클릭 시 노출)
+  const hintEl = document.getElementById('hintText');
+  if (hintEl) {
+    hintEl.style.display = 'none';
+    hintEl.innerHTML = '';
+  }
+  document.getElementById('clearBanner').classList.remove('active');
+  
+  const rawMap = stageData.map;
+  rows = rawMap.length;
+  cols = Math.max(...rawMap.map(r => r.length));
+  
+  grid = [];
+  moveHistory = [];
+  moveCount = 0;
+  undoRemaining = 3;
+  hintRemaining = 5;
+  isCleared = false;
+  particles = [];
+  
+  for (let r = 0; r < rows; r++) {
+    const rowArr = [];
+    for (let c = 0; c < cols; c++) {
+      const char = rawMap[r][c] || ' ';
+      let cell = {
+        type: 'floor',
+        isGoal: false,
+        hasBox: false
+      };
+      
+      if (char === '#') cell.type = 'wall';
+      else if (char === '.') cell.type = 'floor';
+      else if (char === '@') {
+        cell.type = 'floor';
+        player.x = c;
+        player.y = r;
+      } else if (char === '$') {
+        cell.type = 'floor';
+        cell.hasBox = true;
+      } else if (char === '*') {
+        cell.type = 'floor';
+        cell.isGoal = true;
+      } else if (char === '&') {
+        cell.type = 'floor';
+        cell.isGoal = true;
+        cell.hasBox = true;
+      } else if (char === '+') {
+        cell.type = 'floor';
+        cell.isGoal = true;
+        player.x = c;
+        player.y = r;
+      } else {
+        cell.type = 'void';
+      }
+      rowArr.push(cell);
+    }
+    grid.push(rowArr);
+  }
+  
+  const maxTileW = Math.floor((canvas.width - 32) / cols);
+  const maxTileH = Math.floor((canvas.height - 32) / rows);
+  tileSize = Math.min(maxTileW, maxTileH, 46);
+  
+  offsetX = Math.floor((canvas.width - cols * tileSize) / 2);
+  offsetY = Math.floor((canvas.height - rows * tileSize) / 2);
+  
+  updateUI();
+  renderNav();
+}
+
+function cloneGrid(src) {
+  return src.map(row => row.map(cell => ({ ...cell })));
+}
+
+function updateUI() {
+  document.getElementById('moveCount').innerText = moveCount;
+  
+  let remaining = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r] && grid[r][c] && grid[r][c].isGoal && !grid[r][c].hasBox) {
+        remaining++;
+      }
+    }
+  }
+  document.getElementById('targetRemaining').innerText = remaining;
+  document.getElementById('clearedCount').innerText = `클리어: ${clearedStages.size} / ${STAGES.length}`;
+
+  // 되돌리기 잔여 횟수 및 버튼 상태 갱신
+  const undoBtn = document.getElementById('undoBtn');
+  if (undoBtn) {
+    const textEl = undoBtn.querySelector('.btn-text');
+    if (textEl) {
+      textEl.innerText = `되돌리기 (${undoRemaining})`;
+    }
+    if (undoRemaining <= 0 || moveHistory.length === 0) {
+      undoBtn.style.opacity = '0.4';
+      undoBtn.style.cursor = 'not-allowed';
+    } else {
+      undoBtn.style.opacity = '1.0';
+      undoBtn.style.cursor = 'pointer';
+    }
+  }
+
+  // 힌트 잔여 횟수 및 버튼 상태 갱신
+  const hintBtn = document.getElementById('hintBtn');
+  if (hintBtn) {
+    const textEl = hintBtn.querySelector('.btn-text');
+    if (textEl) {
+      textEl.innerText = `힌트 (${hintRemaining})`;
+    }
+    if (hintRemaining <= 0) {
+      hintBtn.style.opacity = '0.4';
+      hintBtn.style.cursor = 'not-allowed';
+    } else {
+      hintBtn.style.opacity = '1.0';
+      hintBtn.style.cursor = 'pointer';
+    }
+  }
+}
+
+/* =====================================================================
+   5. 이동 논리 & 상자 밀기
+   ===================================================================== */
+function tryMove(dx, dy, dirName) {
+  if (gameState !== 'PLAYING' || isCleared) return;
+  sound.init();
+
+  player.facing = dirName;
+  const nextX = player.x + dx;
+  const nextY = player.y + dy;
+
+  if (nextY < 0 || nextY >= rows || nextX < 0 || nextX >= cols) return;
+  const targetCell = grid[nextY][nextX];
+  if (targetCell.type === 'wall' || targetCell.type === 'void') return;
+
+  // 빈 바닥 이동
+  if (!targetCell.hasBox) {
+    moveHistory.push({
+      player: { ...player },
+      grid: cloneGrid(grid),
+      moveCount: moveCount
+    });
+
+    player.x = nextX;
+    player.y = nextY;
+    player.animFrame = (player.animFrame + 1) % 4;
+    moveCount++;
+    sound.playStep();
+    updateUI();
+    return;
+  }
+
+  // 상자 밀기
+  if (targetCell.hasBox) {
+    const boxNextX = nextX + dx;
+    const boxNextY = nextY + dy;
+
+    if (boxNextY < 0 || boxNextY >= rows || boxNextX < 0 || boxNextX >= cols) return;
+    const boxTargetCell = grid[boxNextY][boxNextX];
+    if (boxTargetCell.type === 'wall' || boxTargetCell.type === 'void' || boxTargetCell.hasBox) {
+      return;
+    }
+
+    moveHistory.push({
+      player: { ...player },
+      grid: cloneGrid(grid),
+      moveCount: moveCount
+    });
+
+    targetCell.hasBox = false;
+    boxTargetCell.hasBox = true;
+    player.x = nextX;
+    player.y = nextY;
+    player.animFrame = (player.animFrame + 1) % 4;
+    moveCount++;
+
+    if (boxTargetCell.isGoal) {
+      sound.playGoal();
+      spawnGoalParticles(boxNextX, boxNextY);
+    } else {
+      sound.playPush();
+    }
+
+    updateUI();
+    checkVictory();
+  }
+}
+
+function undo() {
+  if (gameState !== 'PLAYING' || moveHistory.length === 0 || isCleared) return;
+  if (undoRemaining <= 0) return;
+  
+  sound.init();
+  sound.playUndo();
+
+  const prev = moveHistory.pop();
+  player = { ...prev.player };
+  grid = cloneGrid(prev.grid);
+  moveCount = prev.moveCount;
+  undoRemaining--;
+  
+  updateUI();
+}
+
+function resetStage() {
+  if (gameState !== 'PLAYING') return;
+  sound.init();
+  sound.playUndo();
+  initStage(currentStageIndex);
+}
+
+function checkVictory() {
+  let allDone = true;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c].isGoal && !grid[r][c].hasBox) {
+        allDone = false;
+        break;
+      }
+    }
+  }
+
+  if (allDone) {
+    isCleared = true;
+    clearedStages.add(currentStageIndex);
+    saveProgress();
+    sound.playVictory();
+    renderNav();
+    updateUI();
+    
+    const bannerTitle = document.querySelector('#clearBanner .banner-title');
+    const bannerDesc = document.querySelector('#clearBanner .banner-desc');
+    const bannerBtn = document.getElementById('nextStageBtn');
+
+    // 15 스테이지(최종 엔딩) 클리어 시에만 꽃가루 대폭발 + 칼퇴 확정 연출!
+    if (currentStageIndex >= STAGES.length - 1) {
+      if (bannerTitle) bannerTitle.innerText = "🎉 전설의 칼퇴 확정! 김대리 퇴근 성공!";
+      if (bannerDesc) bannerDesc.innerText = "15개의 모든 난관을 뚫고 5년 전 기획서를 찾아냈습니다. 이제 당당하게 퇴근합니다!";
+      if (bannerBtn) bannerBtn.innerText = "🏠 타이틀로 돌아가기 (Space / Enter)";
+
+      // 화려한 축하 꽃가루 파티클 150개 대폭발
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.9,
+          y: (Math.random() - 0.5) * 60,
+          vx: (Math.random() - 0.5) * 8,
+          vy: Math.random() * 4 + 1.5,
+          color: ['#f59e0b', '#10b981', '#38bdf8', '#fbbf24', '#ec4899', '#a855f7', '#ffffff'][Math.floor(Math.random() * 7)],
+          size: Math.random() * 7 + 3,
+          life: 1.8,
+          decay: Math.random() * 0.012 + 0.008
+        });
+      }
+    } else {
+      // 1~14 스테이지는 "칼퇴 확정" 없이 순수 스테이지 클리어
+      if (bannerTitle) bannerTitle.innerText = "✨ 스테이지 클리어!";
+      if (bannerDesc) bannerDesc.innerText = "김대리가 상자를 안전하게 정리했습니다.";
+      if (bannerBtn) bannerBtn.innerText = "다음 업무로 (Space / Enter)";
+
+      for (let i = 0; i < 40; i++) {
+        particles.push({
+          x: canvas.width / 2 + (Math.random() - 0.5) * 220,
+          y: canvas.height / 2 + (Math.random() - 0.5) * 120,
+          vx: (Math.random() - 0.5) * 7,
+          vy: (Math.random() - 0.8) * 6,
+          color: ['#f59e0b', '#10b981', '#38bdf8', '#fbbf24'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 5 + 3,
+          life: 1.0,
+          decay: Math.random() * 0.02 + 0.015
+        });
+      }
+    }
+
+    setTimeout(() => {
+      document.getElementById('clearBanner').classList.add('active');
+    }, 350);
+  }
+}
+
+function spawnGoalParticles(gridX, gridY) {
+  const px = offsetX + gridX * tileSize + tileSize / 2;
+  const py = offsetY + gridY * tileSize + tileSize / 2;
+  for (let i = 0; i < 18; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 3.5 + 1;
+    particles.push({
+      x: px,
+      y: py,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      color: '#34d399',
+      size: Math.random() * 4 + 2,
+      life: 1.0,
+      decay: 0.04
+    });
+  }
+}
+
+/* =====================================================================
+   6. 렌더링 파이프라인
+   ===================================================================== */
+function draw() {
+  titleTimer++;
+
+  if (gameState === 'TITLE') {
+    drawTitleScreen();
+  } else if (gameState === 'STORY') {
+    drawStoryScreen();
+  } else {
+    drawInGame();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// 🎬 스토리 컷씬
+function drawStoryScreen() {
+  const w = canvas.width;
+  const h = canvas.height;
+  const scene = STORY_SCENES[storyIndex];
+
+  if (storyTextProgress < scene.text.length && titleTimer % 2 === 0) {
+    storyTextProgress++;
+    if (storyTextProgress % 3 === 0) sound.playTalk();
+  }
+
+  if (scene.type === 'building') {
+    drawBuildingScene(w, h);
+  } else if (scene.type === 'office') {
+    drawOfficeScene(w, h, scene.speaker);
+  } else if (scene.type === 'warehouse_inside' || scene.type === 'door') {
+    drawWarehouseInsideScene(w, h);
+  }
+
+  drawDialogBox(w, h, scene);
+
+  // 우측 상단 SKIP 버튼
+  ctx.save();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(w - 90, 12, 78, 28, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#fcd34d';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SKIP ⏭', w - 51, 30);
+  ctx.restore();
+
+  if (isDoorOpening) {
+    doorOpenProgress += 0.035;
+    ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(1, doorOpenProgress)})`;
+    ctx.fillRect(0, 0, w, h);
+    if (doorOpenProgress >= 1.0) {
+      startGame(0);
+    }
+  }
+}
+
+function drawBuildingScene(w, h) {
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#030712');
+  grad.addColorStop(0.6, '#0f172a');
+  grad.addColorStop(1, '#1e1b4b');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = '#fff';
+  for (let i = 0; i < 25; i++) {
+    const sx = (i * 73 + 17) % w;
+    const sy = (i * 37 + 11) % (h * 0.45);
+    const blink = Math.sin(titleTimer * 0.1 + i) > 0 ? 1.5 : 0.8;
+    ctx.fillRect(sx, sy, blink, blink);
+  }
+
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(w - 70, 50, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  const bw = 160;
+  const bx = w / 2 - bw / 2;
+  const by = 40;
+  const bh = h - 40;
+
+  ctx.fillStyle = '#090d16';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.8)';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(bx + 14, by + 12, bw - 28, 38);
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx + 14, by + 12, bw - 28, 38);
+
+  ctx.fillStyle = '#fef08a';
+  ctx.font = '900 18px "Pretendard", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('엄 청 그 룹', w / 2, by + 37);
+  ctx.restore();
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 5; c++) {
+      const wx = bx + 22 + c * 24;
+      const wy = by + 65 + r * 16;
+      const isLit = (r + c * 3 + titleTimer) % 5 !== 0;
+      ctx.fillStyle = isLit ? 'rgba(253, 224, 71, 0.75)' : 'rgba(30, 41, 59, 0.6)';
+      ctx.fillRect(wx, wy, 14, 9);
+    }
+  }
+}
+
+function drawOfficeScene(w, h, currentSpeaker) {
+  // 사무실 벽 (모던 오피스 인테리어)
+  ctx.fillStyle = '#1e2536';
+  ctx.fillRect(0, 0, w, h * 0.62);
+
+  // 벽면 창문 (도심 빌딩 전망)
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(w / 2 - 80, 20, 160, 90);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(w / 2 - 80, 20, 160, 90);
+  // 창문 유리 격자
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.beginPath();
+  ctx.moveTo(w / 2, 20); ctx.lineTo(w / 2, 110);
+  ctx.moveTo(w / 2 - 80, 65); ctx.lineTo(w / 2 + 80, 65);
+  ctx.stroke();
+
+  // 사무실 카펫 바닥
+  ctx.fillStyle = '#2b354d';
+  ctx.fillRect(0, h * 0.62, w, h * 0.38);
+
+  // 사무실 벽시계 (5시 55분: 칼퇴 5분 전!)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(80, 50, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.strokeStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(80, 50); ctx.lineTo(80 - 7, 52);
+  ctx.moveTo(80, 50); ctx.lineTo(80 - 2, 38);
+  ctx.stroke();
+
+  // 1. 좌측: 박부장 (책상에 앉아서 호통치는 2등신 인간형 부장님)
+  drawBossDeskScene(w * 0.28, h * 0.44, currentSpeaker === '박부장');
+
+  // 2. 우측: 김대리 (책상에 앉아 땀 흘리는 2등신 인간형 김대리)
+  drawEmployeeDeskScene(w * 0.72, h * 0.44, currentSpeaker === '김대리');
+}
+
+// 👔 박부장의 사무실 책상 & 2등신 캐릭터
+function drawBossDeskScene(cx, cy, isActive) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  if (isActive) {
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
+    ctx.beginPath();
+    ctx.arc(0, -10, 56, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 최고급 중역용 의자 등받이
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(-26, -42, 52, 50, 8);
+  ctx.fill();
+
+  // 2등신 박부장 몸체 (차콜 수트 & 스트라이프 타이)
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.roundRect(-16, -14, 32, 28, 5);
+  ctx.fill();
+  ctx.fillStyle = '#dc2626'; // 레드 타이
+  ctx.fillRect(-3, -8, 6, 14);
+
+  // 박부장 2등신 큰 머리 (살구빛 피부)
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.roundRect(-16, -38, 32, 26, 8);
+  ctx.fill();
+
+  // 2:8 가르마 흑발 헤어
+  ctx.fillStyle = '#1c1917';
+  ctx.fillRect(-17, -42, 34, 10);
+  ctx.fillRect(-17, -38, 10, 14); // 좌측 가르마
+
+  // 뿔테 안경 & 화난 눈썹 (\ /)
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-12, -30, 9, 7);
+  ctx.strokeRect(3, -30, 9, 7);
+  // 눈썹
+  ctx.fillStyle = '#000';
+  ctx.fillRect(-12, -34, 9, 2);
+  ctx.fillRect(3, -34, 9, 2);
+  // 콧수염
+  ctx.fillStyle = '#44403c';
+  ctx.fillRect(-4, -18, 8, 3);
+
+  // 책상 (마호가니 중역 책상)
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-44, 4, 88, 28);
+  ctx.fillStyle = '#451a03';
+  ctx.fillRect(-44, 4, 88, 4);
+
+  // 책상 위 소품: PC 모니터 (뒷면), 서류더미, 커피 머그잔
+  // PC 모니터
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(14, -14, 24, 18);
+  ctx.fillRect(23, 4, 6, 4);
+  // 서류 더미
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(-38, -2, 18, 8);
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillRect(-38, -6, 18, 4); // 파란 결재판
+  // 커피잔
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-12, -2, 8, 8);
+
+  // 명패: "부장 박철수"
+  ctx.fillStyle = '#fef08a';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('부장 박철수', 0, 24);
+
+  ctx.restore();
+}
+
+// 🧑‍💼 김대리의 사무실 책상 & 2등신 인간형 캐릭터
+function drawEmployeeDeskScene(cx, cy, isActive) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  if (isActive) {
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+    ctx.beginPath();
+    ctx.arc(0, -10, 56, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 사무용 메쉬 의자 등받이
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.roundRect(-24, -40, 48, 48, 6);
+  ctx.fill();
+
+  // 2등신 김대리 몸체 (블루 드레스 셔츠 & 레드 넥타이)
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.roundRect(-15, -14, 30, 28, 5);
+  ctx.fill();
+  // 넥타이 & 사원증
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(-2.5, -8, 5, 14);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-4, -1, 8, 9);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(-4, 0, 8, 3); // 노란 사원증 띠
+
+  // 2등신 김대리 큰 머리 (뽀얀 피부)
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.roundRect(-16, -38, 32, 26, 8);
+  ctx.fill();
+
+  // 댄디컷 갈색 헤어 & 앞머리
+  ctx.fillStyle = '#3e2723';
+  ctx.fillRect(-17, -42, 34, 10);
+  ctx.fillRect(-17, -36, 6, 10);
+  ctx.fillRect(11, -36, 6, 10);
+  // 귀여운 앞머리 컬
+  ctx.beginPath();
+  ctx.arc(-5, -32, 4, 0, Math.PI);
+  ctx.arc(5, -32, 4, 0, Math.PI);
+  ctx.fill();
+
+  // 똘망똘망한 눈 & 당황한 땀방울 (💦)
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.arc(-6, -26, 2.5, 0, Math.PI * 2);
+  ctx.arc(6, -26, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  // 눈 하이라이트
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-7, -27, 1.5, 1.5);
+  ctx.fillRect(5, -27, 1.5, 1.5);
+
+  // 볼터치 (핑크)
+  ctx.fillStyle = 'rgba(244, 63, 94, 0.4)';
+  ctx.beginPath();
+  ctx.arc(-10, -22, 3, 0, Math.PI * 2);
+  ctx.arc(10, -22, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 당황 땀방울 (💦)
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.moveTo(13, -36);
+  ctx.lineTo(16, -31);
+  ctx.lineTo(11, -31);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(13.5, -30, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 책상 (화이트/그레이 오피스 데스크)
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(-44, 4, 88, 28);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(-44, 4, 88, 4);
+
+  // 책상 위 소품: 노트북, 볼펜통, 서류
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(-36, -8, 24, 14); // 노트북 화면
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(-38, 2, 28, 4);
+  // 커피 텀블러
+  ctx.fillStyle = '#059669';
+  ctx.fillRect(24, -4, 8, 10);
+
+  // 명패: "대리 김창고"
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('대리 김창고', 0, 24);
+
+  ctx.restore();
+}
+
+// 📦 씬 6: 지하 7층 폐쇄 창고 내부 (어지럽게 널린 상자들과 멘붕 온 김대리)
+function drawWarehouseInsideScene(w, h) {
+  // 1. 어둡고 먼지 쌓인 지하 창고 배경
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#090d16');
+  bgGrad.addColorStop(0.65, '#131b2c');
+  bgGrad.addColorStop(1, '#070a10');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // 창고 콘크리트 바닥 타일
+  ctx.fillStyle = '#1e2638';
+  ctx.fillRect(0, h * 0.58, w, h * 0.42);
+  ctx.strokeStyle = '#121824';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, h * 0.58); ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+
+  // 2. 천장에서 대롱대롱 흔들리는 에디슨 알전구 & 따뜻한 조명 스포트라이트
+  const sway = Math.sin(titleTimer * 0.05) * 6;
+  const lampX = w / 2 + sway;
+  const lampY = 55;
+
+  // 전선
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(w / 2, 0);
+  ctx.lineTo(lampX, lampY);
+  ctx.stroke();
+
+  // 전구 소켓 & 유리구
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(lampX - 4, lampY - 4, 8, 6);
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(lampX, lampY + 5, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 따뜻한 조명 원뿔 오라
+  ctx.save();
+  const spot = ctx.createRadialGradient(lampX, lampY + 10, 10, lampX, lampY + 140, 220);
+  spot.addColorStop(0, 'rgba(251, 191, 36, 0.32)');
+  spot.addColorStop(0.5, 'rgba(251, 191, 36, 0.1)');
+  spot.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = spot;
+  ctx.beginPath();
+  ctx.arc(lampX, lampY + 100, 200, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 공기 중 먼지 반짝임
+  ctx.fillStyle = 'rgba(253, 224, 71, 0.6)';
+  for (let i = 0; i < 15; i++) {
+    const dx = (i * 47 + titleTimer * 0.5) % w;
+    const dy = (i * 29 + Math.sin(titleTimer * 0.04 + i) * 15) % (h * 0.6);
+    ctx.fillRect(dx, dy, 2, 2);
+  }
+
+  // 3. 어지럽게 뒤엉켜 쌓여있는 크라프트 서류 상자 더미들
+  // 좌측 삐뚤빼뚤 상자 더미
+  drawKraftStorageBox(35, 170, 68, 52);
+  drawKraftStorageBox(75, 195, 64, 48);
+  drawKraftStorageBox(25, 120, 60, 46);
+  drawKraftStorageBox(90, 145, 62, 48);
+
+  // 우측 마구 쌓인 상자 더미
+  drawKraftStorageBox(450, 180, 66, 50);
+  drawKraftStorageBox(495, 130, 64, 48);
+  drawKraftStorageBox(430, 125, 60, 46);
+  drawKraftStorageBox(520, 190, 68, 52);
+
+  // 널브러진 A4 서류 낱장들
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(170, 235, 14, 18);
+  ctx.fillRect(390, 240, 18, 14);
+  ctx.fillRect(205, 255, 16, 12);
+
+  // 4. 중앙에서 머리를 감싸쥐고 난감해하는 2등신 김대리
+  drawFlusteredKimDaeri(w / 2, h * 0.44, titleTimer);
+}
+
+// 📦 크라프트 서류 보관 박스 드로잉 헬퍼 (사진 레퍼런스 스타일)
+function drawKraftStorageBox(x, y, w, h) {
+  // 접촉 그림자
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(x + 2, y + h - 3, w - 4, 5);
+
+  const lidH = Math.floor(h * 0.32);
+  const skirtH = Math.floor(h * 0.14);
+  const bodyH = h - lidH;
+
+  // 1. 뚜껑 윗면 (밝은 베이지 크라프트지)
+  ctx.fillStyle = '#dfc49e';
+  ctx.fillRect(x, y, w, lidH - skirtH);
+
+  // 2. 뚜껑 테두리 턱
+  ctx.fillStyle = '#cb9f6e';
+  ctx.fillRect(x, y + lidH - skirtH, w, skirtH);
+
+  // 뚜껑 아래 그림자 띠
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+  ctx.fillRect(x, y + lidH, w, 2);
+
+  // 3. 메인 박스 몸체
+  ctx.fillStyle = '#ba8d5b';
+  ctx.fillRect(x + 1, y + lidH, w - 2, bodyH);
+
+  // 우측 3D 음영
+  ctx.fillStyle = '#a67b48';
+  ctx.fillRect(x + w - 10, y + lidH, 9, bodyH);
+
+  // 4. 측면 타원형 손잡이 컷아웃 구멍
+  ctx.fillStyle = '#221508';
+  ctx.beginPath();
+  ctx.roundRect(x + w - 9, y + lidH + Math.floor(bodyH * 0.22), 6, Math.floor(bodyH * 0.42), 3);
+  ctx.fill();
+
+  // 외곽선
+  ctx.strokeStyle = '#54391e';
+  ctx.lineWidth = 1.3;
+  ctx.strokeRect(x, y, w, h);
+}
+
+// 😱 지하창고에서 멘붕 온 2등신 김대리 렌더링
+function drawFlusteredKimDaeri(cx, cy, timer) {
+  const shake = Math.sin(timer * 0.3) * 1.5; // 안절부절 떠는 애니메이션
+  ctx.save();
+  ctx.translate(cx + shake, cy);
+
+  // 바닥 그림자
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(0, 56, 44, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const scale = 2.4;
+  ctx.scale(scale, scale);
+
+  // 1. 2등신 몸체 (블루 셔츠 + 삐뚤어진 넥타이)
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.roundRect(-11, 1, 22, 16, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#1d4ed8';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 삐뚤어진 레드 넥타이
+  ctx.fillStyle = '#ef4444';
+  ctx.save();
+  ctx.rotate(0.1);
+  ctx.fillRect(-2, 2, 4, 10);
+  ctx.restore();
+
+  // 하체 & 구두
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(-9, 17, 7, 6);
+  ctx.fillRect(2, 17, 7, 6);
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-10, 22, 8, 4);
+  ctx.fillRect(2, 22, 8, 4);
+
+  // 2. 2등신 큼직한 머리 (난감한 표정)
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.roundRect(-15, -23, 30, 25, 8);
+  ctx.fill();
+
+  // 댄디컷 헤어
+  ctx.fillStyle = '#3e2723';
+  ctx.beginPath();
+  ctx.roundRect(-16, -26, 32, 12, 6);
+  ctx.fill();
+  ctx.fillRect(-16, -20, 5, 10);
+  ctx.fillRect(11, -20, 5, 10);
+
+  // 만화풍 멘붕 눈 (> < 눈 모양)
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 2;
+  // 좌측 '>'
+  ctx.beginPath();
+  ctx.moveTo(-9, -11); ctx.lineTo(-5, -8); ctx.lineTo(-9, -5);
+  ctx.stroke();
+  // 우측 '<'
+  ctx.beginPath();
+  ctx.moveTo(9, -11); ctx.lineTo(5, -8); ctx.lineTo(9, -5);
+  ctx.stroke();
+
+  // 삐질삐질 솟아나는 푸른 땀방울 💦 (3개)
+  ctx.fillStyle = '#38bdf8';
+  // 좌측 땀
+  ctx.beginPath();
+  ctx.moveTo(-16, -21); ctx.lineTo(-13, -16); ctx.lineTo(-18, -16); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(-15.5, -15, 2.5, 0, Math.PI * 2); ctx.fill();
+  // 우측 큰 땀
+  ctx.beginPath();
+  ctx.moveTo(15, -23); ctx.lineTo(19, -17); ctx.lineTo(13, -17); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(16, -16, 3, 0, Math.PI * 2); ctx.fill();
+
+  // 난감하게 떨리는 입 (~ 모양)
+  ctx.strokeStyle = '#b91c1c';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-4, -1);
+  ctx.quadraticCurveTo(-2, -3, 0, -1);
+  ctx.quadraticCurveTo(2, 1, 4, -1);
+  ctx.stroke();
+
+  // 핑크 볼터치
+  ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+  ctx.beginPath();
+  ctx.arc(-10, -5, 3.5, 0, Math.PI * 2);
+  ctx.arc(10, -5, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. 양손으로 머리를 감싸쥔 "으악 어쩌지?!" 포즈!
+  ctx.fillStyle = '#fed7aa';
+  // 왼손 머리 위
+  ctx.beginPath();
+  ctx.arc(-14, -15, 4, 0, Math.PI * 2);
+  ctx.fill();
+  // 오른손 머리 위
+  ctx.beginPath();
+  ctx.arc(14, -15, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawDialogBox(w, h, scene) {
+  const boxX = 14;
+  const boxY = h - 130;
+  const boxW = w - 28;
+  const boxH = 118;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(10, 14, 26, 0.92)';
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = scene.speakerColor || '#f59e0b';
+  ctx.font = 'bold 14px "Pretendard", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`[ ${scene.speaker} ]`, boxX + 16, boxY + 26);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px sans-serif';
+  ctx.fillText(`- ${scene.sub}`, boxX + 100, boxY + 26);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '500 14px "Pretendard", sans-serif';
+  
+  const currentText = scene.text.substring(0, storyTextProgress);
+  wrapText(ctx, currentText, boxX + 16, boxY + 54, boxW - 32, 22);
+
+  if (titleTimer % 40 < 25) {
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('▼ 터치하여 계속', boxX + boxW - 16, boxY + boxH - 12);
+  }
+
+  ctx.restore();
+}
+
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  let line = '';
+  for (let i = 0; i < text.length; i++) {
+    const testLine = line + text[i];
+    const metrics = context.measureText(testLine);
+    if (metrics.width > maxWidth && i > 0) {
+      context.fillText(line, x, y);
+      line = text[i];
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
+}
+
+// 🎨 타이틀 화면
+function drawTitleScreen() {
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#0a0d16');
+  bgGrad.addColorStop(0.7, '#131929');
+  bgGrad.addColorStop(1, '#080a10');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = '#1e283d';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let x = 0; x <= w; x += 60) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 30, 40);
+    ctx.lineTo(x + 60, 0);
+  }
+  ctx.stroke();
+
+  ctx.save();
+  const spotGrad = ctx.createRadialGradient(w / 2, 70, 20, w / 2, 220, 260);
+  spotGrad.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
+  spotGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.08)');
+  spotGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = spotGrad;
+  ctx.beginPath();
+  ctx.moveTo(w / 2 - 40, 0);
+  ctx.lineTo(w / 2 + 40, 0);
+  ctx.lineTo(w / 2 + 220, h);
+  ctx.lineTo(w / 2 - 220, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  draw3DBox(40, 260, 64, false);
+  draw3DBox(100, 260, 64, false);
+  draw3DBox(70, 205, 64, true);
+  draw3DBox(30, 150, 56, false);
+
+  draw3DBox(440, 260, 64, false);
+  draw3DBox(500, 260, 64, false);
+  draw3DBox(470, 205, 64, false);
+  draw3DBox(520, 150, 56, true);
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = 'bold 12px monospace';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('★ RETRO LOGIC PUZZLE ★', w / 2, 36);
+
+  ctx.font = '900 38px "Pretendard", sans-serif';
+  ctx.fillStyle = '#000';
+  ctx.fillText('창고담당 김대리', w / 2 + 2, 82);
+  ctx.fillText('창고담당 김대리', w / 2 - 2, 82);
+  ctx.fillText('창고담당 김대리', w / 2, 84);
+
+  const titleGrad = ctx.createLinearGradient(0, 50, 0, 85);
+  titleGrad.addColorStop(0, '#fef08a');
+  titleGrad.addColorStop(0.5, '#f59e0b');
+  titleGrad.addColorStop(1, '#d97706');
+  ctx.fillStyle = titleGrad;
+  ctx.fillText('창고담당 김대리', w / 2, 80);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '500 13px sans-serif';
+  ctx.fillText('“오늘도 무사히 칼퇴할 수 있을까...?”', w / 2, 108);
+  ctx.restore();
+
+  drawHeroKimDaeri(w / 2, 215, titleTimer);
+
+  // 1. PUSH START 버튼
+  const pulse = Math.sin(titleTimer * 0.08) * 0.5 + 0.5;
+  const btn = pushStartBtnRect;
+  btn.x = w / 2 - 110;
+  btn.y = 308;
+  btn.w = 220;
+  btn.h = 44;
+
+  ctx.save();
+  ctx.shadowColor = `rgba(245, 158, 11, ${0.4 + pulse * 0.4})`;
+  ctx.shadowBlur = 16 * pulse + 8;
+
+  const btnGrad = ctx.createLinearGradient(btn.x, btn.y, btn.x, btn.y + btn.h);
+  btnGrad.addColorStop(0, `rgba(245, 158, 11, ${0.9 + pulse * 0.1})`);
+  btnGrad.addColorStop(1, `rgba(217, 119, 6, ${0.9 + pulse * 0.1})`);
+  ctx.fillStyle = btnGrad;
+  ctx.beginPath();
+  ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 10);
+  ctx.fill();
+
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#000';
+  ctx.font = '900 16px "Pretendard", monospace';
+  ctx.fillText('▶ PUSH START ◀', w / 2, btn.y + 27);
+  ctx.restore();
+
+  // 2. 하단 서브 버튼들: [스토리 보기] (클리어 1개 이상 시) & [기록 초기화]
+  const hasClearedAny = clearedStages.size >= 1;
+
+  if (hasClearedAny) {
+    // [스토리 보기]
+    const sBtn = storyReplayBtnRect;
+    sBtn.x = w / 2 - 145;
+    sBtn.y = 362;
+    sBtn.w = 135;
+    sBtn.h = 32;
+
+    ctx.save();
+    ctx.fillStyle = '#1a2333';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(sBtn.x, sBtn.y, sBtn.w, sBtn.h, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 12px "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('스토리 보기', sBtn.x + sBtn.w / 2, sBtn.y + sBtn.h / 2);
+    ctx.restore();
+
+    // [기록 초기화]
+    const rBtn = resetProgressBtnRect;
+    rBtn.x = w / 2 + 10;
+    rBtn.y = 362;
+    rBtn.w = 135;
+    rBtn.h = 32;
+
+    ctx.save();
+    ctx.fillStyle = '#1e1b24';
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(rBtn.x, rBtn.y, rBtn.w, rBtn.h, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#f87171';
+    ctx.font = 'bold 12px "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('기록 초기화', rBtn.x + rBtn.w / 2, rBtn.y + rBtn.h / 2);
+    ctx.restore();
+  } else {
+    // 0개 클리어 시 중앙에 [기록 초기화]
+    const rBtn = singleResetBtnRect;
+    rBtn.x = w / 2 - 68;
+    rBtn.y = 362;
+    rBtn.w = 136;
+    rBtn.h = 30;
+
+    ctx.save();
+    ctx.fillStyle = '#1a202c';
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(rBtn.x, rBtn.y, rBtn.w, rBtn.h, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = 'bold 11.5px "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('기록 초기화', rBtn.x + rBtn.w / 2, rBtn.y + rBtn.h / 2);
+    ctx.restore();
+  }
+
+  // 3. 타이틀 우측 하단 개발자 모드 버튼 ("개발자" 3글자, 비밀번호: 1029)
+  const dBtn = devModeBtnRect;
+  ctx.save();
+  ctx.fillStyle = devModeActive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(30, 41, 59, 0.7)';
+  ctx.strokeStyle = devModeActive ? '#10b981' : '#475569';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(dBtn.x, dBtn.y, dBtn.w, dBtn.h, 5);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = devModeActive ? '#34d399' : '#94a3b8';
+  ctx.font = 'bold 11px "Pretendard", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('개발자', dBtn.x + dBtn.w / 2, dBtn.y + dBtn.h / 2);
+  ctx.restore();
+}
+
+function drawHeroKimDaeri(cx, cy, timer) {
+  const bob = Math.sin(timer * 0.06) * 3;
+  ctx.save();
+  ctx.translate(cx, cy + bob);
+
+  // 바닥 그림자
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(0, 56, 46, 11, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const scale = 2.4;
+  ctx.scale(scale, scale);
+
+  // 1. 2등신 아담한 몸체 (블루 드레스 셔츠 & 슬랙스)
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.roundRect(-11, 1, 22, 16, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#1d4ed8';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 레드 넥타이 & 사원증
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(-2, 2, 4, 10);
+  // 목걸이 사원증
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-5, 1); ctx.lineTo(0, 5); ctx.lineTo(5, 1);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-3, 6, 6, 7);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(-3, 6, 6, 2);
+
+  // 2. 하체 & 구두 (네이비 슬랙스 & 브라운 옥스퍼드화)
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(-9, 17, 7, 6);
+  ctx.fillRect(2, 17, 7, 6);
+  // 브라운 구두
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-10, 22, 8, 4);
+  ctx.fillRect(2, 22, 8, 4);
+
+  // 3. 2등신 큼직하고 귀여운 얼굴 (살구빛 뽀얀 피부)
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.roundRect(-15, -23, 30, 25, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#fbcfe8';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  // 댄디컷 갈색 헤어 (풍성한 볼륨 & 앞머리)
+  ctx.fillStyle = '#3e2723';
+  ctx.beginPath();
+  ctx.roundRect(-16, -26, 32, 12, 6);
+  ctx.fill();
+  // 옆머리
+  ctx.fillRect(-16, -20, 5, 10);
+  ctx.fillRect(11, -20, 5, 10);
+  // 앞머리 컬 (지그재그 자연스러운 뱅헤어)
+  ctx.beginPath();
+  ctx.arc(-5, -15, 4.5, 0, Math.PI);
+  ctx.arc(5, -15, 4.5, 0, Math.PI);
+  ctx.fill();
+
+  // 똘망똘망한 검은 눈동자 + 반짝이는 화이트 하이라이트
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(-6, -9, 3, 0, Math.PI * 2);
+  ctx.arc(6, -9, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // 하이라이트
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-7, -11, 2, 2);
+  ctx.fillRect(5, -11, 2, 2);
+
+  // 생기 있는 핑크 볼터치
+  ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+  ctx.beginPath();
+  ctx.arc(-10, -5, 3.5, 0, Math.PI * 2);
+  ctx.arc(10, -5, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 자신만만한 귀여운 미소 (^_^)
+  ctx.strokeStyle = '#9a3412';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, -5, 3, 0.1 * Math.PI, 0.9 * Math.PI);
+  ctx.stroke();
+
+  // 4. 오른손: 당당한 엄지척 (따봉 포즈 👍)
+  ctx.fillStyle = '#fed7aa';
+  ctx.fillRect(11, 4, 6, 4); // 소매 밖 팔
+  ctx.beginPath();
+  ctx.arc(17, 5, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  // 세운 엄지
+  ctx.fillRect(16, -1, 3.5, 6);
+  ctx.beginPath();
+  ctx.arc(17.5, -1, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 왼손: 허리 손 포즈
+  ctx.fillRect(-16, 5, 5, 4);
+  ctx.beginPath();
+  ctx.arc(-16, 7, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawInGame() {
+  ctx.fillStyle = '#090b10';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+
+  // 1. 바닥 & 목표 발판 & 이동 불가 벽
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = grid[r][c];
+      const px = offsetX + c * tileSize;
+      const py = offsetY + r * tileSize;
+
+      if (cell.type === 'floor') {
+        const isAlt = (r + c) % 2 === 0;
+        ctx.fillStyle = isAlt ? '#181e2a' : '#141822';
+        ctx.fillRect(px, py, tileSize, tileSize);
+        
+        ctx.strokeStyle = '#222938';
+        ctx.strokeRect(px + 0.5, py + 0.5, tileSize - 1, tileSize - 1);
+
+        if (cell.isGoal) {
+          drawGoalPad(px, py, tileSize, cell.hasBox);
+        }
+      } else if (cell.type === 'wall') {
+        // 🧱 지정된 슬레이트 메탈 벽 텍스처
+        drawCustomWall(px, py, tileSize);
+      }
+    }
+  }
+
+  // 2. 오브젝트 레이어 (상자 + 플레이어)
+  const renderList = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = grid[r][c];
+      const px = offsetX + c * tileSize;
+      const py = offsetY + r * tileSize;
+
+      if (cell.hasBox) {
+        renderList.push({
+          type: 'box',
+          y: py,
+          draw: () => draw3DBox(px, py, tileSize, cell.isGoal)
+        });
+      }
+    }
+  }
+
+  const playerPx = offsetX + player.x * tileSize;
+  const playerPy = offsetY + player.y * tileSize;
+  renderList.push({
+    type: 'player',
+    y: playerPy,
+    draw: () => drawPixelCharacter(playerPx, playerPy, tileSize, player.facing, player.animFrame)
+  });
+
+  renderList.sort((a, b) => a.y - b.y);
+  renderList.forEach(item => item.draw());
+
+  drawParticles();
+}
+
+// 🧱 이동 불가 구역 벽 블록
+function drawCustomWall(x, y, size) {
+  ctx.fillStyle = '#0c1017';
+  ctx.fillRect(x, y, size, size);
+
+  const topH = Math.floor(size * 0.44);
+  const margin = 2;
+  const halfW = Math.floor((size - margin * 3) / 2);
+  const panelH = topH - margin * 2;
+
+  ctx.fillStyle = '#394354';
+  ctx.fillRect(x + margin, y + margin, halfW, panelH);
+  ctx.fillRect(x + margin * 2 + halfW, y + margin, halfW, panelH);
+
+  ctx.fillStyle = '#4c5970';
+  ctx.fillRect(x + margin + 1, y + margin + 1, halfW - 2, 2);
+  ctx.fillRect(x + margin * 2 + halfW + 1, y + margin + 1, halfW - 2, 2);
+
+  ctx.fillStyle = '#1c2330';
+  ctx.fillRect(x + margin + halfW, y + margin, margin, panelH);
+
+  const bottomY = y + topH;
+  const bottomH = size - topH - margin;
+  ctx.fillStyle = '#262f40';
+  ctx.fillRect(x + margin, bottomY, size - margin * 2, bottomH);
+
+  ctx.fillStyle = '#171c26';
+  ctx.fillRect(x + margin, y + size - 4, size - margin * 2, 3);
+
+  ctx.strokeStyle = '#0b0f16';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+}
+
+function drawGoalPad(x, y, size, hasBox) {
+  const padInset = size * 0.15;
+  const padSize = size - padInset * 2;
+  const cx = x + size / 2;
+  const cy = y + size / 2;
+
+  ctx.fillStyle = hasBox ? 'rgba(16, 185, 129, 0.28)' : 'rgba(245, 158, 11, 0.16)';
+  ctx.fillRect(x + padInset, y + padInset, padSize, padSize);
+
+  ctx.strokeStyle = hasBox ? '#10b981' : '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + padInset, y + padInset, padSize, padSize);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.beginPath();
+  ctx.moveTo(0, -padSize * 0.35);
+  ctx.lineTo(padSize * 0.35, 0);
+  ctx.lineTo(0, padSize * 0.35);
+  ctx.lineTo(-padSize * 0.35, 0);
+  ctx.closePath();
+  ctx.fillStyle = hasBox ? '#34d399' : '#fbbf24';
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw3DBox(x, y, size, onGoal) {
+  const margin = 2;
+  const bx = x + margin;
+  const by = y + margin;
+  const bw = size - margin * 2;
+  const bh = size - margin * 2;
+
+  // 1. 바닥 접촉 그림자 (바닥에서 붕 띄우지 않고 바닥에 밀착되는 섀도우)
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.fillRect(bx + 1, by + bh - 2, bw - 2, 4);
+
+  const lidH = Math.max(7, Math.floor(bh * 0.28)); // 뚜껑 상단부 높이
+  const skirtH = Math.max(3, Math.floor(bh * 0.12)); // 뚜껑 테두리 턱 높이
+  const bodyH = bh - lidH;
+
+  if (onGoal) {
+    // 💠 골인된 상태: 바닥 밀착형 에메랄드 크리스탈 서류 보관 박스
+    // 1) 뚜껑 윗면 (밝은 에메랄드 그린)
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(bx, by, bw, lidH - skirtH);
+
+    // 2) 뚜껑 앞 턱 (살짝 덮여 내려오는 테두리)
+    ctx.fillStyle = '#059669';
+    ctx.fillRect(bx, by + lidH - skirtH, bw, skirtH);
+
+    // 뚜껑 아래 그림자
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.fillRect(bx, by + lidH, bw, 2);
+
+    // 3) 메인 박스 몸체 정면
+    ctx.fillStyle = '#047857';
+    ctx.fillRect(bx + 1, by + lidH, bw - 2, bodyH);
+
+    // 우측면 3D 명암
+    ctx.fillStyle = '#065f46';
+    ctx.fillRect(bx + bw - 8, by + lidH, 7, bodyH);
+
+    // 4) 측면 타원형 손잡이 컷아웃 구멍
+    const hx = bx + bw - 7;
+    const hy = by + lidH + Math.floor(bodyH * 0.22);
+    const hw = 5;
+    const hh = Math.floor(bodyH * 0.38);
+
+    ctx.fillStyle = '#022c22';
+    ctx.beginPath();
+    ctx.roundRect(hx, hy, hw, hh, 2.5);
+    ctx.fill();
+
+    // 5) 중앙 발광 에메랄드 다이아몬드 크리스탈 보석
+    const cx = bx + bw / 2;
+    const cy = by + lidH + bodyH / 2;
+    ctx.save();
+    ctx.shadowColor = 'rgba(52, 211, 153, 0.85)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#ecfdf5';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 5);
+    ctx.lineTo(cx + 5, cy);
+    ctx.lineTo(cx, cy + 5);
+    ctx.lineTo(cx - 5, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 외곽선
+    ctx.strokeStyle = '#064e3b';
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(bx, by, bw, bh);
+  } else {
+    // 📦 사진 레퍼런스 100% 반영: 바닥에 딱 붙은 3D 크라프트 서류 보관 박스 (뚜껑 + 손잡이 컷아웃)
+    // 1) 뚜껑 윗면 (밝은 베이지 크라프트 상단면)
+    ctx.fillStyle = '#dfc49e';
+    ctx.fillRect(bx, by, bw, lidH - skirtH);
+
+    // 뚜껑 윗면 미세 접힘 하이라이트 라인
+    ctx.strokeStyle = '#eed8be';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx + 2, by + 1);
+    ctx.lineTo(bx + bw - 2, by + 1);
+    ctx.stroke();
+
+    // 2) 뚜껑 앞 턱 (살짝 덮여 내려오는 뚜껑 테두리)
+    ctx.fillStyle = '#cb9f6e';
+    ctx.fillRect(bx, by + lidH - skirtH, bw, skirtH);
+
+    // 뚜껑 아래 드리워지는 그림자 띠
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+    ctx.fillRect(bx, by + lidH, bw, 2);
+
+    // 3) 메인 박스 몸체 정면 (따뜻한 천연 골판지 크라프트 톤)
+    ctx.fillStyle = '#ba8d5b';
+    ctx.fillRect(bx + 1, by + lidH, bw - 2, bodyH);
+
+    // 우측면 3D 입체 음영
+    ctx.fillStyle = '#a67b48';
+    ctx.fillRect(bx + bw - 8, by + lidH, 7, bodyH);
+
+    // 4) 측면 타원형 손잡이 컷아웃 구멍 (사진 속 블랙 오벌 손잡이)
+    const hx = bx + bw - 7;
+    const hy = by + lidH + Math.floor(bodyH * 0.22);
+    const hw = 5;
+    const hh = Math.floor(bodyH * 0.38);
+
+    ctx.fillStyle = '#221508'; // 손잡이 안쪽 어두운 내부
+    ctx.beginPath();
+    ctx.roundRect(hx, hy, hw, hh, 2.5);
+    ctx.fill();
+    // 손잡이 상단 하이라이트
+    ctx.fillStyle = '#dfc49e';
+    ctx.fillRect(hx, hy, hw, 1);
+
+    // 5) 박스 전체 정밀 외곽선
+    ctx.strokeStyle = '#54391e';
+    ctx.lineWidth = 1.3;
+    ctx.strokeRect(bx, by, bw, bh);
+  }
+}
+
+function drawPixelCharacter(x, y, size, facing, frame) {
+  const cx = x + size / 2;
+  const cy = y + size / 2 - 2;
+  const bob = (frame % 2 === 1) ? 1.5 : 0;
+
+  ctx.save();
+  ctx.translate(cx, cy + bob);
+
+  // 1. 발 아래 그림자
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.35, size * 0.28, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const scale = size / 48;
+  ctx.scale(scale, scale);
+
+  // 2. 2등신 아담한 몸체 (블루 셔츠 + 네이비 바지)
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.roundRect(-9, 1, 18, 13, 3);
+  ctx.fill();
+  ctx.strokeStyle = '#1d4ed8';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 레드 넥타이 & 사원증 (앞/옆모습일 때만)
+  if (facing !== 'up') {
+    ctx.fillStyle = '#ef4444';
+    let tieX = (facing === 'left') ? -4 : (facing === 'right') ? 2 : -1.5;
+    ctx.fillRect(tieX, 2, 3, 7);
+
+    // 사원증
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(tieX - 1, 5, 5, 6);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(tieX - 1, 5, 5, 1.5);
+  }
+
+  // 3. 다리 & 브라운 구두 (발걸음 바운스)
+  ctx.fillStyle = '#1e293b';
+  const legL = (frame % 2 === 1) ? 1.5 : -1.5;
+  const legR = (frame % 2 === 1) ? -1.5 : 1.5;
+  // 좌/우 발
+  ctx.fillStyle = '#78350f';
+  if (facing === 'left') {
+    ctx.fillRect(-7, 13 + legL, 6, 4);
+    ctx.fillRect(0, 13 + legR, 5, 4);
+  } else if (facing === 'right') {
+    ctx.fillRect(-5, 13 + legL, 5, 4);
+    ctx.fillRect(1, 13 + legR, 6, 4);
+  } else {
+    ctx.fillRect(-7, 13 + legL, 5, 4);
+    ctx.fillRect(2, 13 + legR, 5, 4);
+  }
+
+  // 4. 2등신 큼직하고 귀여운 머리 (살구빛 뽀얀 피부)
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.roundRect(-12, -18, 24, 20, 6);
+  ctx.fill();
+
+  // 5. 댄디컷 갈색 헤어 & 시선 방향 처리
+  ctx.fillStyle = '#3e2723';
+
+  if (facing === 'up') {
+    // 🔙 뒷모습: 풍성하고 단정한 뒷머리
+    ctx.beginPath();
+    ctx.roundRect(-13, -20, 26, 21, 6);
+    ctx.fill();
+    // 목덜미 살짝
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillRect(-4, -1, 8, 3);
+  } else {
+    // 윗머리 볼륨
+    ctx.beginPath();
+    ctx.roundRect(-13, -20, 26, 10, 5);
+    ctx.fill();
+
+    if (facing === 'down') {
+      // ⬇️ 정면: 양 옆머리 & 앞머리 컬
+      ctx.fillRect(-13, -15, 4, 8);
+      ctx.fillRect(9, -15, 4, 8);
+      ctx.beginPath();
+      ctx.arc(-4, -11, 3.5, 0, Math.PI);
+      ctx.arc(4, -11, 3.5, 0, Math.PI);
+      ctx.fill();
+
+      // 똘망똘망한 두 눈
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(-5, -6, 2, 0, Math.PI * 2);
+      ctx.arc(5, -6, 2, 0, Math.PI * 2);
+      ctx.fill();
+      // 하이라이트
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-6, -7, 1, 1);
+      ctx.fillRect(4, -7, 1, 1);
+
+      // 핑크 볼터치
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(-8, -3, 2.5, 0, Math.PI * 2);
+      ctx.arc(8, -3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (facing === 'left') {
+      // ⬅️ 좌측 방향 프로필
+      ctx.fillRect(3, -16, 9, 12); // 뒷머리
+      ctx.beginPath();
+      ctx.arc(-5, -11, 4, 0, Math.PI);
+      ctx.fill();
+
+      // 왼쪽 눈
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(-7, -6, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-8, -7, 1, 1);
+
+      // 볼터치
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(-9, -3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (facing === 'right') {
+      // ➡️ 우측 방향 프로필
+      ctx.fillRect(-12, -16, 9, 12); // 뒷머리
+      ctx.beginPath();
+      ctx.arc(5, -11, 4, 0, Math.PI);
+      ctx.fill();
+
+      // 오른쪽 눈
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(7, -6, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(6, -7, 1, 1);
+
+      // 볼터치
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(9, -3, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.12;
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+    ctx.globalAlpha = 1.0;
+  }
+}
+
+/* =====================================================================
+   7. 입력 핸들러 & UI 이벤트
+   ===================================================================== */
+window.addEventListener('keydown', (e) => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+    e.preventDefault();
+  }
+
+  if (gameState === 'TITLE') {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code.startsWith('Arrow')) {
+      onTitlePushStart();
+    }
+    return;
+  }
+
+  if (gameState === 'STORY') {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyD') {
+      advanceStory();
+    }
+    return;
+  }
+
+  if (isCleared && (e.code === 'Space' || e.code === 'Enter')) {
+    nextStage();
+    return;
+  }
+
+  switch (e.code) {
+    case 'ArrowUp':
+    case 'KeyW':
+      tryMove(0, -1, 'up');
+      break;
+    case 'ArrowDown':
+    case 'KeyS':
+      tryMove(0, 1, 'down');
+      break;
+    case 'ArrowLeft':
+    case 'KeyA':
+      tryMove(-1, 0, 'left');
+      break;
+    case 'ArrowRight':
+    case 'KeyD':
+      tryMove(1, 0, 'right');
+      break;
+    case 'KeyZ':
+    case 'KeyU':
+      undo();
+      break;
+    case 'KeyH':
+      showHint();
+      break;
+    case 'KeyR':
+      resetStage();
+      break;
+  }
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+  if (gameState === 'TITLE') {
+    const hasClearedAny = clearedStages.size >= 1;
+
+    // 0. 개발자 모드 버튼 클릭 (비밀번호: 1029)
+    const d = devModeBtnRect;
+    if (clickX >= d.x && clickX <= d.x + d.w && clickY >= d.y && clickY <= d.y + d.h) {
+      if (devModeActive) {
+        if (confirm('개발자 모드를 해제하시겠습니까?')) {
+          devModeActive = false;
+          renderNav();
+          updateUI();
+        }
+      } else {
+        const pw = prompt('개발자 모드 암호를 입력하세요:');
+        if (pw === '1029') {
+          devModeActive = true;
+          alert('🔓 개발자 모드가 활성화되었습니다!\n모든 스테이지를 자유롭게 선택할 수 있습니다.');
+          renderNav();
+          updateUI();
+        } else if (pw !== null) {
+          alert('❌ 암호가 올바르지 않습니다.');
+        }
+      }
+      return;
+    }
+
+    // 1. PUSH START 버튼 클릭
+    const b = pushStartBtnRect;
+    if (clickX >= b.x && clickX <= b.x + b.w && clickY >= b.y && clickY <= b.y + b.h) {
+      onTitlePushStart();
+      return;
+    }
+
+    // 2. 스토리 보기 버튼 클릭 (1개 이상 클리어 시)
+    if (hasClearedAny) {
+      const s = storyReplayBtnRect;
+      if (clickX >= s.x && clickX <= s.x + s.w && clickY >= s.y && clickY <= s.y + s.h) {
+        startStory();
+        return;
+      }
+
+      const r = resetProgressBtnRect;
+      if (clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+        clearProgress();
+        return;
+      }
+    } else {
+      const r = singleResetBtnRect;
+      if (clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+        clearProgress();
+        return;
+      }
+    }
+
+    // 그 외 영역 클릭 시 기본 PUSH START 실행
+    onTitlePushStart();
+    return;
+  }
+
+  if (gameState === 'STORY') {
+    if (clickX >= canvas.width - 95 && clickY <= 45) {
+      skipStory();
+    } else {
+      advanceStory();
+    }
+  }
+});
+
+function nextStage() {
+  if (currentStageIndex + 1 < STAGES.length) {
+    initStage(currentStageIndex + 1);
+  } else {
+    showTitleScreen();
+  }
+}
+
+function showHint() {
+  if (gameState !== 'PLAYING' || isCleared) return;
+  if (hintRemaining <= 0) return;
+  sound.init();
+  sound.playTalk();
+  hintRemaining--;
+  const hintEl = document.getElementById('hintText');
+  if (hintEl) {
+    hintEl.innerHTML = STAGES[currentStageIndex].hint;
+    hintEl.style.display = 'flex';
+  }
+  updateUI();
+}
+
+document.getElementById('titleScreenBtn').addEventListener('click', showTitleScreen);
+const hintBtnEl = document.getElementById('hintBtn');
+if (hintBtnEl) {
+  hintBtnEl.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    showHint();
+  });
+}
+document.getElementById('undoBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); undo(); });
+document.getElementById('resetBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); resetStage(); });
+document.getElementById('nextStageBtn').addEventListener('click', nextStage);
+
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  const dir = btn.getAttribute('data-dir');
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (gameState === 'TITLE') {
+      onTitlePushStart();
+      return;
+    }
+    if (gameState === 'STORY') {
+      advanceStory();
+      return;
+    }
+    if (dir === 'up') tryMove(0, -1, 'up');
+    if (dir === 'down') tryMove(0, 1, 'down');
+    if (dir === 'left') tryMove(-1, 0, 'left');
+    if (dir === 'right') tryMove(1, 0, 'right');
+  });
+});
+
+// BGM 음소거(ON/OFF) 및 5단계 볼륨 조절 이벤트
+const bgmVolumeSteps = [0.05, 0.15, 0.30, 0.60, 1.00];
+const bgmVolumeLabels = ['5%', '15%', '30%', '60%', '100%'];
+let currentBgmStepIdx = 2; // 기본값: 30%
+let isBgmMuted = false;
+
+function updateBgmControlUI() {
+  const muteBtn = document.getElementById('bgmMuteBtn');
+  const stepBtn = document.getElementById('bgmVolumeStepBtn');
+  const vol = bgmVolumeSteps[currentBgmStepIdx];
+  const label = bgmVolumeLabels[currentBgmStepIdx];
+
+  if (muteBtn) {
+    muteBtn.innerText = isBgmMuted ? '🔇' : '🎵';
+    muteBtn.style.opacity = isBgmMuted ? '0.45' : '1.0';
+  }
+  if (stepBtn) {
+    stepBtn.innerText = isBgmMuted ? 'OFF' : label;
+    stepBtn.style.color = isBgmMuted ? '#9ca3af' : '#f59e0b';
+  }
+
+  sound.setBgmVolume(isBgmMuted ? 0 : vol);
+}
+
+const muteBtnEl = document.getElementById('bgmMuteBtn');
+if (muteBtnEl) {
+  muteBtnEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sound.init();
+    isBgmMuted = !isBgmMuted;
+    updateBgmControlUI();
+    if (!isBgmMuted && gameState === 'PLAYING') {
+      sound.startBGM();
+    }
+  });
+}
+
+const stepBtnEl = document.getElementById('bgmVolumeStepBtn');
+if (stepBtnEl) {
+  stepBtnEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sound.init();
+    if (isBgmMuted) {
+      isBgmMuted = false;
+    } else {
+      currentBgmStepIdx = (currentBgmStepIdx + 1) % bgmVolumeSteps.length;
+    }
+    updateBgmControlUI();
+    if (gameState === 'PLAYING') {
+      sound.startBGM();
+    }
+  });
+}
+
+function renderNav() {
+  const nav = document.getElementById('levelNav');
+  nav.innerHTML = '';
+  STAGES.forEach((stg, idx) => {
+    const dot = document.createElement('div');
+    const unlocked = idx === 0 || clearedStages.has(idx - 1) || devModeActive;
+    const isClearedStage = clearedStages.has(idx);
+
+    if (unlocked) {
+      dot.className = `lvl-dot ${idx === currentStageIndex && gameState === 'PLAYING' ? 'active' : ''} ${isClearedStage ? 'cleared' : ''}`;
+      dot.innerText = idx + 1;
+      dot.title = `${stg.name} [${stg.diff}]`;
+      dot.style.opacity = '1.0';
+      dot.style.cursor = 'pointer';
+      dot.addEventListener('click', () => {
+        sound.init();
+        gameState = 'PLAYING';
+        initStage(idx);
+      });
+    } else {
+      dot.className = 'lvl-dot locked';
+      dot.innerHTML = '<span style="font-size:10px;">🔒</span>';
+      dot.title = `Stage ${idx + 1} (이전 스테이지를 먼저 클리어하세요)`;
+      dot.style.opacity = '0.35';
+      dot.style.cursor = 'not-allowed';
+    }
+    nav.appendChild(dot);
+  });
+}
+
+// 브라우저 오디오 정책 완벽 해제 (첫 터치/키 입력 시 AudioContext 즉시 활성화)
+['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    sound.init();
+    if (gameState === 'PLAYING') {
+      sound.startBGM();
+    }
+  }, { passive: true });
+});
+
+showTitleScreen();
+renderNav();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
