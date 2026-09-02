@@ -246,7 +246,7 @@ const STAGES = [
       g[2][4] = { type: 'floor' }; // 구멍
       g[7][4] = { type: 'floor' }; // 구멍
 
-      g[1][1] = { type: 'key', color: 0 };
+      g[2][1] = { type: 'key', color: 0 };
       g[8][8] = { type: 'door', color: 0, isExit: true };
     }
   }
@@ -271,7 +271,7 @@ function buildBaseGrid() {
 /* ============================================================
    GAME STATE
 ============================================================ */
-const SCREEN = { TITLE: 'TITLE', SELECT: 'SELECT', PLAYING: 'PLAYING', WIN: 'WIN', TIMEUP: 'TIMEUP', ENDING: 'ENDING' };
+const SCREEN = { TITLE: 'TITLE', SELECT: 'SELECT', PLAYING: 'PLAYING', WIN: 'WIN', TIMEUP: 'TIMEUP', GAMEOVER: 'GAMEOVER', ENDING: 'ENDING' };
 let currentScreen = SCREEN.TITLE;
 
 let stageIdx = 0;
@@ -1386,6 +1386,23 @@ function render() {
     drawText("다시 시도", 400, 371, 15, '#fff');
     drawRect(300, 400, 200, 50, '#4a4a75');
     drawText("스테이지 목록", 400, 431, 15, '#fff');
+  } else if (currentScreen === SCREEN.GAMEOVER) {
+    // 감시자에게 잡힘
+    drawRect(0, 0, 800, 600, 'rgba(20, 0, 8, 0.88)');
+    const t = performance.now() / 1000;
+    const shake = Math.sin(t * 24) * 2;
+    ctx.save();
+    ctx.shadowColor = '#ff0044';
+    ctx.shadowBlur = 24;
+    drawText("👻 붙잡혔다!", 400 + shake, 240, 38, '#ff4466');
+    ctx.restore();
+    drawText("\"시간의 순리를 어긴 자는 여기서 끝이다.\"", 400, 288, 15, '#ffaabb');
+    drawText("— 시간의 감시자 —", 400, 314, 11, '#aa6677');
+    drawRect(300, 350, 200, 50, '#8b2e4a');
+    drawRect(303, 353, 194, 44, '#a8395c');
+    drawText("다시 시도", 400, 381, 15, '#fff');
+    drawRect(300, 410, 200, 50, '#4a4a75');
+    drawText("스테이지 목록", 400, 441, 15, '#fff');
   }
 }
 
@@ -1485,6 +1502,20 @@ function handlePointer(clientX, clientY) {
       return;
     }
     if (x >= 300 && x <= 500 && y >= 400 && y <= 450) {
+      audio.playClick();
+      goToSelect();
+      return;
+    }
+    return;
+  }
+
+  if (currentScreen === SCREEN.GAMEOVER) {
+    if (x >= 300 && x <= 500 && y >= 350 && y <= 400) {
+      audio.playClick();
+      resetLevel();
+      return;
+    }
+    if (x >= 300 && x <= 500 && y >= 410 && y <= 460) {
       audio.playClick();
       goToSelect();
       return;
