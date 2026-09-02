@@ -876,10 +876,10 @@ const STORY_SCENES = [
    3. 100% 알고리즘 검증 완료 15개 정통 소코반 레벨 (단계별 급상승 난이도 곡선)
    ===================================================================== */
 const STAGES = [
-  // 🟢 Stage 1 (16수, Microban 2)
+  // 🟢 Stage 1 (입문)
   {
     name: "Stage 1",
-    diff: "입문 (Easy)",
+    diff: "입문",
     diffColor: "#34d399",
     hint: "💡 <strong>튜토리얼:</strong> 상자 뒤로 돌아가 목표 발판(💠)으로 밉니다.",
     map: [
@@ -892,12 +892,12 @@ const STAGES = [
       "  ######"
     ]
   },
-  // 🟠 Stage 2~5: 2스테이지부터 본격 난이도 급상승! (17~29수)
+  // 🔵 Stage 2~6 (초급)
   {
     name: "Stage 2",
-    diff: "중급 (Moderate)",
-    diffColor: "#fbbf24",
-    hint: "⚡ <strong>난이도 상승:</strong> 두 상자의 경로가 겹치지 않게 순서를 정하세요.",
+    diff: "초급",
+    diffColor: "#38bdf8",
+    hint: "⚡ <strong>초급:</strong> 두 상자의 경로가 겹치지 않게 순서를 정하세요.",
     map: [
       "  ####  ",
       "  #..####",
@@ -909,9 +909,9 @@ const STAGES = [
   },
   {
     name: "Stage 3",
-    diff: "중급 (Moderate)",
-    diffColor: "#fbbf24",
-    hint: "🧠 <strong>공간 관리:</strong> 좁은 공간에서 상자들의 자리를 뒤바꾸세요.",
+    diff: "초급",
+    diffColor: "#38bdf8",
+    hint: "🧠 <strong>초급:</strong> 좁은 공간에서 상자들의 자리를 뒤바꾸세요.",
     map: [
       " ########",
       " #......#",
@@ -923,9 +923,9 @@ const STAGES = [
   },
   {
     name: "Stage 4",
-    diff: "중급 (Moderate)",
-    diffColor: "#fbbf24",
-    hint: "🧠 <strong>순서의 미학:</strong> L자 골목에서 상자들의 진입 순서를 계산하세요.",
+    diff: "초급",
+    diffColor: "#38bdf8",
+    hint: "🧠 <strong>초급:</strong> L자 골목에서 상자들의 진입 순서를 계산하세요.",
     map: [
       "  ####",
       "  #.*#",
@@ -938,9 +938,9 @@ const STAGES = [
   },
   {
     name: "Stage 5",
-    diff: "중급 (Moderate)",
-    diffColor: "#fbbf24",
-    hint: "🧠 <strong>중앙 방벽:</strong> 십자 방벽을 이용해 3개의 상자를 분산 배치하세요.",
+    diff: "초급",
+    diffColor: "#38bdf8",
+    hint: "🧠 <strong>초급:</strong> 십자 방벽을 이용해 3개의 상자를 분산 배치하세요.",
     map: [
       "#######",
       "#.....#",
@@ -953,12 +953,11 @@ const STAGES = [
       "#######"
     ]
   },
-  // 🔴 Stage 6~10: 고급 창고 관리 (32~40수)
   {
     name: "Stage 6",
-    diff: "고급 (Hard)",
-    diffColor: "#f97316",
-    hint: "🔥 <strong>고난이도:</strong> 기둥 뒤로 상자를 우회시켜 골인시키세요.",
+    diff: "초급",
+    diffColor: "#38bdf8",
+    hint: "🔥 <strong>초급:</strong> 기둥 뒤로 상자를 우회시켜 골인시키세요.",
     map: [
       "######",
       "#....#",
@@ -970,11 +969,12 @@ const STAGES = [
       "######"
     ]
   },
+  // 🟡 Stage 7~10 (중급)
   {
     name: "Stage 7",
-    diff: "고급 (Hard)",
-    diffColor: "#f97316",
-    hint: "🔥 <strong>고난이도:</strong> 지그재그 통로를 따라 3개의 상자를 차례로 정렬하세요.",
+    diff: "중급",
+    diffColor: "#fbbf24",
+    hint: "🔥 <strong>중급:</strong> 지그재그 통로를 따라 3개의 상자를 차례로 정렬하세요.",
     map: [
       " ##### ",
       " #...# ",
@@ -989,9 +989,9 @@ const STAGES = [
   },
   {
     name: "Stage 8",
-    diff: "고급 (Hard)",
-    diffColor: "#f97316",
-    hint: "🔥 <strong>고난이도:</strong> 지그재그 벽을 따라 상자를 순서대로 유도하세요.",
+    diff: "중급",
+    diffColor: "#fbbf24",
+    hint: "🔥 <strong>중급:</strong> 지그재그 벽을 따라 상자를 순서대로 유도하세요.",
     map: [
       "  #.#####",
       "    #...#",
@@ -1004,9 +1004,9 @@ const STAGES = [
   },
   {
     name: "Stage 9",
-    diff: "고급 (Hard)",
-    diffColor: "#f97316",
-    hint: "🔥 <strong>고난이도:</strong> 좁은 통로의 병목을 해결하고 상자를 안착시키세요.",
+    diff: "중급",
+    diffColor: "#fbbf24",
+    hint: "🔥 <strong>중급:</strong> 좁은 통로의 병목을 해결하고 상자를 안착시키세요.",
     map: [
       "      ###",
       " ######@##",
@@ -1019,9 +1019,9 @@ const STAGES = [
   },
   {
     name: "Stage 10",
-    diff: "고급 (Hard)",
-    diffColor: "#f97316",
-    hint: "⚡ <strong>고난이도:</strong> 40수 이상의 정밀한 연쇄 밀기가 요구됩니다.",
+    diff: "중급",
+    diffColor: "#fbbf24",
+    hint: "⚡ <strong>중급:</strong> 40수 이상의 정밀한 연쇄 밀기가 요구됩니다.",
     map: [
       " ##### ",
       " #...# ",
@@ -1034,12 +1034,12 @@ const STAGES = [
       "###### "
     ]
   },
-  // 🟣 Stage 11~15: 초심층 마스터클래스 (41~107수)
+  // 🟠 Stage 11~13 (고급)
   {
     name: "Stage 11",
-    diff: "초심층 (Ultra Deep)",
-    diffColor: "#ef4444",
-    hint: "🧠 <strong>상자 2개:</strong> 통로 끝 포켓으로 상자를 순차 운반하세요.",
+    diff: "고급",
+    diffColor: "#f97316",
+    hint: "🧠 <strong>고급:</strong> 통로 끝 포켓으로 상자를 순차 운반하세요.",
     map: [
       "########",
       "#...**.#",
@@ -1053,9 +1053,9 @@ const STAGES = [
   },
   {
     name: "Stage 12",
-    diff: "초심층 (Ultra Deep)",
-    diffColor: "#ef4444",
-    hint: "🧠 <strong>상자 2개:</strong> 49수 이상의 장거리 수읽기가 필요한 정통 명작입니다.",
+    diff: "고급",
+    diffColor: "#f97316",
+    hint: "🧠 <strong>고급:</strong> 49수 이상의 장거리 수읽기가 필요한 정통 명작입니다.",
     map: [
       " #####   ",
       " #...##  ",
@@ -1069,9 +1069,9 @@ const STAGES = [
   },
   {
     name: "Stage 13",
-    diff: "두뇌 한계 (Brain Melter)",
-    diffColor: "#dc2626",
-    hint: "👑 <strong>상자 2개:</strong> 50수의 치밀한 이동으로 좁은 방벽을 뚫어내세요.",
+    diff: "고급",
+    diffColor: "#f97316",
+    hint: "👑 <strong>고급:</strong> 50수의 치밀한 이동으로 좁은 방벽을 뚫어내세요.",
     map: [
       " #######  ",
       " #.....###",
@@ -1083,11 +1083,12 @@ const STAGES = [
       "   ####   "
     ]
   },
+  // 🔴 Stage 14~15 (초심층)
   {
     name: "Stage 14",
-    diff: "두뇌 한계 (Brain Melter)",
-    diffColor: "#dc2626",
-    hint: "👑 <strong>상자 2개:</strong> 51수 이상의 정밀한 공간 기동 퍼즐입니다.",
+    diff: "초심층",
+    diffColor: "#ef4444",
+    hint: "👑 <strong>초심층:</strong> 51수 이상의 정밀한 공간 기동 퍼즐입니다.",
     map: [
       "  #######",
       "  #.....#",
@@ -1099,9 +1100,9 @@ const STAGES = [
   },
   {
     name: "Stage 15",
-    diff: "마스터 (Grandmaster)",
-    diffColor: "#a855f7",
-    hint: "🏆 <strong>궁극의 107수:</strong> 소코반의 정점! 100수 이상의 장거리 연쇄 밀기로 칼퇴를 완성하세요!",
+    diff: "초심층",
+    diffColor: "#ef4444",
+    hint: "🏆 <strong>초심층 (107수):</strong> 소코반의 정점! 100수 이상의 장거리 연쇄 밀기로 칼퇴를 완성하세요!",
     map: [
       "###### #####",
       "#....###...#",
@@ -3085,11 +3086,18 @@ function nextStage() {
 
 function showHint() {
   if (gameState !== 'PLAYING' || isCleared) return;
+  
+  const hintEl = document.getElementById('hintText');
+  // 힌트가 이미 화면에 노출되어 있는 경우 잔여 횟수를 소비하지 않음
+  if (hintEl && hintEl.style.display === 'flex') {
+    return;
+  }
+  
   if (hintRemaining <= 0) return;
+  
   sound.init();
   sound.playTalk();
   hintRemaining--;
-  const hintEl = document.getElementById('hintText');
   if (hintEl) {
     hintEl.innerHTML = STAGES[currentStageIndex].hint;
     hintEl.style.display = 'flex';
