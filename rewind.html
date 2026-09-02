@@ -124,6 +124,44 @@ class SoundEngine {
     this.playTone(220, 'sawtooth', 0.3, 0.15);
     setTimeout(() => this.playTone(140, 'sawtooth', 0.4, 0.15), 200);
   }
+  playOminous() {
+    this.init();
+    if (this.muted || !this.ctx) return;
+    try {
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      // ① sawtooth(배음 폭탄) → triangle(부드러운 저음)으로 변경
+      osc1.type = 'triangle'; osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(120, this.ctx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 3);
+      osc2.frequency.setValueAtTime(124, this.ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(46, this.ctx.currentTime + 3);
+
+      // ② 저역대 웅웅거림을 깎아내는 로우패스 필터 추가
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+      filter.Q.value = 0.7;
+
+      // ③ 진짜 작게: 오실레이터 2개가 합쳐지는 걸 감안해 0.02로, 부드럽게 페이드인 후 지수감쇠
+      gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.02, this.ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 3);
+
+      osc1.connect(filter); osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc1.start(); osc2.start();
+      osc1.stop(this.ctx.currentTime + 3); osc2.stop(this.ctx.currentTime + 3);
+    } catch(e) {}
+  }
+  playCaught() {
+    this.init();
+    this.playTone(150, 'sawtooth', 0.2, 0.3);
+    setTimeout(() => this.playTone(100, 'sawtooth', 0.5, 0.4), 150);
+  }
   playClick() { this.init(); this.playTone(500, 'square', 0.06, 0.08); }
 }
 const audio = new SoundEngine();
@@ -134,7 +172,10 @@ const audio = new SoundEngine();
 const GRID_SIZE = 10;
 const CELL = 42;
 const gridX = 190, gridY = 90;
-const FLOOR = 0, WALL = 1, KEY = 2, DOOR = 3;
+const FLOOR = 0, WALL = 1;
+// 이제 타일 번호가 복잡해지므로 타일 정보를 객체로 관리합니다.
+// type: 'floor', 'wall', 'key', 'door', 'exit'
+// color: 0(빨강), 1(파랑) 등 (key와 door 매칭용)
 
 /* ============================================================
    STAGE DEFINITIONS (여러 스테이지를 하나의 파일에서 관리)
@@ -142,31 +183,71 @@ const FLOOR = 0, WALL = 1, KEY = 2, DOOR = 3;
 const STAGES = [
   {
     name: "첫 되감기",
-    sub: "열쇠를 지키며 문으로 — 되감기 기본 학습",
-    totalTime: 60,
+    sub: "발판을 지키며 출구로 — 되감기 기본 학습",
+    totalTime: 45,
     startPos: { col: 1, row: 7 },
-    doorPos: { col: 8, row: 7 },
-    keyPositions: [{ col: 1, row: 3 }],
+    keysCount: 1,
     build: (g) => {
-      g[3][1] = KEY;
-      g[7][8] = DOOR;
+      g[3][1] = { type: 'key', color: 0 }; // 0: 노란색(기본)
+      g[7][8] = { type: 'door', color: 0, isExit: true }; // 노란문이 곧 출구
     }
   },
   {
-    name: "열쇠는 두 개다",
-    sub: "두 열쇠를 동시에 지켜야 문이 열립니다 — 다중 되감기",
-    totalTime: 120,
+    name: "엇갈린 길",
+    sub: "멈추지 말고 달려야 합니다",
+    totalTime: 45,
     startPos: { col: 1, row: 7 },
-    doorPos: { col: 8, row: 7 },
-    keyPositions: [{ col: 2, row: 2 }, { col: 8, row: 2 }],
+    keysCount: 2,
     build: (g) => {
-      // 중앙 세로 벽 (위/아래 두 곳이 뚫려 우회로가 두 개 존재)
+      // 2스테이지 재설계: 대기(Wait) 없이 멈추지 않고 계속 달려야 하는 구조
       for (let r = 1; r < GRID_SIZE - 1; r++) {
-        if (r !== 4 && r !== 7) g[r][5] = WALL;
+        if (r !== 7) g[r][4] = { type: 'wall' }; // 중간 세로 벽
       }
-      g[2][2] = KEY;
-      g[2][8] = KEY;
-      g[7][8] = DOOR;
+      // 열쇠 1 (왼쪽 구석) - 노란색
+      g[1][1] = { type: 'key', color: 0 };
+      // 열쇠 2 (중앙 통로 근처) - 파란색
+      g[5][3] = { type: 'key', color: 2 };
+      g[7][8] = { type: 'door', color: 'all', isExit: true }; 
+    }
+  },
+  {
+    name: "연쇄 작용 (Cascade)",
+    sub: "과거가 문을 열면, 과거가 다시 지나갑니다",
+    totalTime: 45,
+    startPos: { col: 1, row: 8 },
+    keysCount: 2,
+    build: (g) => {
+      // 벽 세팅 (지그재그 구조)
+      for (let r = 1; r < 8; r++) g[r][3] = { type: 'wall' };
+      for (let r = 2; r < 9; r++) g[r][6] = { type: 'wall' };
+      
+      // 빨간색 그룹
+      g[3][1] = { type: 'key', color: 1 }; // 빨강 발판 (1번방 - 한 칸 아래로 내림)
+      g[8][3] = { type: 'door', color: 1 }; // 빨강 문 (1번방 -> 2번방 가는 길)
+
+      // 파란색 그룹
+      g[8][4] = { type: 'key', color: 2 }; // 파랑 발판 (2번방)
+      g[1][6] = { type: 'door', color: 2 }; // 파랑 문 (2번방 -> 3번방 가는 길)
+
+      // 최종 출구 (3번방)
+      g[2][8] = { type: 'exit' }; // 발판 필요없는 최종 골인 지점
+    }
+  },
+  {
+    name: "시간 감시자",
+    sub: "첫 되감기 시, 당신을 쫓는 감시자가 깨어납니다",
+    totalTime: 45,
+    startPos: { col: 1, row: 8 },
+    watcherSpawn: { col: 7, row: 2 },
+    keysCount: 1,
+    build: (g) => {
+      // 미로 구조
+      for(let r = 1; r <= 7; r++) g[r][4] = { type: 'wall' };
+      g[2][4] = { type: 'floor' }; // 구멍
+      g[7][4] = { type: 'floor' }; // 구멍
+
+      g[1][1] = { type: 'key', color: 0 };
+      g[8][8] = { type: 'door', color: 0, isExit: true };
     }
   }
 ];
@@ -176,7 +257,11 @@ function buildBaseGrid() {
   for (let r = 0; r < GRID_SIZE; r++) {
     const row = [];
     for (let c = 0; c < GRID_SIZE; c++) {
-      row.push((r === 0 || r === GRID_SIZE - 1 || c === 0 || c === GRID_SIZE - 1) ? WALL : FLOOR);
+      if (r === 0 || r === GRID_SIZE - 1 || c === 0 || c === GRID_SIZE - 1) {
+        row.push({ type: 'wall' });
+      } else {
+        row.push({ type: 'floor' });
+      }
     }
     g.push(row);
   }
@@ -195,6 +280,7 @@ let startPos = null, doorPos = null, keyPositions = null;
 
 let player = { col: 0, row: 0, history: [] };
 let ghosts = [];
+let watchers = [];
 let currentTick = 0;
 let loopCount = 1;
 
@@ -203,6 +289,7 @@ let timeLeft = TOTAL_TIME;
 
 let popups = [];
 let flashAlpha = 0;
+let watcherIntroTimer = 0;
 let lastTime = performance.now();
 
 function showPopup(txt, x, y, col = '#ffffff') {
@@ -225,6 +312,8 @@ function loadStage(idx) {
 
   player = { col: startPos.col, row: startPos.row, history: [] };
   ghosts = [];
+  watchers = [];
+  watcherIntroTimer = 0;
   currentTick = 0;
   loopCount = 1;
   popups = [];
@@ -255,24 +344,68 @@ function ghostStateAt(ghost, tick) {
   return { col, row, alive, grace };
 }
 
-function isEntityOnKey(entCol, entRow, keyPos) {
-  return entCol === keyPos.col && entRow === keyPos.row;
+// grid는 2차원 배열. 요소는 { type: 'floor'|'wall'|'key'|'door'|'exit', color: 0|1|2... }
+function isEntityOnExactKey(entCol, entRow, keyR, keyC) {
+  return entCol === keyC && entRow === keyR;
 }
 
-function keysHeldStatusAt(tick, pCol, pRow) {
-  return keyPositions.map(kp => {
-    if (isEntityOnKey(pCol, pRow, kp)) return true;
-    return ghosts.some(g => {
-      const s = ghostStateAt(g, tick);
-      return s.alive && isEntityOnKey(s.col, s.row, kp);
-    });
+function keyHeldStatusAt(tick, pCol, pRow, keyR, keyC) {
+  if (isEntityOnExactKey(pCol, pRow, keyR, keyC)) return true;
+  return ghosts.some(g => {
+    const s = ghostStateAt(g, tick);
+    return s.alive && isEntityOnExactKey(s.col, s.row, keyR, keyC);
   });
 }
-function keysHeldStatus() {
-  return keysHeldStatusAt(currentTick, player.col, player.row);
+
+function isDoorOpenNow(targetCol, targetRow) {
+  const doorTile = grid[targetRow][targetCol];
+  if (doorTile.type !== 'door') return true;
+
+  let keysToCheck = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (grid[r][c].type === 'key') {
+        if (doorTile.color === 'all' || grid[r][c].color === doorTile.color) {
+          keysToCheck.push({r, c});
+        }
+      }
+    }
+  }
+
+  return keysToCheck.every(k => keyHeldStatusAt(currentTick, player.col, player.row, k.r, k.c));
 }
-function isDoorOpenNow() {
-  return keysHeldStatus().every(h => h);
+
+// Watcher pathfinding BFS
+function getNextWatcherMove(wCol, wRow, pCol, pRow) {
+  const queue = [{c: wCol, r: wRow, path: []}];
+  const visited = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(false));
+  visited[wRow][wCol] = true;
+
+  while(queue.length > 0) {
+    const curr = queue.shift();
+    if (curr.c === pCol && curr.r === pRow) {
+      return curr.path[0] || {dc: 0, dr: 0};
+    }
+    for (const dir in DIRS) {
+      if (dir === 'wait') continue;
+      const nc = curr.c + DIRS[dir].dc;
+      const nr = curr.r + DIRS[dir].dr;
+      if (nc >= 0 && nc < GRID_SIZE && nr >= 0 && nr < GRID_SIZE) {
+        if (!visited[nr][nc]) {
+          const tile = grid[nr][nc];
+          let isPassable = true;
+          if (tile.type === 'wall') isPassable = false;
+          if (tile.type === 'door' && !isDoorOpenNow(nc, nr)) isPassable = false;
+
+          if (isPassable) {
+            visited[nr][nc] = true;
+            queue.push({c: nc, r: nr, path: [...curr.path, {dc: DIRS[dir].dc, dr: DIRS[dir].dr}]});
+          }
+        }
+      }
+    }
+  }
+  return {dc: 0, dr: 0};
 }
 
 const DIRS = {
@@ -296,19 +429,17 @@ function attemptMove(dirName) {
   const tile = grid[targetRow][targetCol];
   const nextTick = currentTick + 1;
 
-  if (tile === WALL) { audio.playBlocked(); return; }
+  if (tile.type === 'wall') { audio.playBlocked(); return; }
 
   // 문 판정: "현재 턴(이동하기 직전)"에 문이 열려있다면 닫히는 순간이더라도 슬라이딩해서 들어갈 수 있게 허용 (인디아나 존스 판정!)
-  if (tile === DOOR) {
-    const openBefore = isDoorOpenNow();
+  if (tile.type === 'door') {
+    const openBefore = isDoorOpenNow(targetCol, targetRow);
     if (!openBefore) {
       audio.playBlocked();
-      showPopup(keyPositions.length > 1 ? "열쇠가 부족해!" : "문이 잠겼다!", targetCol * CELL + gridX, targetRow * CELL + gridY - 10, '#ff6b6b');
+      showPopup("문이 잠겼다!", targetCol * CELL + gridX, targetRow * CELL + gridY - 10, '#ff6b6b');
       return;
     }
   }
-
-  const doorOpenBefore = isDoorOpenNow();
 
   // 이번 이동으로 어떤 유령이 방금 사라졌는지 체크 (효과음/팝업용)
   ghosts.forEach(g => {
@@ -326,22 +457,38 @@ function attemptMove(dirName) {
   player.history.push(dirName);
   currentTick = nextTick;
 
+  // Move watchers
+  watchers.forEach(w => {
+    // Collision check before move (player walked into watcher)
+    if (player.col === w.col && player.row === w.row) {
+      currentScreen = SCREEN.GAMEOVER;
+      audio.playCaught();
+      return;
+    }
+    const move = getNextWatcherMove(w.col, w.row, player.col, player.row);
+    w.col += move.dc;
+    w.row += move.dr;
+    // Collision check after move (watcher walked into player)
+    if (player.col === w.col && player.row === w.row) {
+      currentScreen = SCREEN.GAMEOVER;
+      audio.playCaught();
+    }
+  });
+  if (currentScreen === SCREEN.GAMEOVER) return;
+
   audio.playMove();
 
-  if (tile === KEY) {
+  if (tile.type === 'key') {
     audio.playKey();
     showPopup("🔑 열쇠 확보!", targetCol * CELL + gridX + CELL/2, targetRow * CELL + gridY - 6, '#ffe66d');
   }
 
-  const doorOpenAfter = isDoorOpenNow();
-  if (doorOpenAfter && !doorOpenBefore) {
+  // 문을 통과하면 자동으로 열리는 효과음을 낸다 (인디아나 존스 통과 시에도)
+  if (tile.type === 'door') {
     audio.playDoorOpen();
-    if (keyPositions.length > 1) showPopup("🔓 문이 열렸다!", 400, 300, '#3ddc84');
-  } else if (!doorOpenAfter && doorOpenBefore) {
-    showPopup("🔒 문이 다시 잠겼다...", 400, 300, '#ff9f6b');
   }
 
-  if (player.col === doorPos.col && player.row === doorPos.row) {
+  if (tile.type === 'exit' || (tile.type === 'door' && tile.isExit)) {
     currentScreen = SCREEN.WIN;
     audio.playWin();
   }
@@ -358,7 +505,17 @@ function doRewind() {
     audio.playBlocked();
     return;
   }
-  audio.playRewind();
+
+  // 첫 되감기 시 감시자 소환
+  const stage = STAGES[stageIdx];
+  if (stage.watcherSpawn && watchers.length === 0) {
+    watchers.push({ col: stage.watcherSpawn.col, row: stage.watcherSpawn.row });
+    audio.playOminous();
+    watcherIntroTimer = 3.0; // 3초간 대사 표시
+  } else {
+    audio.playRewind();
+  }
+
   flashAlpha = 1;
   ghosts.push({ history: [...player.history], colorIdx: ghosts.length % 3 });
   player.col = startPos.col;
@@ -366,7 +523,9 @@ function doRewind() {
   player.history = [];
   currentTick = 0;
   loopCount++;
-  showPopup("⏪ 되감기!", 400, 300, '#8ecdf7');
+  if (!stage.watcherSpawn || watchers.length > 1) {
+    showPopup("⏪ 되감기!", 400, 300, '#8ecdf7');
+  }
 }
 
 function resetLevel() {
@@ -411,45 +570,131 @@ const BTN = {
 let selectCards = [];
 
 function drawGrid() {
-  const held = keysHeldStatus();
-
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
       const x = gridX + c * CELL, y = gridY + r * CELL;
       const tile = grid[r][c];
 
-      if (tile === WALL) {
+      if (tile.type === 'wall') {
         drawRect(x, y, CELL, CELL, '#2b2b45');
         drawRect(x + 2, y + 2, CELL - 4, CELL - 4, '#3d3d63');
       } else {
         drawRect(x, y, CELL, CELL, (r + c) % 2 === 0 ? '#1a1a30' : '#1e1e38');
 
-        if (tile === KEY) {
-          const keyIdx = keyPositions.findIndex(kp => kp.col === c && kp.row === r);
-          const pressed = held[keyIdx];
+        if (tile.type === 'key') {
+          const pressed = keyHeldStatusAt(currentTick, player.col, player.row, r, c);
+          
+          // 색상 매핑 (0: 노랑, 1: 빨강, 2: 파랑)
+          const colors = ['#ffe66d', '#ff6b6b', '#6bc5ff'];
+          const dimColors = ['#8a7020', '#8a2f2f', '#2f5f8a'];
+          const tColor = colors[tile.color] || colors[0];
+          const dColor = dimColors[tile.color] || dimColors[0];
+          const kc = pressed ? tColor : dColor;
+
+          const kcx = x + CELL / 2, kcy = y + CELL / 2;
 
           ctx.save();
-          ctx.translate(x + CELL/2, y + CELL/2);
-          if (pressed) { ctx.shadowColor = '#ffe66d'; ctx.shadowBlur = 14; }
-          ctx.font = `${pressed ? '700' : '400'} 26px "Galmuri11", monospace`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = pressed ? '#ffe66d' : '#c9a227';
-          ctx.fillText('🔑', 0, 2);
+          if (pressed) { ctx.shadowColor = tColor; ctx.shadowBlur = 16; }
+
+          // 색깔 발판 (바닥 패드)
+          ctx.globalAlpha = pressed ? 0.35 : 0.15;
+          drawRect(x + 4, y + 4, CELL - 8, CELL - 8, tColor);
+          ctx.globalAlpha = 1.0;
+
+          // 픽셀아트 열쇠 그리기 (이모지 대신 직접 그려서 색상 적용)
+          ctx.fillStyle = kc;
+          // 열쇠 머리 (동그란 고리)
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = kc;
+          ctx.beginPath();
+          ctx.arc(kcx - 4, kcy - 5, 5.5, 0, Math.PI * 2);
+          ctx.stroke();
+          // 열쇠 몸통 (대각선 축)
+          ctx.beginPath();
+          ctx.lineWidth = 3.5;
+          ctx.moveTo(kcx - 1, kcy - 1);
+          ctx.lineTo(kcx + 8, kcy + 8);
+          ctx.stroke();
+          // 열쇠 이빨 2개
+          ctx.beginPath();
+          ctx.lineWidth = 3;
+          ctx.moveTo(kcx + 3, kcy + 4);
+          ctx.lineTo(kcx + 7, kcy + 1);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(kcx + 6, kcy + 7);
+          ctx.lineTo(kcx + 10, kcy + 4);
+          ctx.stroke();
           ctx.restore();
 
           if (pressed) {
-            ctx.strokeStyle = 'rgba(255,230,109,0.5)';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = tColor;
+            ctx.globalAlpha = 0.6;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(x + CELL/2, y + CELL/2, CELL/2 - 2, 0, Math.PI * 2);
+            ctx.arc(x + CELL/2, y + CELL/2, CELL/2 - 3, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.globalAlpha = 1.0;
           }
-        } else if (tile === DOOR) {
-          const open = isDoorOpenNow();
-          drawRect(x + 3, y + 3, CELL - 6, CELL - 6, open ? '#3ddc84' : '#8b2e2e');
-          drawRect(x + 8, y + 8, CELL - 16, CELL - 16, open ? '#2bb96b' : '#5e1e1e');
-          drawText(open ? '🔓' : '🔒', x + CELL/2, y + CELL/2 + 6, 16, '#fff');
+        } else if (tile.type === 'door') {
+          const open = isDoorOpenNow(c, r);
+          const colors = ['#ffe66d', '#ff6b6b', '#6bc5ff']; // 열쇠와 동일한 색상 매핑
+          const dimColors = ['#8a7020', '#8a2f2f', '#2f5f8a'];
+          
+          let tColor, dColor;
+          if (tile.color === 'all') {
+            tColor = '#3ddc84'; dColor = '#2bb96b';
+          } else {
+            tColor = colors[tile.color] || colors[0];
+            dColor = dimColors[tile.color] || dimColors[0];
+          }
+
+          // 문 프레임 (열리면 밝은 색, 닫히면 어두운 색)
+          drawRect(x + 3, y + 3, CELL - 6, CELL - 6, open ? tColor : dColor);
+          drawRect(x + 7, y + 7, CELL - 14, CELL - 14, open ? '#0d2b1a' : '#1a0d16');
+
+          const dcx = x + CELL / 2, dcy = y + CELL / 2;
+          ctx.save();
+          if (open) {
+            // 열린 상태: 초록 화살표 (통과 가능)
+            ctx.fillStyle = '#3ddc84';
+            ctx.shadowColor = '#3ddc84';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(dcx - 5, dcy - 7);
+            ctx.lineTo(dcx + 6, dcy);
+            ctx.lineTo(dcx - 5, dcy + 7);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            // 닫힌 상태: 자물쇠 픽셀아트
+            ctx.strokeStyle = tColor;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(dcx, dcy - 4, 5, Math.PI, 0);
+            ctx.stroke();
+            ctx.fillStyle = tColor;
+            drawRect(dcx - 7, dcy - 3, 14, 11, tColor);
+            ctx.fillStyle = '#1a0d16';
+            drawRect(dcx - 1.5, dcy + 1, 3, 4, '#1a0d16');
+          }
+          ctx.restore();
+        } else if (tile.type === 'exit') {
+          // 순수 출구 (발판 필요없음)
+          drawRect(x + 3, y + 3, CELL - 6, CELL - 6, '#3ddc84');
+          drawRect(x + 8, y + 8, CELL - 16, CELL - 16, '#2bb96b');
+          // 출구 화살표 (초록 문)
+          ctx.save();
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(x + CELL/2 - 5, y + CELL/2 - 7);
+          ctx.lineTo(x + CELL/2 + 6, y + CELL/2);
+          ctx.lineTo(x + CELL/2 - 5, y + CELL/2 + 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
         }
       }
     }
@@ -529,6 +774,57 @@ function drawEntity(col, row, color, alpha, label, outline) {
     drawText(label, cx, y - 4, 10, color);
     ctx.restore();
   }
+}
+
+// ── Watcher (시간 감시자) 그리기 ──
+function drawWatcher(col, row, alpha) {
+  const x = gridX + col * CELL, y = gridY + row * CELL;
+  const cx = x + CELL / 2, cy = y + CELL / 2;
+  const t = performance.now() / 1000;
+  
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 유령 그림자 (빨간색 글로우)
+  ctx.shadowColor = '#ff0044';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#ff0044'; // 검은색에서 시뻘건 색으로 변경하여 잘 보이게 함
+  
+  // 감시자 몸통 (팩맨 유령처럼 아래가 너풀거림)
+  const w = CELL - 8;
+  const h = CELL - 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy - h/4, w/2, Math.PI, 0);
+  ctx.lineTo(cx + w/2, cy + h/2);
+  
+  // 밑단 웨이브
+  const waveCount = 3;
+  const waveW = w / waveCount;
+  for(let i=1; i<=waveCount; i++) {
+    const wy = cy + h/2 - ((i%2 === 1) ? 4 : 0);
+    ctx.lineTo(cx + w/2 - i*waveW + waveW/2, wy);
+    ctx.lineTo(cx + w/2 - i*waveW, cy + h/2);
+  }
+  ctx.lineTo(cx - w/2, cy - h/4);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // 감시자 눈 (노란색/흰색으로 대비)
+  const eyeBob = Math.sin(t * 8) * 1;
+  ctx.fillStyle = '#ffff00';
+  ctx.fillRect(cx - 8, cy - 6 + eyeBob, 6, 4);
+  ctx.fillRect(cx + 2, cy - 6 + eyeBob, 6, 4);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx - 7, cy - 5 + eyeBob, 3, 2);
+  ctx.fillRect(cx + 3, cy - 5 + eyeBob, 3, 2);
+
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, alpha + 0.35);
+  drawText('감시자', cx, y - 8, 11, '#ff88aa');
+  ctx.restore();
 }
 
 function roundRect(x, y, w, h, r) {
@@ -909,7 +1205,7 @@ function renderSelect() {
 
     drawText(stage.name, cx + 82, cy + 32, 17, '#ffffff', 'left');
     drawText(stage.sub, cx + 82, cy + 51, 11, '#a0aee0', 'left');
-    const tagTxt = `🔑 x${stage.keyPositions.length}   ⏱ ${stage.totalTime}초`;
+    const tagTxt = `🔑 x${stage.keysCount}   ⏱ ${stage.totalTime}초`;
     drawText(tagTxt, cx + 82, cy + 68, 10, '#8ecdf7', 'left');
 
     drawText('▶', cx + cardW - 26, cy + cardH/2 + 6, 18, '#ffe66d');
@@ -962,9 +1258,17 @@ function render() {
   const timeColor = timeLeft <= Math.min(15, TOTAL_TIME * 0.2) ? '#ff6b6b' : '#ffffff';
   drawText(`⏱ ${Math.ceil(timeLeft)}초`, 400, 30, 20, timeColor);
 
-  const held = keysHeldStatus();
-  const heldCount = held.filter(h => h).length;
-  drawText(`🔑 ${heldCount}/${keyPositions.length} | 이동 ${player.history.length} | 되감기 ${ghosts.length}/${MAX_REWINDS}`, 400, 55, 13, '#a0aee0');
+  let heldCount = 0;
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (grid[r][c].type === 'key' && keyHeldStatusAt(currentTick, player.col, player.row, r, c)) {
+        heldCount++;
+      }
+    }
+  }
+  const totalKeys = STAGES[stageIdx].keysCount;
+  
+  drawText(`🔑 ${heldCount}/${totalKeys} | 이동 ${player.history.length} | 되감기 ${ghosts.length}/${MAX_REWINDS}`, 400, 55, 13, '#a0aee0');
 
   drawRect(BTN.reset.x, BTN.reset.y, BTN.reset.w, BTN.reset.h, '#4a4a75');
   drawText("RESET", BTN.reset.x + BTN.reset.w/2, BTN.reset.y + 19, 10, '#fff');
@@ -978,6 +1282,11 @@ function render() {
     const s = ghostStateAt(g, currentTick);
     if (!s.alive) return;
     drawEntity(s.col, s.row, GHOST_COLORS[g.colorIdx], 0.55, `과거${i+1}`);
+  });
+
+  // 시간의 감시자 렌더링
+  watchers.forEach(w => {
+    drawWatcher(w.col, w.row, 1);
   });
 
   drawEntity(player.col, player.row, '#ff9f43', 0.98, '현재', '#ffd9a0');
@@ -1009,6 +1318,44 @@ function render() {
   if (flashAlpha > 0) {
     ctx.fillStyle = `rgba(140, 180, 255, ${flashAlpha * 0.35})`;
     ctx.fillRect(0, 0, 800, 600);
+  }
+
+  // ── 감시자 등장 연출 (화면 중앙 대사) ──
+  if (watcherIntroTimer > 0) {
+    const t = performance.now() / 1000;
+    // 페이드 인/아웃 알파 계산 (등장 0.3초 페이드인, 마지막 0.6초 페이드아웃)
+    let a = 1;
+    if (watcherIntroTimer > 2.7) a = (3.0 - watcherIntroTimer) / 0.3;
+    else if (watcherIntroTimer < 0.6) a = watcherIntroTimer / 0.6;
+
+    ctx.save();
+    ctx.globalAlpha = a;
+
+    // 붉은 비네트 (화면 전체 붉은 기운)
+    const vig = ctx.createRadialGradient(400, 300, 100, 400, 300, 500);
+    vig.addColorStop(0, 'rgba(80, 0, 20, 0.2)');
+    vig.addColorStop(1, 'rgba(120, 0, 30, 0.75)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, 800, 600);
+
+    // 대사 배너 (위아래 검은 띠)
+    const bannerH = 110;
+    ctx.fillStyle = 'rgba(10, 0, 5, 0.88)';
+    ctx.fillRect(0, 300 - bannerH/2, 800, bannerH);
+    // 상하 붉은 라인
+    ctx.fillStyle = '#ff0044';
+    ctx.fillRect(0, 300 - bannerH/2, 800, 3);
+    ctx.fillRect(0, 300 + bannerH/2 - 3, 800, 3);
+
+    // 흔들리는 텍스트 (공포감)
+    const shake = Math.sin(t * 28) * 2 * a;
+    ctx.shadowColor = '#ff0044';
+    ctx.shadowBlur = 22;
+    drawText("이놈! 시간의 순리를 어기다니!", 400 + shake, 300 + 4, 30, '#ff5577');
+    ctx.shadowBlur = 0;
+    drawText("— 시간의 감시자 —", 400, 300 + 38, 12, '#ffaabb');
+
+    ctx.restore();
   }
 
   if (currentScreen === SCREEN.WIN) {
@@ -1052,13 +1399,17 @@ function update(dt) {
     if (popups[i].alpha <= 0) popups.splice(i, 1);
   }
   if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - dt * 2.5);
+  if (watcherIntroTimer > 0) watcherIntroTimer = Math.max(0, watcherIntroTimer - dt);
 
   if (currentScreen === SCREEN.PLAYING) {
-    timeLeft -= dt;
-    if (timeLeft <= 0) {
-      timeLeft = 0;
-      currentScreen = SCREEN.TIMEUP;
-      audio.playFail();
+    // 이동을 시작한 후에만 타이머 감소 (history가 있거나 유령이 있는 경우 = 움직였다는 뜻)
+    if (player.history.length > 0 || ghosts.length > 0) {
+      timeLeft -= dt;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        currentScreen = SCREEN.TIMEUP;
+        audio.playFail();
+      }
     }
   }
 }
