@@ -66,7 +66,7 @@
     <canvas id="gameCanvas" width="800" height="600"></canvas>
   </div>
   <div class="instructions">
-    [WASD / 방향키 이동] &nbsp; [E 또는 ⏳ 버튼 = 제자리 대기] &nbsp; [Space/R = 되감기]
+    [WASD / 방향키 이동] &nbsp; [Space/R = 되감기] &nbsp; [M = 사운드 On/Off]
   </div>
 
 <script>
@@ -163,7 +163,178 @@ class SoundEngine {
     setTimeout(() => this.playTone(100, 'sawtooth', 0.5, 0.4), 150);
   }
   playClick() { this.init(); this.playTone(500, 'square', 0.06, 0.08); }
+
+  /* ══════════════════════════════════════════════════
+     BGM 엔진 (실시간 8비트 합성 · 파일 용량 0KB)
+  ══════════════════════════════════════════════════ */
+  ensureBgmBus() {
+    this.init();
+    if (!this.bgmGain) {
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.value = 0.16; // BGM 전체 볼륨 (효과음보다 작게)
+      this.bgmGain.connect(this.ctx.destination);
+    }
+  }
+
+  bgmNote(freq, type, start, dur, vol, filterFreq) {
+    if (this.muted || !this.ctx || !this.bgmGain) return;
+    try {
+      const t0 = this.ctx.currentTime + start;
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+
+      if (filterFreq) {
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.value = filterFreq;
+        f.Q.value = 0.8;
+        osc.connect(f); f.connect(g);
+      } else {
+        osc.connect(g);
+      }
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+      g.connect(this.bgmGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.05);
+    } catch(e) {}
+  }
+
+  bgmPerc(start, dur, vol, hp) {
+    if (this.muted || !this.ctx || !this.bgmGain) return;
+    try {
+      const t0 = this.ctx.currentTime + start;
+      const len = Math.floor(this.ctx.sampleRate * dur);
+      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = hp || 4000;
+      const g = this.ctx.createGain();
+      g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(this.bgmGain);
+      src.start(t0);
+    } catch(e) {}
+  }
+
+  // 샘플 A — "시간의 심연" (긴장감 / 4스테이지)
+  barA() {
+    const N = BGM_NOTES;
+    for (let i = 0; i < 4; i++) {
+      const t = i * 2.0;
+      this.bgmNote(N.A1, 'triangle', t, 0.35, 0.30, 220);
+      this.bgmNote(N.A1, 'triangle', t + 0.28, 0.25, 0.18, 220);
+    }
+    this.bgmNote(N.A2, 'sine', 0, 4.0, 0.10, 400);
+    this.bgmNote(N.E2, 'sine', 4.0, 4.0, 0.10, 400);
+
+    const arp = [
+      N.A3, N.C4, N.E4, N.A4,
+      N.F3, N.A3, N.C4, N.F4,
+      N.G3, N.Bb3, N.D4, N.G4,
+      N.A3, N.C4, N.E4, N.C5
+    ];
+    arp.forEach((f, i) => this.bgmNote(f, 'square', i * 0.5, 0.42, 0.055, 2600));
+
+    for (let i = 0; i < 16; i++) {
+      if (i % 2 === 1) this.bgmPerc(i * 0.5, 0.05, 0.035, 6000);
+    }
+    this.bgmNote(N.E5, 'square', 7.0, 0.2, 0.05, 4000);
+    this.bgmNote(N.G5, 'square', 7.35, 0.2, 0.05, 4000);
+    this.bgmNote(N.A5, 'square', 7.7, 0.3, 0.06, 4000);
+  }
+
+  // 샘플 B — "잊혀진 회랑" (신비로움 / 1~3스테이지)
+  barB() {
+    const N = BGM_NOTES;
+    const chords = [
+      [N.D2, N.D3, N.F3, N.A3],
+      [N.Bb3 / 2, N.D3, N.F3, N.Bb3],
+      [N.F2, N.C3, N.F3, N.A3],
+      [N.C2, N.C3, N.E3, N.G3]
+    ];
+    chords.forEach((ch, ci) => {
+      ch.forEach(f => this.bgmNote(f, 'triangle', ci * 2.0, 2.1, 0.055, 900));
+    });
+
+    const bells = [
+      { f: N.A4, t: 0.0, d: 1.2 }, { f: N.D5, t: 1.0, d: 1.4 },
+      { f: N.F5, t: 2.2, d: 1.2 }, { f: N.D5, t: 3.2, d: 1.0 },
+      { f: N.C5, t: 4.2, d: 1.4 }, { f: N.A4, t: 5.4, d: 1.2 },
+      { f: N.G4, t: 6.4, d: 0.9 }, { f: N.A4, t: 7.1, d: 1.0 }
+    ];
+    bells.forEach(b => {
+      this.bgmNote(b.f, 'sine', b.t, b.d, 0.11, 3500);
+      this.bgmNote(b.f * 2, 'sine', b.t, b.d * 0.5, 0.028, 5000);
+    });
+
+    this.bgmNote(N.D2 / 2, 'sine', 0, 8.0, 0.09, 200);
+    for (let i = 0; i < 4; i++) this.bgmPerc(i * 2.0 + 1.0, 0.04, 0.022, 7000);
+  }
+
+  // BGM 시작 ('A' 또는 'B')
+  startBgm(track) {
+    if (this.currentTrack === track && this.bgmTimer) return; // 이미 같은 곡 재생 중
+    this.stopBgm();
+    if (this.muted) { this.currentTrack = track; return; }
+    this.ensureBgmBus();
+    this.currentTrack = track;
+
+    const play = () => {
+      if (this.muted) return;
+      if (track === 'A') this.barA();
+      else this.barB();
+    };
+    play();
+    this.bgmTimer = setInterval(() => {
+      if (this.currentTrack === track) play();
+    }, 8000);
+  }
+
+  stopBgm() {
+    if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
+    this.currentTrack = null;
+  }
+
+  // 사운드 On/Off 토글
+  toggleMute() {
+    this.muted = !this.muted;
+    if (this.muted) {
+      // 즉시 BGM 음소거 (예약된 노트까지 차단)
+      if (this.bgmGain && this.ctx) {
+        this.bgmGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      }
+      if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
+    } else {
+      this.ensureBgmBus();
+      if (this.bgmGain && this.ctx) {
+        this.bgmGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.bgmGain.gain.setValueAtTime(0.16, this.ctx.currentTime);
+      }
+      // 원래 재생하던 트랙 복구
+      const t = this.currentTrack;
+      if (t) { this.currentTrack = null; this.startBgm(t); }
+    }
+    return this.muted;
+  }
 }
+
+/* 음정 주파수 테이블 (BGM용) */
+const BGM_NOTES = {
+  A1: 55.00, C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98.00, A2: 110.00,
+  C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, Bb3: 233.08,
+  C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16,
+  C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
+};
 const audio = new SoundEngine();
 
 /* ============================================================
@@ -318,6 +489,9 @@ function loadStage(idx) {
   loopCount = 1;
   popups = [];
   currentScreen = SCREEN.PLAYING;
+
+  // BGM: 4스테이지(감시자)는 긴장감 A, 1~3스테이지는 신비로운 B
+  audio.startBgm(stage.watcherSpawn ? 'A' : 'B');
 }
 
 /* ============================================================
@@ -540,6 +714,7 @@ function resetLevel() {
 
 function goToSelect() {
   currentScreen = SCREEN.SELECT;
+  audio.stopBgm();
 }
 
 /* ============================================================
@@ -568,9 +743,52 @@ const BTN = {
   down: { x: 110, y: 558, w: 50, h: 32 },
   right: { x: 165, y: 558, w: 50, h: 32 },
   rewind: { x: 292, y: 528, w: 190, h: 60 },
-  reset: { x: 620, y: 10, w: 60, h: 28 },
-  menu: { x: 690, y: 10, w: 100, h: 28 }
+  reset: { x: 578, y: 10, w: 56, h: 28 },
+  menu: { x: 640, y: 10, w: 92, h: 28 }
 };
+
+// 사운드 토글 버튼 (모든 화면 공통, 우측 상단)
+const soundBtn = { x: 742, y: 10, w: 44, h: 28 };
+
+function drawSoundBtn() {
+  const on = !audio.muted;
+  drawRect(soundBtn.x, soundBtn.y, soundBtn.w, soundBtn.h, on ? '#2f4a6a' : '#4a3040');
+  drawRect(soundBtn.x + 2, soundBtn.y + 2, soundBtn.w - 4, soundBtn.h - 4, on ? '#3f6a95' : '#6a4055');
+
+  const cx = soundBtn.x + soundBtn.w / 2;
+  const cy = soundBtn.y + soundBtn.h / 2;
+
+  // 스피커 아이콘
+  ctx.save();
+  ctx.fillStyle = on ? '#cfe8ff' : '#c0a0b0';
+  // 스피커 본체
+  ctx.beginPath();
+  ctx.moveTo(cx - 9, cy - 3);
+  ctx.lineTo(cx - 5, cy - 3);
+  ctx.lineTo(cx - 1, cy - 7);
+  ctx.lineTo(cx - 1, cy + 7);
+  ctx.lineTo(cx - 5, cy + 3);
+  ctx.lineTo(cx - 9, cy + 3);
+  ctx.closePath();
+  ctx.fill();
+
+  if (on) {
+    // 음파 2줄
+    ctx.strokeStyle = '#cfe8ff';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(cx - 1, cy, 5, -0.8, 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx - 1, cy, 8.5, -0.8, 0.8); ctx.stroke();
+  } else {
+    // X 표시
+    ctx.strokeStyle = '#ff8899';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(cx + 2, cy - 5); ctx.lineTo(cx + 10, cy + 5);
+    ctx.moveTo(cx + 10, cy - 5); ctx.lineTo(cx + 2, cy + 5);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 // Stage select card buttons (computed per render)
 let selectCards = [];
@@ -1241,16 +1459,19 @@ function render() {
 
   if (currentScreen === SCREEN.TITLE) {
     renderTitle();
+    drawSoundBtn();
     return;
   }
 
   if (currentScreen === SCREEN.ENDING) {
     renderEnding();
+    drawSoundBtn();
     return;
   }
 
   if (currentScreen === SCREEN.SELECT) {
     renderSelect();
+    drawSoundBtn();
     return;
   }
 
@@ -1281,6 +1502,8 @@ function render() {
 
   drawRect(BTN.menu.x, BTN.menu.y, BTN.menu.w, BTN.menu.h, '#4a4a75');
   drawText("STAGE 목록", BTN.menu.x + BTN.menu.w/2, BTN.menu.y + 19, 10, '#fff');
+
+  drawSoundBtn();
 
   drawGrid();
 
@@ -1447,6 +1670,13 @@ function handlePointer(clientX, clientY) {
   const x = (clientX - rect.left) * (canvas.width / rect.width);
   const y = (clientY - rect.top) * (canvas.height / rect.height);
 
+  // 사운드 토글 버튼 (모든 화면 공통 · 최우선 처리)
+  if (hit(soundBtn, x, y)) {
+    const muted = audio.toggleMute();
+    if (!muted) audio.playClick();
+    return;
+  }
+
   if (currentScreen === SCREEN.TITLE) {
     if (hit(titleBtn, x, y)) {
       audio.playClick();
@@ -1487,6 +1717,7 @@ function handlePointer(clientX, clientY) {
       if (hasNext) {
         loadStage(stageIdx + 1);
       } else {
+        audio.stopBgm();
         audio.playWin();
         currentScreen = SCREEN.ENDING;
       }
@@ -1554,9 +1785,12 @@ canvas.addEventListener('mousedown', (e) => {
 window.addEventListener('keydown', (e) => {
   audio.init();
   const key = e.code;
-  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','KeyR','Space'].includes(key)) {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','KeyR','KeyM','Space'].includes(key)) {
     e.preventDefault();
   }
+  // M 키: 사운드 On/Off (모든 화면 공통)
+  if (key === 'KeyM') { audio.toggleMute(); return; }
+
   if (currentScreen !== SCREEN.PLAYING) return;
   if (key === 'KeyW' || key === 'ArrowUp') attemptMove('up');
   else if (key === 'KeyS' || key === 'ArrowDown') attemptMove('down');
