@@ -189,7 +189,7 @@ const STAGES = [
     keysCount: 1,
     build: (g) => {
       g[3][1] = { type: 'key', color: 0 }; // 0: 노란색(기본)
-      g[7][8] = { type: 'door', color: 0, isExit: true }; // 노란문이 곧 출구
+      g[7][7] = { type: 'door', color: 0, isExit: true }; // 노란문이 곧 출구
     }
   },
   {
@@ -207,7 +207,7 @@ const STAGES = [
       g[1][1] = { type: 'key', color: 0 };
       // 열쇠 2 (중앙 통로 근처) - 파란색
       g[5][3] = { type: 'key', color: 2 };
-      g[7][8] = { type: 'door', color: 'all', isExit: true }; 
+      g[6][8] = { type: 'door', color: 'all', isExit: true }; 
     }
   },
   {
@@ -218,19 +218,19 @@ const STAGES = [
     keysCount: 2,
     build: (g) => {
       // 벽 세팅 (지그재그 구조)
-      for (let r = 1; r < 8; r++) g[r][3] = { type: 'wall' };
-      for (let r = 2; r < 9; r++) g[r][6] = { type: 'wall' };
+      for (let r = 1; r < 9; r++) { if (r !== 7) g[r][3] = { type: 'wall' }; }
+      for (let r = 1; r < 9; r++) { if (r !== 2) g[r][6] = { type: 'wall' }; }
       
       // 빨간색 그룹
-      g[3][1] = { type: 'key', color: 1 }; // 빨강 발판 (1번방 - 한 칸 아래로 내림)
-      g[8][3] = { type: 'door', color: 1 }; // 빨강 문 (1번방 -> 2번방 가는 길)
+      g[3][1] = { type: 'key', color: 1 }; // 빨강 발판 (1번방)
+      g[7][3] = { type: 'door', color: 1 }; // 빨강 문 (위로 한 칸 이동)
 
       // 파란색 그룹
       g[8][4] = { type: 'key', color: 2 }; // 파랑 발판 (2번방)
-      g[1][6] = { type: 'door', color: 2 }; // 파랑 문 (2번방 -> 3번방 가는 길)
+      g[2][6] = { type: 'door', color: 2 }; // 파랑 문 (아래로 한 칸 이동)
 
       // 최종 출구 (3번방)
-      g[2][8] = { type: 'exit' }; // 발판 필요없는 최종 골인 지점
+      g[3][8] = { type: 'exit' }; // 발판 필요없는 최종 골인 지점 (아래로 한 칸 이동)
     }
   },
   {
@@ -247,7 +247,7 @@ const STAGES = [
       g[7][4] = { type: 'floor' }; // 구멍
 
       g[2][1] = { type: 'key', color: 0 };
-      g[8][8] = { type: 'door', color: 0, isExit: true };
+      g[7][8] = { type: 'door', color: 0, isExit: true };
     }
   }
 ];
@@ -357,9 +357,14 @@ function keyHeldStatusAt(tick, pCol, pRow, keyR, keyC) {
   });
 }
 
-function isDoorOpenNow(targetCol, targetRow) {
+function isDoorOpenNow(targetCol, targetRow, atTick, pCol, pRow) {
   const doorTile = grid[targetRow][targetCol];
   if (doorTile.type !== 'door') return true;
+
+  // 인자가 안 넘어오면 현재 상태 기준으로 판정 (렌더링용)
+  const tick = (atTick === undefined) ? currentTick : atTick;
+  const px = (pCol === undefined) ? player.col : pCol;
+  const py = (pRow === undefined) ? player.row : pRow;
 
   let keysToCheck = [];
   for (let r = 0; r < GRID_SIZE; r++) {
@@ -372,7 +377,7 @@ function isDoorOpenNow(targetCol, targetRow) {
     }
   }
 
-  return keysToCheck.every(k => keyHeldStatusAt(currentTick, player.col, player.row, k.r, k.c));
+  return keysToCheck.every(k => keyHeldStatusAt(tick, px, py, k.r, k.c));
 }
 
 // Watcher pathfinding BFS
@@ -431,10 +436,11 @@ function attemptMove(dirName) {
 
   if (tile.type === 'wall') { audio.playBlocked(); return; }
 
-  // 문 판정: "현재 턴(이동하기 직전)"에 문이 열려있다면 닫히는 순간이더라도 슬라이딩해서 들어갈 수 있게 허용 (인디아나 존스 판정!)
+  // 문 판정: "도착하는 순간(nextTick)"의 상태로만 판정
+  // → 열쇠가 밟힌 그 턴에 바로 문에 들어갈 수 있음 (직관적)
   if (tile.type === 'door') {
-    const openBefore = isDoorOpenNow(targetCol, targetRow);
-    if (!openBefore) {
+    const openOnArrival = isDoorOpenNow(targetCol, targetRow, nextTick, targetCol, targetRow);
+    if (!openOnArrival) {
       audio.playBlocked();
       showPopup("문이 잠겼다!", targetCol * CELL + gridX, targetRow * CELL + gridY - 10, '#ff6b6b');
       return;
